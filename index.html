@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>직원 출퇴근 체크</title>
+
+    <link rel="stylesheet" href="css/common.css" />
+    <link rel="stylesheet" href="css/index.css" />
+</head>
+<body data-page="index">
+  <div class="phone">
+    <!-- 상태바 영역 -->
+    <div class="status-area"></div>
+
+    <!-- 상단 헤더 -->
+    <header class="header">
+      <div>
+        <p id="todayDate"></p>
+        <h1>안녕하세요, 김민준 님 👋</h1>
+      </div>
+
+      <div class="profile">
+        <span>👤</span>
+      </div>
+    </header>
+
+    <!-- 메인 콘텐츠 -->
+    <main class="main">
+      <!-- 위치 확인 카드 -->
+      <section class="card location-card">
+        <div class="icon-circle">📍</div>
+
+        <div class="location-text">
+          <p>위치 확인 상태</p>
+          <strong>회사 근처 확인됨</strong>
+        </div>
+
+        <span class="badge active">확인됨</span>
+      </section>
+
+      <!-- 오늘 근무 현황 -->
+      <section class="card work-card">
+        <div class="card-header">
+          <h2>오늘 근무 현황</h2>
+          <span id="workStatus" class="badge outline">출근 전</span>
+        </div>
+
+        <div class="time-grid">
+          <div class="time-box">
+            <p>출근 시간</p>
+            <strong id="checkInTime">--:--</strong>
+          </div>
+
+          <div class="time-box">
+            <p>퇴근 시간</p>
+            <strong id="checkOutTime">--:--</strong>
+          </div>
+        </div>
+
+        <button id="attendanceBtn" class="main-button">
+          <span>✓</span>
+          <span id="buttonText">출근하기</span>
+        </button>
+      </section>
+
+      <!-- 공지사항 -->
+      <section class="card notice-card">
+        <div class="notice-title">
+          <span>📢</span>
+          <h2>공지사항</h2>
+        </div>
+
+        <p class="notice-text">
+          6월 30일(월)은 월말 결산으로 인해 조기 퇴근이 가능합니다.
+        </p>
+
+        <p class="notice-date">2025.06.25</p>
+      </section>
+    </main>
+
+<!-- 공통 하단배너 자리 -->
+    <div id="bottomNav"></div>
+  </div>
+
+  <script src="js/common.js"></script>
+  <script src="js/index.js"></script>
+
+</body>
+</html>

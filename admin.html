@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>근태관리 Admin</title>
+
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+  <div class="admin-layout">
+    <!-- 사이드바 -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-box">A</div>
+
+        <div>
+          <h1>근태관리 Admin</h1>
+          <p>최고 관리자</p>
+        </div>
+      </div>
+
+      <nav class="sidebar-menu">
+        <button class="menu-item active">
+          <span>📊</span>
+          대시보드
+        </button>
+
+        <button class="menu-item">
+          <span>🕘</span>
+          출퇴근 관리
+        </button>
+
+        <button class="menu-item">
+          <span>📅</span>
+          월간 출근부
+        </button>
+
+        <button class="menu-item">
+          <span>📩</span>
+          요청사항 관리
+          <em>5</em>
+        </button>
+
+        <button class="menu-item">
+          <span>👥</span>
+          직원 관리
+        </button>
+
+        <button class="menu-item">
+          <span>🏢</span>
+          부서 관리
+        </button>
+
+        <button class="menu-item">
+          <span>📢</span>
+          공지사항
+        </button>
+
+        <button class="menu-item">
+          <span>⚙️</span>
+          설정
+        </button>
+
+        <button class="menu-item">
+          <span>📝</span>
+          수정 이력
+        </button>
+      </nav>
+
+      <div class="sidebar-user">
+        <div class="user-avatar">김</div>
+
+        <div class="user-info">
+          <strong>김관리자</strong>
+          <p>admin@company.com</p>
+        </div>
+
+        <button class="logout-btn">↗</button>
+      </div>
+    </aside>
+
+    <!-- 메인 영역 -->
+    <main class="main">
+      <!-- 상단 헤더 -->
+      <header class="top-header">
+        <div>
+          <h2>대시보드</h2>
+          <p id="todayDate"></p>
+        </div>
+
+        <div class="header-actions">
+          <button class="icon-button">
+            <span class="notice-dot"></span>
+            🔔
+          </button>
+
+          <button class="download-button" id="excelDownloadBtn">
+            <span>⬇</span>
+            엑셀 다운로드
+          </button>
+        </div>
+      </header>
+
+      <!-- 콘텐츠 -->
+      <section class="content">
+        <!-- 알림 배너 -->
+        <div class="alert-banner">
+          <div>
+            <span>⚠️</span>
+            <p>관리자 확인이 필요한 항목 2건이 있습니다.</p>
+          </div>
+
+          <button>확인하러 가기</button>
+        </div>
+
+        <!-- 통계 카드 -->
+        <section class="stats-grid">
+          <article class="stat-card">
+            <p>전체 직원</p>
+            <strong>32</strong>
+            <span>명</span>
+          </article>
+
+          <article class="stat-card">
+            <p>출근 완료</p>
+            <strong>24</strong>
+            <span>명</span>
+          </article>
+
+          <article class="stat-card">
+            <p>퇴근 완료</p>
+            <strong>18</strong>
+            <span>명</span>
+          </article>
+
+          <article class="stat-card warning">
+            <p>지각</p>
+            <strong>3</strong>
+            <span>명</span>
+          </article>
+
+          <article class="stat-card warning">
+            <p>결근</p>
+            <strong>1</strong>
+            <span>명</span>
+          </article>
+
+          <article class="stat-card dark">
+            <p>확인 필요</p>
+            <strong>2</strong>
+            <span>건</span>
+          </article>
+        </section>
+
+        <!-- 하단 영역 -->
+        <section class="dashboard-grid">
+          <!-- 오늘 출퇴근 현황 -->
+          <article class="panel attendance-panel">
+            <div class="panel-header">
+              <h3>오늘 출퇴근 현황</h3>
+              <button>전체 보기 ›</button>
+            </div>
+
+            <table class="attendance-table">
+              <thead>
+                <tr>
+                  <th>직원명</th>
+                  <th>부서</th>
+                  <th>출근</th>
+                  <th>퇴근</th>
+                  <th>상태</th>
+                </tr>
+              </thead>
+
+              <tbody id="attendanceTableBody">
+                <tr>
+                  <td>
+                    <div class="employee">
+                      <span class="avatar">이</span>
+                      이민준
+                    </div>
+                  </td>
+                  <td>개발팀</td>
+                  <td>09:02</td>
+                  <td>18:05</td>
+                  <td><span class="status normal">정상</span></td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <div class="employee">
+                      <span class="avatar">박</span>
+                      박서연
+                    </div>
+                  </td>
+                  <td>디자인팀</td>
+                  <td>09:18</td>
+                  <td class="muted">—</td>
+                  <td><span class="status late">지각</span></td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <div class="employee">
+                      <span class="avatar">최</span>
+                      최준혁
+                    </div>
+                  </td>
+                  <td>영업팀</td>
+                  <td class="muted">—</td>
+                  <td class="muted">—</td>
+                  <td><span class="status absent">결근</span></td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <div class="employee">
+                      <span class="avatar">김</span>
+                      김다은
+                    </div>
+                  </td>
+                  <td>인사팀</td>
+                  <td>08:55</td>
+                  <td class="muted">—</td>
+                  <td><span class="status normal">정상</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </article>
+
+          <!-- 확인 필요 항목 -->
+          <article class="panel request-panel">
+            <div class="panel-header">
+              <h3>확인 필요 항목</h3>
+              <button>전체 보기 ›</button>
+            </div>
+
+            <div class="request-list">
+              <div class="request-item">
+                <div>
+                  <strong>박서연</strong>
+                  <p>지각 사유 확인 필요</p>
+                </div>
+                <span>대기</span>
+              </div>
+
+              <div class="request-item">
+                <div>
+                  <strong>최준혁</strong>
+                  <p>결근 처리 확인 필요</p>
+                </div>
+                <span>대기</span>
+              </div>
+            </div>
+          </article>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/common.js"></script>
+  <script src="js/admin.js"></script>
+
+</body>
+</html>
