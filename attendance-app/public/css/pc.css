@@ -109,10 +109,6 @@
   flex: 1;
 }
 
-.admin-menu-item.active {
-  background: #ffffff;
-  color: #171717;
-}
 
 .admin-menu-item:hover:not(.active) {
   background: #262626;

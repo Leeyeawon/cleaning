@@ -1,8 +1,6 @@
 
 /* 관리자용 공통 좌측 사이드바 */
-
 const adminSidebar = document.getElementById("adminSidebar");
-const currentAdminPage = document.body.dataset.adminPage;
 
 if (adminSidebar) {
   adminSidebar.innerHTML = `
@@ -17,43 +15,43 @@ if (adminSidebar) {
       </div>
 
       <nav class="admin-sidebar-menu">
-        <a href="admin-dashboard.html" class="admin-menu-item ${currentAdminPage === "admin" ? "active" : ""}">
+        <a href="admin.html" class="admin-menu-item">
           <span>📊</span>
           <p>대시보드</p>
         </a>
 
-        <a href="admin-attendance.html" class="admin-menu-item ${currentAdminPage === "attendance" ? "active" : ""}">
+        <a href="admin-attendance.html" class="admin-menu-item">
           <span>🕘</span>
           <p>출퇴근 관리</p>
         </a>
 
-        <a href="admin-monthly.html" class="admin-menu-item ${currentAdminPage === "monthly" ? "active" : ""}">
+        <a href="admin-monthly.html" class="admin-menu-item">
           <span>📅</span>
           <p>월간 출근부</p>
         </a>
 
-        <a href="admin-request.html" class="admin-menu-item ${currentAdminPage === "request" ? "active" : ""}">
+        <a href="admin-request.html" class="admin-menu-item">
           <span>📩</span>
           <p>요청사항 관리</p>
           <em>5</em>
         </a>
 
-        <a href="admin-employees.html" class="admin-menu-item ${currentAdminPage === "employees" ? "active" : ""}">
+        <a href="admin-employees.html" class="admin-menu-item">
           <span>👥</span>
           <p>직원 관리</p>
         </a>
 
-        <a href="admin-departments.html" class="admin-menu-item ${currentAdminPage === "departments" ? "active" : ""}">
+        <a href="admin-departments.html" class="admin-menu-item">
           <span>🏢</span>
           <p>부서 관리</p>
         </a>
 
-        <a href="admin-notices.html" class="admin-menu-item ${currentAdminPage === "notices" ? "active" : ""}">
+        <a href="admin-notices.html" class="admin-menu-item">
           <span>📢</span>
           <p>공지사항</p>
         </a>
 
-        <a href="admin-settings.html" class="admin-menu-item ${currentAdminPage === "settings" ? "active" : ""}">
+        <a href="admin-settings.html" class="admin-menu-item">
           <span>⚙️</span>
           <p>설정</p>
         </a>
@@ -72,4 +70,5 @@ if (adminSidebar) {
     </aside>
   `;
 }
+
 /*  */
