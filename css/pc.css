@@ -1,0 +1,187 @@
+/* =========================
+   관리자 공통 레이아웃
+========================= */
+
+.admin-layout {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  background: #ffffff;
+}
+
+.admin-main {
+  flex: 1;
+  min-height: 100vh;
+  background: #fafafa;
+  overflow: auto;
+}
+
+/* =========================
+   관리자 공통 좌측 사이드바
+========================= */
+
+.admin-sidebar {
+  width: 256px;
+  height: 100vh;
+  flex-shrink: 0;
+
+  position: sticky;
+  top: 0;
+  left: 0;
+
+  background: #171717;
+  color: #ffffff;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+}
+
+.admin-sidebar-logo {
+  padding: 20px 24px;
+  border-bottom: 1px solid #404040;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-logo-box {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #171717;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.admin-sidebar-logo h1 {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+}
+
+.admin-sidebar-logo p {
+  color: #a3a3a3;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.admin-sidebar-menu {
+  flex: 1;
+  padding: 16px 12px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-menu-item {
+  width: 100%;
+  min-height: 36px;
+  padding: 8px 12px;
+  border-radius: 6px;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  color: #d4d4d4;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.admin-menu-item span {
+  width: 16px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.admin-menu-item p {
+  flex: 1;
+}
+
+.admin-menu-item.active {
+  background: #ffffff;
+  color: #171717;
+}
+
+.admin-menu-item:hover:not(.active) {
+  background: #262626;
+}
+
+.admin-menu-item em {
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+
+  background: #ffffff;
+  color: #171717;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-size: 12px;
+  font-style: normal;
+  line-height: 16px;
+}
+
+.admin-sidebar-user {
+  padding: 16px 12px;
+  border-top: 1px solid #404040;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  background: #ffffff;
+  color: #171717;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-size: 12px;
+}
+
+.admin-user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-user-info strong {
+  display: block;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+}
+
+.admin-user-info p {
+  color: #a3a3a3;
+  font-size: 12px;
+  line-height: 16px;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-logout-btn {
+  color: #a3a3a3;
+  font-size: 14px;
+}

@@ -7,79 +7,13 @@
   <title>근태관리 Admin</title>
 
   <link rel="stylesheet" href="css/admin.css" />
+  <link rel="stylesheet" href="css/pc.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+
 </head>
-<body>
+<body data-admin-page="adimin">
   <div class="admin-layout">
-    <!-- 사이드바 -->
-    <aside class="sidebar">
-      <div class="sidebar-logo">
-        <div class="logo-box">A</div>
-
-        <div>
-          <h1>근태관리 Admin</h1>
-          <p>최고 관리자</p>
-        </div>
-      </div>
-
-      <nav class="sidebar-menu">
-        <button class="menu-item active">
-          <span>📊</span>
-          대시보드
-        </button>
-
-        <button class="menu-item">
-          <span>🕘</span>
-          출퇴근 관리
-        </button>
-
-        <button class="menu-item">
-          <span>📅</span>
-          월간 출근부
-        </button>
-
-        <button class="menu-item">
-          <span>📩</span>
-          요청사항 관리
-          <em>5</em>
-        </button>
-
-        <button class="menu-item">
-          <span>👥</span>
-          직원 관리
-        </button>
-
-        <button class="menu-item">
-          <span>🏢</span>
-          부서 관리
-        </button>
-
-        <button class="menu-item">
-          <span>📢</span>
-          공지사항
-        </button>
-
-        <button class="menu-item">
-          <span>⚙️</span>
-          설정
-        </button>
-
-        <button class="menu-item">
-          <span>📝</span>
-          수정 이력
-        </button>
-      </nav>
-
-      <div class="sidebar-user">
-        <div class="user-avatar">김</div>
-
-        <div class="user-info">
-          <strong>김관리자</strong>
-          <p>admin@company.com</p>
-        </div>
-
-        <button class="logout-btn">↗</button>
-      </div>
-    </aside>
+    <div id="adminSidebar"></div>
 
     <!-- 메인 영역 -->
     <main class="main">
@@ -261,6 +195,7 @@
   </div>
 
   <script src="js/common.js"></script>
+  <script src="js/pc.js"></script>
   <script src="js/admin.js"></script>
 
 </body>
