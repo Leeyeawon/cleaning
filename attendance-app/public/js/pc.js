@@ -17,7 +17,7 @@ if (adminSidebar) {
       </div>
 
       <nav class="admin-sidebar-menu">
-        <a href="admin.html" class="admin-menu-item ${currentAdminPage === "admin" ? "active" : ""}">
+        <a href="admin-dashboard.html" class="admin-menu-item ${currentAdminPage === "admin" ? "active" : ""}">
           <span>📊</span>
           <p>대시보드</p>
         </a>
@@ -30,6 +30,12 @@ if (adminSidebar) {
         <a href="admin-monthly.html" class="admin-menu-item ${currentAdminPage === "monthly" ? "active" : ""}">
           <span>📅</span>
           <p>월간 출근부</p>
+        </a>
+
+        <a href="admin-request.html" class="admin-menu-item ${currentAdminPage === "request" ? "active" : ""}">
+          <span>📩</span>
+          <p>요청사항 관리</p>
+          <em>5</em>
         </a>
 
         <a href="admin-employees.html" class="admin-menu-item ${currentAdminPage === "employees" ? "active" : ""}">
@@ -61,10 +67,9 @@ if (adminSidebar) {
           <p>admin@company.com</p>
         </div>
 
-        <button class="admin-logout-btn">↗</button>
+        <button class="admin-logout-btn" type="button">↗</button>
       </div>
     </aside>
   `;
 }
-
-/* 관리자용 공통 좌측 사이드바 */
+/*  */
