@@ -7,10 +7,169 @@
 
     <link rel="stylesheet" href="../public/css/common.css" />
     <link rel="stylesheet" href="../public/css/pc.css" />
+    <link rel="stylesheet" href="../public/css/admin.css" />
     <link rel="stylesheet" href="../public/css/admin-attendance.css" />
 </head>
 <body data-admin-page="attendance">
- 
+  <div class="admin-layout">
+    <div id="adminSidebar"></div>
+
+    <main class="main">
+      <header class="top-header">
+        <div>
+          <h2>출퇴근관리</h2>
+          <p id="todayDate">오늘 출퇴근 현황과 반복 지각 직원을 확인합니다.</p>
+        </div>
+
+        <div class="header-actions">
+          <button class="icon-button" type="button">
+            <span class="notice-dot"></span>
+          </button>
+
+          <button class="download-button" id="excelDownloadBtn" type="button">
+            <span>⬇</span>
+            엑셀 다운로드
+          </button>
+        </div>
+      </header>
+
+      <section class="content">
+        <div class="alert-banner">
+          <div>
+            <span>⚠️</span>
+            <p>이번 달 지각 3회 이상 직원 3명이 있습니다.</p>
+          </div>
+          <button type="button">지각 직원 확인</button>
+        </div>
+
+        <section class="attendance-sub-tabs">
+          <a href="admin-attendance.html" class="attendance-sub-tab active">오늘 출퇴근 현황</a>
+          <a href="#" class="attendance-sub-tab">지각·미출근 관리</a>
+          <a href="admin-monthly.html" class="attendance-sub-tab">월간 출근부</a>
+          <a href="#" class="attendance-sub-tab">출퇴근 기록 수정</a>
+        </section>
+
+        <section class="stats-grid">
+          <article class="stat-card">
+            <p>출근 완료</p>
+            <strong>24</strong>
+            <span>명</span>
+          </article>
+
+          <article class="stat-card">
+            <p>퇴근 완료</p>
+            <strong>18</strong>
+            <span>명</span>
+          </article>
+
+          <article class="stat-card">
+            <p>근무중</p>
+            <strong>6</strong>
+            <span>명</span>
+          </article>
+
+          <article class="stat-card warning">
+            <p>지각</p>
+            <strong>3</strong>
+            <span>명</span>
+          </article>
+
+          <article class="stat-card warning">
+            <p>미출근</p>
+            <strong>2</strong>
+            <span>명</span>
+          </article>
+
+          <article class="stat-card dark">
+            <p>위치 오류</p>
+            <strong>1</strong>
+            <span>건</span>
+          </article>
+        </section>
+
+        <section class="attendance-manage-grid">
+          <article class="panel attendance-panel">
+            <div class="panel-header">
+              <h3>오늘 직원별 출퇴근 현황</h3>
+              <button type="button">전체 보기 ›</button>
+            </div>
+
+            <div class="filter-bar">
+              <select id="regionFilter">
+                <option>전체 지역</option>
+                <option>해운대 A구역</option>
+                <option>서면 B구역</option>
+                <option>남포동 C구역</option>
+              </select>
+
+              <select id="statusFilter">
+                <option>전체 상태</option>
+                <option>퇴근완료</option>
+                <option>근무중</option>
+                <option>지각</option>
+                <option>미출근</option>
+                <option>위치오류</option>
+              </select>
+
+              <input id="employeeSearchInput" type="text" placeholder="직원명 검색" />
+            </div>
+
+            <div class="attendance-table-wrap">
+              <table class="attendance-table">
+                <thead>
+                  <tr>
+                    <th>직원명</th>
+                    <th>배정 지역</th>
+                    <th>출근</th>
+                    <th>퇴근</th>
+                    <th>근무시간</th>
+                    <th>상태</th>
+                    <th>관리</th>
+                  </tr>
+                </thead>
+
+                <tbody id="attendanceTableBody"></tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="panel request-panel">
+            <div class="panel-header">
+              <h3>이번 달 지각 3회 이상</h3>
+              <button type="button">전체 보기 ›</button>
+            </div>
+
+            <div class="late-list">
+              <div class="late-item">
+                <div>
+                  <strong>박서연</strong>
+                  <p>디자인팀 · 서면 B구역</p>
+                </div>
+                <span>5회</span>
+              </div>
+
+              <div class="late-item">
+                <div>
+                  <strong>정하윤</strong>
+                  <p>운영팀 · 서면 B구역</p>
+                </div>
+                <span>4회</span>
+              </div>
+
+              <div class="late-item">
+                <div>
+                  <strong>한지우</strong>
+                  <p>현장팀 · 남포동 C구역</p>
+                </div>
+                <span>3회</span>
+              </div>
+            </div>
+          </article>
+        </section>
+      </section>
+    </main>
+  </div>
+
   <script src="../public/js/common.js"></script>
   <script src="../public/js/pc.js"></script>
   <script src="../public/js/admin-attendance.js"></script>

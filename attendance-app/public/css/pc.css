@@ -181,3 +181,75 @@
   color: #a3a3a3;
   font-size: 14px;
 }
+
+.admin-menu-item.active {
+  background: #ffffff;
+  color: #171717;
+}
+
+.admin-menu-item.active p {
+  color: #171717;
+}
+
+.admin-menu-item.active span {
+  color: #171717;
+}
+
+/* =========================
+  관리자 사이드바 소분류 메뉴
+========================= */
+
+.admin-menu-item.active {
+  background: #ffffff;
+  color: #171717;
+}
+
+.admin-menu-item.active p,
+.admin-menu-item.active span,
+.admin-menu-item.active b {
+  color: #171717;
+}
+
+.admin-menu-parent b {
+  color: #a3a3a3;
+  font-size: 12px;
+  font-weight: 400;
+  transition: transform 0.2s ease;
+}
+
+.admin-menu-group.open .admin-menu-parent b {
+  transform: rotate(180deg);
+}
+
+.admin-sub-menu {
+  margin: 4px 0 6px 28px;
+  padding-left: 12px;
+  border-left: 1px solid #404040;
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-menu-group.open .admin-sub-menu {
+  display: flex;
+}
+
+.admin-sub-menu-item {
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  color: #a3a3a3;
+  font-size: 13px;
+  line-height: 18px;
+  text-decoration: none;
+}
+
+.admin-sub-menu-item:hover {
+  background: #262626;
+  color: #ffffff;
+}
+
+.admin-sub-menu-item.active {
+  background: #262626;
+  color: #ffffff;
+}

@@ -359,3 +359,384 @@ button {
     overflow-x: auto;
   }
 }
+
+/* =========================
+  출퇴근 관리 페이지
+========================= */
+
+.attendance-sub-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 6px;
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+}
+
+.attendance-sub-tab {
+  min-height: 36px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  color: #737373;
+  font-size: 14px;
+  line-height: 20px;
+  text-decoration: none;
+}
+
+.attendance-sub-tab:hover {
+  background: #f5f5f5;
+  color: #171717;
+}
+
+.attendance-sub-tab.active {
+  background: #171717;
+  color: #ffffff;
+}
+
+.attendance-manage-grid {
+  display: grid;
+  grid-template-columns: minmax(680px, 2fr) minmax(280px, 0.8fr);
+  gap: 20px;
+}
+
+.filter-bar {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f5f5f5;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  background: #ffffff;
+}
+
+.filter-bar select,
+.filter-bar input {
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #404040;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.filter-bar input {
+  min-width: 180px;
+}
+
+.table-action-btn {
+  height: 28px;
+  padding: 4px 10px;
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  color: #404040;
+  font-size: 12px;
+}
+
+.table-action-btn:hover {
+  background: #f5f5f5;
+}
+
+.status.location {
+  background: #fafafa;
+  border: 1px solid #171717;
+  color: #171717;
+}
+
+.late-list {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.late-item {
+  padding: 14px;
+  background: #fafafa;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.late-item strong {
+  display: block;
+  color: #171717;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+}
+
+.late-item p {
+  margin-top: 2px;
+  color: #737373;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.late-item span {
+  min-width: 42px;
+  height: 28px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: #171717;
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 20px;
+  text-align: center;
+}
+
+@media (max-width: 1100px) {
+  .attendance-manage-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-bar {
+    flex-wrap: wrap;
+  }
+
+  .attendance-sub-tabs {
+    overflow-x: auto;
+  }
+
+  .attendance-sub-tab {
+    white-space: nowrap;
+  }
+}
+
+/* =========================
+  출퇴근 기록 수정 페이지
+========================= */
+
+.edit-filter-panel {
+  padding: 18px 20px;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.edit-filter-group {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.edit-filter-group label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #404040;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.edit-filter-group input,
+.edit-filter-group select {
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #404040;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.edit-filter-group input:focus,
+.edit-filter-group select:focus {
+  outline: none;
+  border-color: #171717;
+}
+
+.edit-layout {
+  display: grid;
+  grid-template-columns: minmax(720px, 1fr) 320px;
+  gap: 20px;
+}
+
+.edit-main-panel,
+.edit-history-panel {
+  overflow: hidden;
+}
+
+.edit-notice {
+  padding: 14px 20px;
+  border-bottom: 1px solid #f5f5f5;
+  background: #fafafa;
+  color: #737373;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.edit-notice strong {
+  color: #171717;
+  font-weight: 400;
+}
+
+.edit-type-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: #fafafa;
+  border: 1px solid #e5e5e5;
+  color: #404040;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.edit-history-list {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.edit-history-item {
+  padding: 14px;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.edit-history-item strong {
+  display: block;
+  color: #171717;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+}
+
+.edit-history-item p {
+  margin-top: 6px;
+  color: #737373;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.edit-history-item span {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: #171717;
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.edit-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.edit-modal.open {
+  display: flex;
+}
+
+.edit-modal-content {
+  width: 460px;
+  max-width: calc(100% - 40px);
+  border-radius: 12px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.edit-modal-header {
+  padding: 18px 20px;
+  border-bottom: 1px solid #f5f5f5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.edit-modal-header h3 {
+  color: #171717;
+  font-size: 18px;
+  font-weight: 400;
+}
+
+.edit-modal-header button {
+  color: #737373;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.edit-modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.edit-time-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.edit-modal-body label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #404040;
+  font-size: 14px;
+}
+
+.edit-modal-body input,
+.edit-modal-body select,
+.edit-modal-body textarea {
+  width: 100%;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.edit-modal-body input,
+.edit-modal-body select {
+  height: 40px;
+  padding: 0 12px;
+}
+
+.edit-modal-body textarea {
+  min-height: 100px;
+  padding: 12px;
+  resize: none;
+}
+
+.edit-modal-body input:focus,
+.edit-modal-body select:focus,
+.edit-modal-body textarea:focus {
+  outline: none;
+  border-color: #171717;
+}
+
+.edit-modal-footer {
+  padding: 16px 20px;
+  border-top: 1px solid #f5f5f5;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@media (max-width: 1200px) {
+  .edit-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .edit-filter-group {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .edit-time-grid {
+    grid-template-columns: 1fr;
+  }
+}

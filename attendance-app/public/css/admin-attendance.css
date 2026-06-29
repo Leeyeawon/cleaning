@@ -1,0 +1,621 @@
+/* =========================
+  관리자 출퇴근관리 페이지
+========================= */
+
+.attendance-sub-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 6px;
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+}
+
+.attendance-sub-tab {
+  min-height: 36px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  color: #737373;
+  font-size: 14px;
+  line-height: 20px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.attendance-sub-tab:hover {
+  background: #f5f5f5;
+  color: #171717;
+}
+
+.attendance-sub-tab.active {
+  background: #171717;
+  color: #ffffff;
+}
+
+.attendance-manage-grid {
+  display: grid;
+  grid-template-columns: minmax(680px, 2fr) minmax(280px, 0.8fr);
+  gap: 20px;
+}
+
+.filter-bar {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f5f5f5;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  background: #ffffff;
+}
+
+.filter-bar select,
+.filter-bar input {
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #404040;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.filter-bar input {
+  min-width: 180px;
+}
+
+.filter-bar select:focus,
+.filter-bar input:focus {
+  outline: none;
+  border-color: #171717;
+}
+
+.attendance-panel {
+  overflow: hidden;
+}
+
+.attendance-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table-action-btn {
+  height: 28px;
+  padding: 4px 10px;
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  color: #404040;
+  font-size: 12px;
+}
+
+.table-action-btn:hover {
+  background: #f5f5f5;
+}
+
+.status.location {
+  background: #fafafa;
+  border: 1px solid #171717;
+  color: #171717;
+}
+
+.late-list {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.late-item {
+  padding: 14px;
+  background: #fafafa;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.late-item strong {
+  display: block;
+  color: #171717;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+}
+
+.late-item p {
+  margin-top: 2px;
+  color: #737373;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.late-item span {
+  min-width: 42px;
+  height: 28px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: #171717;
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 20px;
+  text-align: center;
+}
+
+.empty-row {
+  height: 160px;
+  text-align: center;
+  color: #a3a3a3;
+}
+
+@media (max-width: 1100px) {
+  .attendance-manage-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-bar {
+    flex-wrap: wrap;
+  }
+
+  .filter-bar select,
+  .filter-bar input {
+    flex: 1;
+    min-width: 160px;
+  }
+
+  .attendance-sub-tabs {
+    overflow-x: auto;
+  }
+}
+
+/* =========================
+  지각·미출근 관리 페이지
+========================= */
+
+.issue-layout {
+  display: grid;
+  grid-template-columns: minmax(720px, 1fr) 320px;
+  gap: 20px;
+}
+
+.issue-main-panel {
+  overflow: hidden;
+}
+
+.issue-side-panel {
+  overflow: hidden;
+}
+
+.issue-desc {
+  padding: 14px 20px;
+  border-bottom: 1px solid #f5f5f5;
+  color: #737373;
+  font-size: 14px;
+  line-height: 20px;
+  background: #fafafa;
+}
+
+.issue-desc strong {
+  color: #171717;
+  font-weight: 400;
+}
+
+.issue-table select {
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #404040;
+  font-family: inherit;
+  font-size: 12px;
+}
+
+.issue-table select:focus {
+  outline: none;
+  border-color: #171717;
+}
+
+.reason-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.reason-badge.unchecked {
+  background: #f5f5f5;
+  color: #737373;
+}
+
+.reason-badge.checked {
+  background: #171717;
+  color: #ffffff;
+}
+
+.reason-badge.input {
+  background: #fafafa;
+  border: 1px solid #171717;
+  color: #171717;
+}
+
+.repeat-late-list,
+.location-error-list {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.repeat-late-item,
+.location-error-item {
+  padding: 14px;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.repeat-late-item-top,
+.location-error-item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.repeat-late-item strong,
+.location-error-item strong {
+  color: #171717;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.repeat-late-item span,
+.location-error-item span {
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: #171717;
+  color: #ffffff;
+  font-size: 12px;
+}
+
+.repeat-late-item p,
+.location-error-item p {
+  margin-top: 6px;
+  color: #737373;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.issue-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.issue-modal.open {
+  display: flex;
+}
+
+.issue-modal-content {
+  width: 420px;
+  max-width: calc(100% - 40px);
+  border-radius: 12px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.issue-modal-header {
+  padding: 18px 20px;
+  border-bottom: 1px solid #f5f5f5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.issue-modal-header h3 {
+  color: #171717;
+  font-size: 18px;
+  font-weight: 400;
+}
+
+.issue-modal-header button {
+  color: #737373;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.issue-modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-employee-box {
+  padding: 14px;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.modal-employee-box strong {
+  display: block;
+  color: #171717;
+  font-size: 15px;
+  font-weight: 400;
+}
+
+.modal-employee-box p {
+  margin-top: 4px;
+  color: #737373;
+  font-size: 13px;
+}
+
+.issue-modal-body label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #404040;
+  font-size: 14px;
+}
+
+.issue-modal-body select,
+.issue-modal-body textarea {
+  width: 100%;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.issue-modal-body select {
+  height: 40px;
+  padding: 0 12px;
+}
+
+.issue-modal-body textarea {
+  min-height: 100px;
+  padding: 12px;
+  resize: none;
+}
+
+.issue-modal-body select:focus,
+.issue-modal-body textarea:focus {
+  outline: none;
+  border-color: #171717;
+}
+
+.issue-modal-footer {
+  padding: 16px 20px;
+  border-top: 1px solid #f5f5f5;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.cancel-btn,
+.save-btn {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.cancel-btn {
+  border: 1px solid #e5e5e5;
+  color: #404040;
+}
+
+.save-btn {
+  background: #171717;
+  color: #ffffff;
+}
+
+@media (max-width: 1200px) {
+  .issue-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================
+  월간 출근부 페이지
+========================= */
+
+.monthly-filter-panel {
+  padding: 18px 20px;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.monthly-filter-group {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.monthly-filter-group label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #404040;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.monthly-filter-group input,
+.monthly-filter-group select {
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #404040;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.monthly-filter-group input:focus,
+.monthly-filter-group select:focus {
+  outline: none;
+  border-color: #171717;
+}
+
+.monthly-summary-grid {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.monthly-layout {
+  display: grid;
+  grid-template-columns: minmax(720px, 1fr) 320px;
+  gap: 20px;
+}
+
+.monthly-table-panel,
+.employee-detail-panel {
+  overflow: hidden;
+}
+
+.monthly-notice {
+  padding: 14px 20px;
+  border-bottom: 1px solid #f5f5f5;
+  background: #fafafa;
+  color: #737373;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.monthly-table td {
+  vertical-align: middle;
+}
+
+.memo-cell {
+  max-width: 220px;
+  color: #737373;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.employee-detail-empty {
+  padding: 40px 20px;
+  color: #a3a3a3;
+  font-size: 14px;
+  line-height: 22px;
+  text-align: center;
+}
+
+.employee-detail-content {
+  display: none;
+  padding: 20px;
+}
+
+.employee-detail-content.active {
+  display: block;
+}
+
+.employee-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.avatar.large {
+  width: 44px;
+  height: 44px;
+  font-size: 16px;
+}
+
+.employee-profile strong {
+  display: block;
+  color: #171717;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 22px;
+}
+
+.employee-profile p {
+  margin-top: 2px;
+  color: #737373;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.detail-stat-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.detail-stat-list div {
+  padding: 14px;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.detail-stat-list p {
+  color: #737373;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.detail-stat-list strong {
+  display: block;
+  margin-top: 6px;
+  color: #171717;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 24px;
+}
+
+.recent-memo-box {
+  margin-top: 20px;
+}
+
+.recent-memo-box h4 {
+  color: #171717;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+}
+
+.recent-memo-box ul {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.recent-memo-box li {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fafafa;
+  color: #737373;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+@media (max-width: 1200px) {
+  .monthly-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .monthly-summary-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .monthly-filter-group {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .monthly-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
