@@ -69,7 +69,7 @@ if (adminSidebar) {
 
         <a href="admin-departments.html" class="admin-menu-item ${currentAdminPage === "departments" ? "active" : ""}">
           <span></span>
-          <p>부서 관리</p>
+          <p>근무지역 관리</p>
         </a>
 
         <a href="admin-notices.html" class="admin-menu-item ${currentAdminPage === "notices" ? "active" : ""}">

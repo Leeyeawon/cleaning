@@ -1,20 +1,214 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>공지사항</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <link rel="stylesheet" href="../public/css/common.css" />
-    <link rel="stylesheet" href="../public/css/pc.css" />
-    <link rel="stylesheet" href="../public/css/admin-notices.css" />
+  <title>공지사항 | 근태관리 Admin</title>
 
+  <link rel="stylesheet" href="../public/css/common.css" />
+  <link rel="stylesheet" href="../public/css/pc.css" />
+  <link rel="stylesheet" href="../public/css/admin.css" />
 </head>
+
 <body data-admin-page="notices">
-    
+  <div class="admin-layout">
+    <div id="adminSidebar"></div>
+
+    <main class="main">
+      <header class="top-header">
+        <div>
+          <h2>공지사항</h2>
+          <p>직원에게 전달할 공지와 안내사항을 관리합니다.</p>
+        </div>
+
+        <div class="header-actions">
+          <button class="download-button" type="button" id="addNoticeBtn">
+            + 공지 작성
+          </button>
+        </div>
+      </header>
+
+      <section class="content">
+        <section class="stats-grid notice-summary-grid">
+          <article class="stat-card">
+            <p>전체 공지</p>
+            <strong>18</strong>
+            <span>건</span>
+          </article>
+
+          <article class="stat-card warning">
+            <p>중요 공지</p>
+            <strong>3</strong>
+            <span>건</span>
+          </article>
+
+          <article class="stat-card">
+            <p>게시중</p>
+            <strong>12</strong>
+            <span>건</span>
+          </article>
+
+          <article class="stat-card dark">
+            <p>임시저장</p>
+            <strong>4</strong>
+            <span>건</span>
+          </article>
+
+          <article class="stat-card">
+            <p>예약 공지</p>
+            <strong>2</strong>
+            <span>건</span>
+          </article>
+        </section>
+
+        <section class="notice-filter-panel">
+          <div class="notice-filter-group">
+            <input type="text" id="noticeSearchInput" placeholder="공지 제목 검색" />
+
+            <select id="noticeCategoryFilter">
+              <option value="all">전체 분류</option>
+              <option value="전체공지">전체공지</option>
+              <option value="근무안내">근무안내</option>
+              <option value="비품안내">비품안내</option>
+              <option value="긴급공지">긴급공지</option>
+            </select>
+
+            <select id="noticeStatusFilter">
+              <option value="all">전체 상태</option>
+              <option value="게시중">게시중</option>
+              <option value="임시저장">임시저장</option>
+              <option value="예약">예약</option>
+              <option value="게시종료">게시종료</option>
+            </select>
+
+            <select id="noticeTargetFilter">
+              <option value="all">전체 대상</option>
+              <option value="전체 직원">전체 직원</option>
+              <option value="현장팀">현장팀</option>
+              <option value="운영팀">운영팀</option>
+              <option value="서면 B구역">서면 B구역</option>
+              <option value="해운대 A구역">해운대 A구역</option>
+            </select>
+          </div>
+        </section>
+
+        <section class="notice-layout">
+          <article class="panel notice-table-panel">
+            <div class="panel-header">
+              <h3>공지 목록</h3>
+              <button type="button">전체 보기 ›</button>
+            </div>
+
+            <div class="attendance-table-wrap">
+              <table class="attendance-table notice-table">
+                <thead>
+                  <tr>
+                    <th>공지 제목</th>
+                    <th>분류</th>
+                    <th>대상</th>
+                    <th>상태</th>
+                    <th>작성일</th>
+                    <th>조회</th>
+                    <th>관리</th>
+                  </tr>
+                </thead>
+
+                <tbody id="noticeTableBody"></tbody>
+              </table>
+            </div>
+          </article>
+
+          <aside class="panel notice-preview-panel">
+            <div class="panel-header">
+              <h3>공지 미리보기</h3>
+            </div>
+
+            <div class="notice-preview-empty" id="noticePreviewEmpty">
+              공지를 선택하면 내용이 표시됩니다.
+            </div>
+
+            <div class="notice-preview-content" id="noticePreviewContent">
+              <span class="notice-preview-category" id="previewCategory">전체공지</span>
+              <h3 id="previewTitle">공지 제목</h3>
+              <p class="notice-preview-meta" id="previewMeta">대상 · 작성일</p>
+              <div class="notice-preview-body" id="previewBody"></div>
+            </div>
+          </aside>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div class="notice-modal" id="noticeModal">
+    <div class="notice-modal-content">
+      <div class="notice-modal-header">
+        <h3 id="noticeModalTitle">공지 작성</h3>
+        <button type="button" id="noticeModalCloseBtn">×</button>
+      </div>
+
+      <div class="notice-modal-body">
+        <div class="notice-form-grid">
+          <label class="full">
+            공지 제목
+            <input type="text" id="noticeTitleInput" placeholder="공지 제목 입력" />
+          </label>
+
+          <label>
+            분류
+            <select id="noticeCategoryInput">
+              <option value="전체공지">전체공지</option>
+              <option value="근무안내">근무안내</option>
+              <option value="비품안내">비품안내</option>
+              <option value="긴급공지">긴급공지</option>
+            </select>
+          </label>
+
+          <label>
+            게시 상태
+            <select id="noticeStatusInput">
+              <option value="게시중">게시중</option>
+              <option value="임시저장">임시저장</option>
+              <option value="예약">예약</option>
+              <option value="게시종료">게시종료</option>
+            </select>
+          </label>
+
+          <label>
+            공지 대상
+            <select id="noticeTargetInput">
+              <option value="전체 직원">전체 직원</option>
+              <option value="현장팀">현장팀</option>
+              <option value="운영팀">운영팀</option>
+              <option value="서면 B구역">서면 B구역</option>
+              <option value="해운대 A구역">해운대 A구역</option>
+            </select>
+          </label>
+
+          <label>
+            중요 공지
+            <select id="noticeImportantInput">
+              <option value="false">일반 공지</option>
+              <option value="true">중요 공지</option>
+            </select>
+          </label>
+        </div>
+
+        <label class="notice-content-label">
+          공지 내용
+          <textarea id="noticeContentInput" placeholder="직원에게 전달할 내용을 입력해 주세요."></textarea>
+        </label>
+      </div>
+
+      <div class="notice-modal-footer">
+        <button type="button" class="cancel-btn" id="noticeModalCancelBtn">취소</button>
+        <button type="button" class="save-btn" id="noticeSaveBtn">저장</button>
+      </div>
+    </div>
+  </div>
+
   <script src="../public/js/common.js"></script>
   <script src="../public/js/pc.js"></script>
   <script src="../public/js/admin-notices.js"></script>
-
 </body>
 </html>

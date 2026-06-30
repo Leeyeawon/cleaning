@@ -1,20 +1,345 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>설정</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <link rel="stylesheet" href="../public/css/common.css" />
-    <link rel="stylesheet" href="../public/css/pc.css" />
-    <link rel="stylesheet" href="../public/css/admin-settings.css" />
+  <title>설정 | 근태관리 Admin</title>
 
+  <link rel="stylesheet" href="../public/css/common.css" />
+  <link rel="stylesheet" href="../public/css/pc.css" />
+  <link rel="stylesheet" href="../public/css/admin.css" />
 </head>
+
 <body data-admin-page="settings">
-    
+  <div class="admin-layout">
+    <div id="adminSidebar"></div>
+
+    <main class="main">
+      <header class="top-header">
+        <div>
+          <h2>설정</h2>
+          <p>출퇴근 기준, 위치 인증, 알림, 관리자 정보를 설정합니다.</p>
+        </div>
+
+        <div class="header-actions">
+          <button class="download-button" type="button" id="saveAllSettingsBtn">
+            전체 저장
+          </button>
+        </div>
+      </header>
+
+      <section class="content">
+        <section class="settings-layout">
+          <aside class="settings-nav-panel">
+            <button class="settings-nav-item active" type="button" data-target="basic">
+              기본 설정
+            </button>
+            <button class="settings-nav-item" type="button" data-target="attendance">
+              출퇴근 설정
+            </button>
+            <button class="settings-nav-item" type="button" data-target="location">
+              위치 인증 설정
+            </button>
+            <button class="settings-nav-item" type="button" data-target="notification">
+              알림 설정
+            </button>
+            <button class="settings-nav-item" type="button" data-target="admin">
+              관리자 계정
+            </button>
+            <button class="settings-nav-item" type="button" data-target="data">
+              데이터 설정
+            </button>
+          </aside>
+
+          <div class="settings-content">
+            <section class="panel settings-section active" id="settings-basic">
+              <div class="panel-header">
+                <h3>기본 설정</h3>
+                <button type="button">기본값 복원 ›</button>
+              </div>
+
+              <div class="settings-form">
+                <label>
+                  서비스명
+                  <input type="text" id="serviceNameInput" value="근태관리 Admin" />
+                </label>
+
+                <label>
+                  회사명
+                  <input type="text" id="companyNameInput" value="클린케어" />
+                </label>
+
+                <label>
+                  대표 연락처
+                  <input type="text" id="companyPhoneInput" value="010-0000-0000" />
+                </label>
+
+                <label>
+                  관리자 이메일
+                  <input type="email" id="companyEmailInput" value="admin@example.com" />
+                </label>
+
+                <label>
+                  기본 출근 시간
+                  <input type="time" id="defaultStartTimeInput" value="09:00" />
+                </label>
+
+                <label>
+                  기본 퇴근 시간
+                  <input type="time" id="defaultEndTimeInput" value="18:00" />
+                </label>
+              </div>
+            </section>
+
+            <section class="panel settings-section" id="settings-attendance">
+              <div class="panel-header">
+                <h3>출퇴근 설정</h3>
+                <button type="button">기본값 복원 ›</button>
+              </div>
+
+              <div class="settings-form">
+                <label>
+                  지각 기준
+                  <select id="lateStandardInput">
+                    <option value="0">예정 시간 이후 바로 지각</option>
+                    <option value="5">예정 시간 5분 이후 지각</option>
+                    <option value="10">예정 시간 10분 이후 지각</option>
+                  </select>
+                </label>
+
+                <label>
+                  출근 가능 시간
+                  <select id="checkInOpenInput">
+                    <option value="10">근무 시작 10분 전부터</option>
+                    <option value="30" selected>근무 시작 30분 전부터</option>
+                    <option value="60">근무 시작 1시간 전부터</option>
+                  </select>
+                </label>
+
+                <label>
+                  퇴근 가능 시간
+                  <select id="checkOutOpenInput">
+                    <option value="0">근무 종료 시간부터</option>
+                    <option value="30" selected>근무 종료 30분 전부터</option>
+                    <option value="60">근무 종료 1시간 전부터</option>
+                  </select>
+                </label>
+
+                <label>
+                  퇴근 누락 기준
+                  <select id="missingCheckOutInput">
+                    <option value="1">퇴근 시간 1시간 후</option>
+                    <option value="2" selected>퇴근 시간 2시간 후</option>
+                    <option value="3">퇴근 시간 3시간 후</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="settings-help-box">
+                <strong>안내</strong>
+                <p>이 설정은 지각, 미출근, 퇴근 누락 판단 기준으로 사용됩니다. 근무지역별 시간이 있으면 지역 설정이 우선 적용됩니다.</p>
+              </div>
+            </section>
+
+            <section class="panel settings-section" id="settings-location">
+              <div class="panel-header">
+                <h3>위치 인증 설정</h3>
+                <button type="button">기본값 복원 ›</button>
+              </div>
+
+              <div class="settings-form">
+                <label>
+                  위치 인증 사용
+                  <select id="locationUseInput">
+                    <option value="on" selected>사용</option>
+                    <option value="off">사용 안 함</option>
+                  </select>
+                </label>
+
+                <label>
+                  기본 출근 허용 반경
+                  <div class="settings-inline-input">
+                    <input type="number" id="defaultRadiusInput" value="100" />
+                    <span>m</span>
+                  </div>
+                </label>
+
+                <label>
+                  지역 밖 출근
+                  <select id="outsideCheckInInput">
+                    <option value="deny" selected>불가</option>
+                    <option value="request">관리자 확인 요청</option>
+                    <option value="allow">허용</option>
+                  </select>
+                </label>
+
+                <label>
+                  GPS 오류 처리
+                  <select id="gpsErrorInput">
+                    <option value="block">출근 차단</option>
+                    <option value="request" selected>관리자 확인 필요</option>
+                    <option value="allow">임시 허용</option>
+                  </select>
+                </label>
+
+                <label class="full">
+                  위치 권한 안내 문구
+                  <textarea id="locationGuideInput">정확한 출퇴근 처리를 위해 위치 권한을 허용해 주세요.</textarea>
+                </label>
+              </div>
+            </section>
+
+            <section class="panel settings-section" id="settings-notification">
+              <div class="panel-header">
+                <h3>알림 설정</h3>
+                <button type="button">기본값 복원 ›</button>
+              </div>
+
+              <div class="settings-toggle-list">
+                <div class="settings-toggle-item">
+                  <div>
+                    <strong>미출근 알림</strong>
+                    <p>출근 예정 시간이 지나도 출근하지 않으면 관리자에게 표시합니다.</p>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="absentAlertInput" checked />
+                    <span></span>
+                  </label>
+                </div>
+
+                <div class="settings-toggle-item">
+                  <div>
+                    <strong>반복 지각 알림</strong>
+                    <p>이번 달 지각 3회 이상 직원을 자동으로 표시합니다.</p>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="lateAlertInput" checked />
+                    <span></span>
+                  </label>
+                </div>
+
+                <div class="settings-toggle-item">
+                  <div>
+                    <strong>위치 오류 알림</strong>
+                    <p>근무지역 밖에서 출근 시도한 기록을 알림으로 표시합니다.</p>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="locationAlertInput" checked />
+                    <span></span>
+                  </label>
+                </div>
+
+                <div class="settings-toggle-item">
+                  <div>
+                    <strong>출퇴근 수정 요청 알림</strong>
+                    <p>직원 출퇴근 기록에 수정이 필요할 때 표시합니다.</p>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="editRequestAlertInput" checked />
+                    <span></span>
+                  </label>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel settings-section" id="settings-admin">
+              <div class="panel-header">
+                <h3>관리자 계정</h3>
+                <button type="button">비밀번호 변경 ›</button>
+              </div>
+
+              <div class="settings-form">
+                <label>
+                  관리자 이름
+                  <input type="text" id="adminNameInput" value="관리자" />
+                </label>
+
+                <label>
+                  관리자 이메일
+                  <input type="email" id="adminEmailInput" value="admin@example.com" />
+                </label>
+
+                <label>
+                  권한
+                  <select id="adminRoleInput">
+                    <option value="owner" selected>최고 관리자</option>
+                    <option value="manager">일반 관리자</option>
+                    <option value="region">지역 관리자</option>
+                  </select>
+                </label>
+
+                <label>
+                  로그인 상태
+                  <input type="text" value="로그인 중" disabled />
+                </label>
+              </div>
+
+              <div class="settings-danger-box">
+                <div>
+                  <strong>로그아웃</strong>
+                  <p>현재 관리자 계정에서 로그아웃합니다.</p>
+                </div>
+                <button type="button" id="logoutBtn">로그아웃</button>
+              </div>
+            </section>
+
+            <section class="panel settings-section" id="settings-data">
+              <div class="panel-header">
+                <h3>데이터 설정</h3>
+                <button type="button">백업하기 ›</button>
+              </div>
+
+              <div class="settings-form">
+                <label>
+                  출퇴근 기록 보관 기간
+                  <select id="recordKeepInput">
+                    <option value="6">6개월</option>
+                    <option value="12" selected>1년</option>
+                    <option value="24">2년</option>
+                    <option value="all">전체 보관</option>
+                  </select>
+                </label>
+
+                <label>
+                  수정 이력 저장
+                  <select id="editHistoryInput">
+                    <option value="on" selected>사용</option>
+                    <option value="off">사용 안 함</option>
+                  </select>
+                </label>
+
+                <label>
+                  엑셀 다운로드 권한
+                  <select id="excelPermissionInput">
+                    <option value="admin" selected>관리자만 가능</option>
+                    <option value="all">전체 관리자 가능</option>
+                    <option value="off">사용 안 함</option>
+                  </select>
+                </label>
+
+                <label>
+                  직원 연락처 표시
+                  <select id="phoneVisibleInput">
+                    <option value="full" selected>전체 표시</option>
+                    <option value="mask">일부 가림</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="settings-help-box">
+                <strong>주의</strong>
+                <p>실제 삭제 기능은 Supabase 연결 후 권한과 백업 정책을 정한 뒤 적용하는 것을 추천합니다.</p>
+              </div>
+            </section>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
   <script src="../public/js/common.js"></script>
   <script src="../public/js/pc.js"></script>
   <script src="../public/js/admin-settings.js"></script>
-
 </body>
 </html>
