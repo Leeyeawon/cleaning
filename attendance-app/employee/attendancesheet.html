@@ -1,95 +1,119 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>월간 출근부</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>출근부</title>
 
-    <link rel="stylesheet" href="../public/css/common.css" />
-    <link rel="stylesheet" href="../public/css/mobile.css" />
-    <link rel="stylesheet" href="../public/css/attendancesheet.css" />
-    
+  <link rel="stylesheet" href="../public/css/common.css" />
+  <link rel="stylesheet" href="../public/css/mobile.css" />
+  <link rel="stylesheet" href="../public/css/attendancesheet.css" />
 </head>
-<body data-page="attendancesheet">
-  
+<body>
   <div class="phone">
-    <!-- 상단 상태 영역 -->
-    <div class="status-area"></div>
+    <header class="sheet-header">
+      <div>
+        <p class="page-label">ATTENDANCE</p>
+        <h1>출근부</h1>
+      </div>
 
-    <!-- 페이지 제목 -->
-    <header class="page-header">
-      <h1>월간 출근부</h1>
+      <button id="todayBtn" class="calendar-today-button" type="button">
+        오늘
+      </button>
     </header>
 
-    <!-- 월 선택 영역 -->
-    <section class="month-header">
-      <button class="month-btn" id="prevMonthBtn" aria-label="이전 달">
-        ‹
-      </button>
+    <main class="sheet-main">
+      <section class="month-card">
+        <button id="prevMonthBtn" class="month-button" type="button" aria-label="이전 달">
+          ‹
+        </button>
 
-      <h2 id="currentMonth">2025년 6월</h2>
+        <strong id="currentMonth">2026년 7월</strong>
 
-      <button class="month-btn" id="nextMonthBtn" aria-label="다음 달">
-        ›
-      </button>
-    </section>
+        <button id="nextMonthBtn" class="month-button" type="button" aria-label="다음 달">
+          ›
+        </button>
+      </section>
 
-    <!-- 달력 영역 -->
-    <main class="attendance-main">
+      <section class="summary-grid">
+        <article class="summary-card">
+          <p>총 근무</p>
+          <strong>18일</strong>
+        </article>
+
+        <article class="summary-card success">
+          <p>정상</p>
+          <strong>15일</strong>
+        </article>
+
+        <article class="summary-card warning">
+          <p>지각</p>
+          <strong>2일</strong>
+        </article>
+
+        <article class="summary-card danger">
+          <p>결근</p>
+          <strong>1일</strong>
+        </article>
+      </section>
+
       <section class="calendar-card">
-        <div class="calendar-placeholder">
-          출근부 달력 영역
+        <div class="week-row">
+          <span>일</span>
+          <span>월</span>
+          <span>화</span>
+          <span>수</span>
+          <span>목</span>
+          <span>금</span>
+          <span>토</span>
         </div>
+
+        <div class="calendar-grid" id="calendarGrid"></div>
+      </section>
+
+      <section class="detail-card">
+        <div class="detail-header">
+          <div>
+            <p class="detail-label">선택한 날짜</p>
+            <h2>7월 1일 수요일</h2>
+          </div>
+
+          <span class="detail-badge normal">정상</span>
+        </div>
+
+        <div class="detail-list">
+          <div class="detail-item">
+            <span>출근 시간</span>
+            <strong>09:02</strong>
+          </div>
+
+          <div class="detail-item">
+            <span>퇴근 시간</span>
+            <strong>18:04</strong>
+          </div>
+
+          <div class="detail-item">
+            <span>근무 지역</span>
+            <strong>서면 B구역</strong>
+          </div>
+
+          <div class="detail-item">
+            <span>총 근무시간</span>
+            <strong>9시간 2분</strong>
+          </div>
+        </div>
+
+        <button class="request-fix-button" type="button">
+          기록 수정 요청하기
+        </button>
       </section>
     </main>
 
-    <!-- 월간 요약 -->
-    <section class="summary-area">
-      <div class="summary-wrap">
-        <div class="summary-card large">
-          <div class="summary-item">
-            <strong>20</strong>
-            <span>총 근무일</span>
-          </div>
-
-          <div class="summary-item border">
-            <strong>18</strong>
-            <span>정상 출근</span>
-          </div>
-
-          <div class="summary-item">
-            <strong>2</strong>
-            <span>지각</span>
-          </div>
-        </div>
-
-        <div class="summary-card small">
-          <div class="summary-item">
-            <strong>0</strong>
-            <span>조퇴</span>
-          </div>
-
-          <div class="summary-item border">
-            <strong>0</strong>
-            <span>결근</span>
-          </div>
-
-          <div class="summary-item">
-            <strong>1</strong>
-            <span>확인 필요</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 공통 하단배너 자리 -->
     <div id="bottomNav"></div>
   </div>
 
-  
   <script src="../public/js/common.js"></script>
   <script src="../public/js/mobile.js"></script>
   <script src="../public/js/attendancesheet.js"></script>
-
 </body>
 </html>

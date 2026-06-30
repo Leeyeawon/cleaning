@@ -4,16 +4,17 @@
   padding: 0;
 }
 
+html,
 body {
-  min-height: 100vh;
-  background: #f1f1f1;
-  font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
 
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
+body {
+  min-height: 100dvh;
+  background: #ffffff;
+  font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: #171717;
 }
 
@@ -29,15 +30,25 @@ a {
   text-decoration: none;
 }
 
+/* =========================
+  모바일 앱 전용 프레임
+  PC 호환 고려 X
+========================= */
+
 .phone {
-  width: 390px;
-  height: 844px;
+  width: 100vw;
+  height: 100dvh;
+  min-width: 320px;
+  max-width: 430px;
+  margin: 0 auto;
   position: relative;
-  background: #ffffff;
+  background: #f7f8fa;
   overflow: hidden;
 }
 
 /* 임시 기본 콘텐츠 영역 */
 .page-content {
-  padding: 60px 24px 90px;
+  height: calc(100dvh - 72px);
+  padding: 20px 20px 92px;
+  overflow: hidden;
 }

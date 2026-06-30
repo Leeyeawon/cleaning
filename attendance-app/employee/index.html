@@ -1,51 +1,47 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>직원 출퇴근 체크</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>직원 홈</title>
 
-    <link rel="stylesheet" href="../public/css/common.css" />
-    <link rel="stylesheet" href="../public/css/mobile.css" />
-    <link rel="stylesheet" href="../public/css/index.css" />
-
+  <link rel="stylesheet" href="../public/css/common.css" />
+  <link rel="stylesheet" href="../public/css/mobile.css" />
+  <link rel="stylesheet" href="../public/css/index.css" />
 </head>
-<body data-page="index">
+<body>
   <div class="phone">
-    <!-- 상태바 영역 -->
-    <div class="status-area"></div>
-
-    <!-- 상단 헤더 -->
-    <header class="header">
+    <header class="home-header">
       <div>
-        <p id="todayDate"></p>
-        <h1>안녕하세요, 김민준 님 👋</h1>
+        <p class="today-date">2026년 7월 1일 수요일</p>
+        <h1>안녕하세요, <strong>김민준</strong> 님</h1>
       </div>
 
-      <div class="profile">
-        <span>👤</span>
-      </div>
+      <a href="./mypage.html" class="profile-button" aria-label="마이페이지로 이동">
+        👤
+      </a>
     </header>
 
-    <!-- 메인 콘텐츠 -->
-    <main class="main">
-      <!-- 위치 확인 카드 -->
-      <section class="card location-card">
-        <div class="icon-circle">📍</div>
+    <main class="home-main">
+      <section class="location-card">
+        <div class="location-icon">📍</div>
 
-        <div class="location-text">
+        <div class="location-info">
           <p>위치 확인 상태</p>
           <strong>회사 근처 확인됨</strong>
         </div>
 
-        <span class="badge active">확인됨</span>
+        <span class="status-badge success">확인됨</span>
       </section>
 
-      <!-- 오늘 근무 현황 -->
-      <section class="card work-card">
-        <div class="card-header">
-          <h2>오늘 근무 현황</h2>
-          <span id="workStatus" class="badge outline">출근 전</span>
+      <section class="work-card">
+        <div class="section-title-row">
+          <div>
+            <p class="section-label">TODAY</p>
+            <h2>오늘 근무 현황</h2>
+          </div>
+
+          <span id="workStatus" class="status-badge neutral">출근 전</span>
         </div>
 
         <div class="time-grid">
@@ -60,34 +56,62 @@
           </div>
         </div>
 
-        <button id="attendanceBtn" class="main-button">
-          <span>✓</span>
+        <button id="attendanceBtn" class="attendance-button" type="button">
+          <span class="button-icon">✓</span>
           <span id="buttonText">출근하기</span>
         </button>
+
+        <p class="work-guide">
+          지정된 근무 지역 안에서만 출퇴근 체크가 가능합니다.
+        </p>
       </section>
 
-      <!-- 공지사항 -->
-      <section class="card notice-card">
-        <div class="notice-title">
-          <span>📢</span>
-          <h2>공지사항</h2>
+      <section class="quick-menu">
+        <a href="./attendancesheet.html" class="quick-card">
+          <span>📅</span>
+          <div>
+            <strong>월간 출근부</strong>
+            <p>이번 달 기록 확인</p>
+          </div>
+        </a>
+
+        <a href="./request.html" class="quick-card">
+          <span>📷</span>
+          <div>
+            <strong>업무 요청</strong>
+            <p>사진 첨부 및 기록</p>
+          </div>
+        </a>
+      </section>
+
+      <section class="notice-card">
+        <div class="section-title-row">
+          <div>
+            <p class="section-label">NOTICE</p>
+            <h2>공지사항</h2>
+          </div>
+
+          <button class="more-button" type="button">전체보기</button>
         </div>
 
-        <p class="notice-text">
-          6월 30일(월)은 월말 결산으로 인해 조기 퇴근이 가능합니다.
-        </p>
+        <article class="notice-item">
+          <div class="notice-icon">🔔</div>
 
-        <p class="notice-date">2025.06.25</p>
+          <div>
+            <p class="notice-text">
+              6월 30일(월)은 월말 결산으로 인해 조기 퇴근이 가능합니다.
+            </p>
+            <span class="notice-date">2025.06.25</span>
+          </div>
+        </article>
       </section>
     </main>
 
-<!-- 공통 하단배너 자리 -->
     <div id="bottomNav"></div>
   </div>
 
   <script src="../public/js/common.js"></script>
   <script src="../public/js/mobile.js"></script>
-  <script type="module" src="../public/js/index.js"></script>
-
+  <script src="../public/js/index.js"></script>
 </body>
 </html>

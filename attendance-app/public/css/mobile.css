@@ -1,50 +1,96 @@
-/* 공통 하단배너 */
-.bottom-nav {
-  width: calc(100% - 14px);
-  height: 67px;
+/* =========================
+  모바일 공통 하단바
+  - #bottomNav를 통해 JS로 삽입됨
+========================= */
 
+:root {
+  --bottom-nav-height: 72px;
+}
+
+#bottomNav {
+  width: 100%;
+  height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
   position: absolute;
-  left: 7px;
+  left: 0;
+  right: 0;
   bottom: 0;
+  z-index: 100;
+}
+
+.bottom-nav {
+  width: 100%;
+  height: 100%;
+
+  padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
 
   background: #ffffff;
-  border-top: 1px solid #e5e5e5;
+  border-top: 1px solid #e5e7eb;
 
   display: grid;
   grid-template-columns: repeat(4, 1fr);
+  align-items: center;
 }
 
 .nav-item {
+  width: 100%;
+  height: 100%;
+
+  border-radius: 14px;
+
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
 
-  color: #a3a3a3;
-  font-size: 12px;
-  line-height: 16px;
+  color: #9ca3af;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 15px;
+  text-align: center;
 }
 
-.nav-item span {
+.nav-icon {
   font-size: 18px;
+  line-height: 20px;
+}
+
+.nav-label {
+  font-size: 11px;
+  line-height: 15px;
 }
 
 .nav-item.active {
-  color: #171717;
+  color: #111827;
+  background: #f3f4f6;
 }
 
-@media (max-width: 430px) {
-  body {
-    align-items: flex-start;
-    background: #ffffff;
-  }
-
-  .phone {
-    width: 100%;
-    height: 100vh;
-    min-height: 844px;
-  }
+.nav-item:active {
+  transform: scale(0.96);
 }
 
-/*  */
+/* 작은 기기 대응 */
+@media (max-height: 740px) {
+  :root {
+    --bottom-nav-height: 66px;
+  }
+
+  .bottom-nav {
+    padding: 4px 7px calc(4px + env(safe-area-inset-bottom));
+  }
+
+  .nav-item {
+    border-radius: 12px;
+    gap: 2px;
+  }
+
+  .nav-icon {
+    font-size: 17px;
+    line-height: 19px;
+  }
+
+  .nav-label {
+    font-size: 10px;
+    line-height: 14px;
+  }
+}
