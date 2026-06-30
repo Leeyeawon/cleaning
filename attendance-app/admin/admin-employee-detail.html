@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>직원 상세 | 근태관리 Admin</title>
+
+  <link rel="stylesheet" href="../public/css/common.css" />
+  <link rel="stylesheet" href="../public/css/pc.css" />
+  <link rel="stylesheet" href="../public/css/admin.css" />
+</head>
+
+<body data-admin-page="employees">
+  <div class="admin-layout">
+    <div id="adminSidebar"></div>
+
+    <main class="main">
+      <header class="top-header">
+        <div>
+          <h2 id="employeeDetailTitle">직원 상세</h2>
+          <p>직원 기본 정보, 배정 지역, 근태 기록을 확인합니다.</p>
+        </div>
+
+        <div class="header-actions">
+          <a href="admin-employees.html" class="download-button">목록으로</a>
+          <button class="download-button" type="button" id="editEmployeeBtn">
+            정보 수정
+          </button>
+        </div>
+      </header>
+
+      <section class="content">
+        <section class="employee-detail-hero">
+          <div class="employee-profile">
+            <span class="avatar large" id="detailAvatar">-</span>
+
+            <div>
+              <strong id="detailName">직원명</strong>
+              <p id="detailInfo">소속 · 상태</p>
+            </div>
+          </div>
+
+          <div class="employee-detail-actions">
+            <button type="button">월간 출근부</button>
+            <button type="button">비밀번호 초기화</button>
+            <button type="button">계정 비활성화</button>
+          </div>
+        </section>
+
+        <section class="stats-grid employee-summary-grid">
+          <article class="stat-card">
+            <p>출근일수</p>
+            <strong id="detailWorkDays">0</strong>
+            <span>일</span>
+          </article>
+
+          <article class="stat-card warning">
+            <p>지각</p>
+            <strong id="detailLateCount">0</strong>
+            <span>회</span>
+          </article>
+
+          <article class="stat-card warning">
+            <p>미출근</p>
+            <strong id="detailAbsentCount">0</strong>
+            <span>회</span>
+          </article>
+
+          <article class="stat-card">
+            <p>총 근무시간</p>
+            <strong id="detailWorkHours">0</strong>
+            <span>시간</span>
+          </article>
+        </section>
+
+        <section class="employee-detail-grid">
+          <article class="panel">
+            <div class="panel-header">
+              <h3>기본 정보</h3>
+            </div>
+
+            <div class="employee-info-list detail-page-info">
+              <div>
+                <span>연락처</span>
+                <strong id="detailPhone">-</strong>
+              </div>
+
+              <div>
+                <span>로그인 ID</span>
+                <strong id="detailLoginId">-</strong>
+              </div>
+
+              <div>
+                <span>등록일</span>
+                <strong id="detailJoinDate">-</strong>
+              </div>
+
+              <div>
+                <span>상태</span>
+                <strong id="detailStatus">-</strong>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <h3>배정 지역</h3>
+              <button type="button">지역 수정 ›</button>
+            </div>
+
+            <div class="employee-region-list detail-page-regions" id="detailRegionList"></div>
+          </article>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header">
+                <h3>개인 출근부</h3>
+                <button type="button" id="attendanceResetBtn">이번 달 보기</button>
+            </div>
+
+            <div class="employee-attendance-filter">
+                <label>
+                시작일
+                <input type="date" id="attendanceStartDate" />
+                </label>
+
+                <label>
+                종료일
+                <input type="date" id="attendanceEndDate" />
+                </label>
+
+                <button type="button" id="attendanceSearchBtn">
+                검색
+                </button>
+            </div>
+
+            <div class="attendance-table-wrap">
+                <table class="attendance-table">
+                <thead>
+                    <tr>
+                    <th>날짜</th>
+                    <th>배정 지역</th>
+                    <th>출근</th>
+                    <th>퇴근</th>
+                    <th>근무시간</th>
+                    <th>상태</th>
+                    <th>메모</th>
+                    </tr>
+                </thead>
+
+                <tbody id="detailRecordTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h3>관리자 메모</h3>
+          </div>
+
+          <p class="employee-memo detail-page-memo" id="detailMemo">
+            등록된 메모가 없습니다.
+          </p>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script src="../public/js/common.js"></script>
+  <script src="../public/js/pc.js"></script>
+  <script src="../public/js/admin-employees-data.js"></script>
+  <script src="../public/js/admin-employee-detail.js"></script>
+</body>
+</html>

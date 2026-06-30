@@ -360,9 +360,265 @@ button {
   }
 }
 
-/* =========================
-  출퇴근 관리 페이지
-========================= */
+/*  관리자 대시보드 */
+
+.dashboard-hero {
+  padding: 24px;
+  border-radius: 12px;
+  background: #171717;
+  color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+}
+
+.dashboard-hero span {
+  display: inline-block;
+  margin-bottom: 8px;
+  color: #d4d4d4;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.dashboard-hero h3 {
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 32px;
+}
+
+.dashboard-hero p {
+  margin-top: 8px;
+  color: #d4d4d4;
+  font-size: 14px;
+  line-height: 22px;
+}
+
+.dashboard-hero a {
+  flex-shrink: 0;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #171717;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.dashboard-summary-grid {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(520px, 1fr) 360px;
+  gap: 20px;
+}
+
+.dashboard-task-panel,
+.dashboard-quick-panel,
+.dashboard-region-panel,
+.dashboard-request-panel,
+.dashboard-activity-panel {
+  overflow: hidden;
+}
+
+.dashboard-task-list,
+.dashboard-region-list,
+.dashboard-request-list,
+.dashboard-activity-list {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dashboard-task-item {
+  padding: 14px;
+  border-radius: 8px;
+  background: #fafafa;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.dashboard-task-item div {
+  min-width: 0;
+}
+
+.dashboard-task-item strong {
+  display: block;
+  color: #171717;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+}
+
+.dashboard-task-item p {
+  margin-top: 4px;
+  color: #737373;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.dashboard-task-item a {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #171717;
+  color: #ffffff;
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.quick-action-grid {
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.quick-action-grid a {
+  min-height: 78px;
+  padding: 14px;
+  border-radius: 8px;
+  background: #fafafa;
+  color: #171717;
+  font-size: 14px;
+  line-height: 20px;
+  text-decoration: none;
+  display: flex;
+  align-items: flex-end;
+}
+
+.quick-action-grid a:hover {
+  background: #171717;
+  color: #ffffff;
+}
+
+.dashboard-region-item {
+  padding: 14px;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.dashboard-region-top,
+.dashboard-request-top,
+.dashboard-activity-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.dashboard-region-top strong,
+.dashboard-request-top strong,
+.dashboard-activity-top strong {
+  color: #171717;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+}
+
+.dashboard-region-top span,
+.dashboard-request-top span,
+.dashboard-activity-top span {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: #171717;
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.dashboard-region-meta {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.dashboard-region-meta div {
+  padding: 10px;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.dashboard-region-meta p {
+  color: #737373;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.dashboard-region-meta strong {
+  display: block;
+  margin-top: 4px;
+  color: #171717;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 22px;
+}
+
+.dashboard-request-item,
+.dashboard-activity-item {
+  padding: 14px;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.dashboard-request-item p,
+.dashboard-activity-item p {
+  margin-top: 6px;
+  color: #737373;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.dashboard-activity-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.dashboard-activity-item {
+  min-height: 96px;
+}
+
+@media (max-width: 1200px) {
+  .dashboard-summary-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-activity-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboard-hero {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .dashboard-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .quick-action-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-region-meta {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* 출퇴근 관리 페이지 */
 
 .attendance-sub-tabs {
   display: flex;
@@ -504,9 +760,7 @@ button {
   }
 }
 
-/* =========================
-  출퇴근 기록 수정 페이지
-========================= */
+/*  출퇴근 기록 수정 페이지 */
 
 .edit-filter-panel {
   padding: 18px 20px;
@@ -739,4 +993,459 @@ button {
   .edit-time-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* 직원 관리 페이지 */
+
+.employee-summary-grid {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.employee-filter-panel {
+  padding: 18px 20px;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.employee-filter-group {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.employee-filter-group input,
+.employee-filter-group select {
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #404040;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.employee-filter-group input:focus,
+.employee-filter-group select:focus {
+  outline: none;
+  border-color: #171717;
+}
+
+.unassigned-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #404040;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.unassigned-check input {
+  width: 14px;
+  height: 14px;
+}
+
+.employee-layout {
+  display: grid;
+  grid-template-columns: minmax(720px, 1fr) 340px;
+  gap: 20px;
+}
+
+.employee-table-panel,
+.employee-detail-panel {
+  overflow: hidden;
+}
+
+.employee-table td {
+  vertical-align: middle;
+}
+
+.employee-region-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: #fafafa;
+  border: 1px solid #e5e5e5;
+  color: #404040;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.employee-region-chip.empty {
+  background: #fff;
+  border-color: #171717;
+  color: #171717;
+}
+
+.employee-work-summary {
+  color: #737373;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.employee-detail-empty {
+  padding: 48px 20px;
+  color: #a3a3a3;
+  font-size: 14px;
+  line-height: 22px;
+  text-align: center;
+}
+
+.employee-detail-content {
+  display: none;
+  padding: 20px;
+}
+
+.employee-detail-content.active {
+  display: block;
+}
+
+.employee-info-section {
+  margin-top: 22px;
+}
+
+.employee-info-section h4 {
+  color: #171717;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+}
+
+.employee-info-list {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.employee-info-list div {
+  padding: 12px;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.employee-info-list span {
+  display: block;
+  color: #737373;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.employee-info-list strong {
+  display: block;
+  margin-top: 4px;
+  color: #171717;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+}
+
+.employee-region-list {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.employee-memo {
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 8px;
+  background: #fafafa;
+  color: #737373;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.employee-detail-actions {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.employee-detail-actions button {
+  height: 38px;
+  border-radius: 6px;
+  background: #171717;
+  color: #ffffff;
+  font-size: 14px;
+}
+
+.employee-detail-actions button:nth-child(2),
+.employee-detail-actions button:nth-child(3) {
+  background: #fafafa;
+  color: #171717;
+}
+
+.employee-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.employee-modal.open {
+  display: flex;
+}
+
+.employee-modal-content {
+  width: 560px;
+  max-width: calc(100% - 40px);
+  border-radius: 12px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.employee-modal-header {
+  padding: 18px 20px;
+  border-bottom: 1px solid #f5f5f5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.employee-modal-header h3 {
+  color: #171717;
+  font-size: 18px;
+  font-weight: 400;
+}
+
+.employee-modal-header button {
+  color: #737373;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.employee-modal-body {
+  padding: 20px;
+}
+
+.employee-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.employee-form-grid label,
+.employee-memo-label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #404040;
+  font-size: 14px;
+}
+
+.employee-form-grid input,
+.employee-form-grid select,
+.employee-memo-label textarea {
+  width: 100%;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.employee-form-grid input,
+.employee-form-grid select {
+  height: 40px;
+  padding: 0 12px;
+}
+
+.employee-memo-label {
+  margin-top: 14px;
+}
+
+.employee-memo-label textarea {
+  min-height: 100px;
+  padding: 12px;
+  resize: none;
+}
+
+.employee-form-grid input:focus,
+.employee-form-grid select:focus,
+.employee-memo-label textarea:focus {
+  outline: none;
+  border-color: #171717;
+}
+
+.employee-modal-footer {
+  padding: 16px 20px;
+  border-top: 1px solid #f5f5f5;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@media (max-width: 1200px) {
+  .employee-summary-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .employee-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .employee-filter-group {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .unassigned-check {
+    min-height: 38px;
+  }
+}
+
+@media (max-width: 900px) {
+  .employee-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .employee-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 직원 상세 페이지 */
+
+.employee-list-only {
+  display: block;
+}
+
+.employee-list-only .employee-table-panel {
+  width: 100%;
+}
+
+.employee-detail-hero {
+  padding: 22px 24px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.employee-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.detail-page-info {
+  padding: 16px;
+}
+
+.detail-page-regions {
+  padding: 16px;
+}
+
+.detail-page-memo {
+  margin: 16px;
+}
+
+.employee-not-found {
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.employee-not-found h3 {
+  color: #171717;
+  font-size: 20px;
+  font-weight: 400;
+}
+
+.employee-not-found p {
+  margin-top: 8px;
+  color: #737373;
+  font-size: 14px;
+}
+
+.employee-not-found a {
+  display: inline-flex;
+  margin-top: 20px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: #171717;
+  color: #ffffff;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.table-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+@media (max-width: 1000px) {
+  .employee-detail-hero {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .employee-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================
+  직원 상세 출근부 조회
+========================= */
+
+.employee-attendance-filter {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f5f5f5;
+  background: #fafafa;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.employee-attendance-filter label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #404040;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.employee-attendance-filter input {
+  height: 38px;
+  min-width: 160px;
+  padding: 0 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #404040;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.employee-attendance-filter input:focus {
+  outline: none;
+  border-color: #171717;
+}
+
+.employee-attendance-filter button {
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 6px;
+  background: #171717;
+  color: #ffffff;
+  font-size: 14px;
+}
+
+.employee-attendance-filter button:hover {
+  opacity: 0.9;
 }

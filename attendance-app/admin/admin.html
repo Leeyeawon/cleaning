@@ -4,191 +4,129 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>근태관리 Admin</title>
+  <title>대시보드 | 근태관리 Admin</title>
 
   <link rel="stylesheet" href="../public/css/common.css" />
   <link rel="stylesheet" href="../public/css/pc.css" />
   <link rel="stylesheet" href="../public/css/admin.css" />
-
 </head>
+
 <body data-admin-page="admin">
   <div class="admin-layout">
     <div id="adminSidebar"></div>
 
-    <!-- 메인 영역 -->
     <main class="main">
-      <!-- 상단 헤더 -->
       <header class="top-header">
         <div>
           <h2>대시보드</h2>
-          <p id="todayDate"></p>
+          <p id="dashboardDate">관리자 운영 현황을 확인합니다.</p>
         </div>
 
         <div class="header-actions">
-          <button class="icon-button">
+          <button class="icon-button" type="button">
             <span class="notice-dot"></span>
-            🔔
           </button>
 
-          <button class="download-button" id="excelDownloadBtn">
-            <span>⬇</span>
-            엑셀 다운로드
+          <button class="download-button" type="button" id="dashboardRefreshBtn">
+            새로고침
           </button>
         </div>
       </header>
 
-      <!-- 콘텐츠 -->
       <section class="content">
-        <!-- 알림 배너 -->
-        <div class="alert-banner">
+        <section class="dashboard-hero">
           <div>
-            <span>⚠️</span>
-            <p>관리자 확인이 필요한 항목 2건이 있습니다.</p>
+            <span>오늘의 관리자 체크</span>
+            <h3>처리해야 할 업무가 9건 있습니다.</h3>
+            <p>미확인 지각 사유, 미출근 연락, 출퇴근 수정 요청을 확인해 주세요.</p>
           </div>
 
-          <button>확인하러 가기</button>
-        </div>
+          <a href="admin-attendance-issue.html">문제 현황 확인</a>
+        </section>
 
-        <!-- 통계 카드 -->
-        <section class="stats-grid">
+        <section class="stats-grid dashboard-summary-grid">
           <article class="stat-card">
             <p>전체 직원</p>
-            <strong>32</strong>
+            <strong>48</strong>
             <span>명</span>
           </article>
 
           <article class="stat-card">
-            <p>출근 완료</p>
-            <strong>24</strong>
-            <span>명</span>
-          </article>
-
-          <article class="stat-card">
-            <p>퇴근 완료</p>
-            <strong>18</strong>
-            <span>명</span>
+            <p>활성 근무 지역</p>
+            <strong>12</strong>
+            <span>개</span>
           </article>
 
           <article class="stat-card warning">
-            <p>지각</p>
-            <strong>3</strong>
-            <span>명</span>
+            <p>오늘 처리 필요</p>
+            <strong>9</strong>
+            <span>건</span>
           </article>
 
           <article class="stat-card warning">
-            <p>결근</p>
-            <strong>1</strong>
-            <span>명</span>
+            <p>미확인 요청</p>
+            <strong>5</strong>
+            <span>건</span>
           </article>
 
           <article class="stat-card dark">
-            <p>확인 필요</p>
-            <strong>2</strong>
-            <span>건</span>
+            <p>반복 지각 직원</p>
+            <strong>3</strong>
+            <span>명</span>
           </article>
         </section>
 
-        <!-- 하단 영역 -->
         <section class="dashboard-grid">
-          <!-- 오늘 출퇴근 현황 -->
-          <article class="panel attendance-panel">
+          <article class="panel dashboard-task-panel">
             <div class="panel-header">
-              <h3>오늘 출퇴근 현황</h3>
-              <button>전체 보기 ›</button>
+              <h3>오늘 관리자 체크리스트</h3>
+              <button type="button">전체 보기 ›</button>
             </div>
 
-            <table class="attendance-table">
-              <thead>
-                <tr>
-                  <th>직원명</th>
-                  <th>부서</th>
-                  <th>출근</th>
-                  <th>퇴근</th>
-                  <th>상태</th>
-                </tr>
-              </thead>
-
-              <tbody id="attendanceTableBody">
-                <tr>
-                  <td>
-                    <div class="employee">
-                      <span class="avatar">이</span>
-                      이민준
-                    </div>
-                  </td>
-                  <td>개발팀</td>
-                  <td>09:02</td>
-                  <td>18:05</td>
-                  <td><span class="status normal">정상</span></td>
-                </tr>
-
-                <tr>
-                  <td>
-                    <div class="employee">
-                      <span class="avatar">박</span>
-                      박서연
-                    </div>
-                  </td>
-                  <td>디자인팀</td>
-                  <td>09:18</td>
-                  <td class="muted">—</td>
-                  <td><span class="status late">지각</span></td>
-                </tr>
-
-                <tr>
-                  <td>
-                    <div class="employee">
-                      <span class="avatar">최</span>
-                      최준혁
-                    </div>
-                  </td>
-                  <td>영업팀</td>
-                  <td class="muted">—</td>
-                  <td class="muted">—</td>
-                  <td><span class="status absent">결근</span></td>
-                </tr>
-
-                <tr>
-                  <td>
-                    <div class="employee">
-                      <span class="avatar">김</span>
-                      김다은
-                    </div>
-                  </td>
-                  <td>인사팀</td>
-                  <td>08:55</td>
-                  <td class="muted">—</td>
-                  <td><span class="status normal">정상</span></td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="dashboard-task-list" id="dashboardTaskList"></div>
           </article>
 
-          <!-- 확인 필요 항목 -->
-          <article class="panel request-panel">
+          <article class="panel dashboard-quick-panel">
             <div class="panel-header">
-              <h3>확인 필요 항목</h3>
-              <button>전체 보기 ›</button>
+              <h3>빠른 작업</h3>
             </div>
 
-            <div class="request-list">
-              <div class="request-item">
-                <div>
-                  <strong>박서연</strong>
-                  <p>지각 사유 확인 필요</p>
-                </div>
-                <span>대기</span>
-              </div>
-
-              <div class="request-item">
-                <div>
-                  <strong>최준혁</strong>
-                  <p>결근 처리 확인 필요</p>
-                </div>
-                <span>대기</span>
-              </div>
+            <div class="quick-action-grid">
+              <a href="admin-employees.html">직원 등록</a>
+              <a href="admin-departments.html">근무 지역 추가</a>
+              <a href="admin-notices.html">공지 작성</a>
+              <a href="admin-attendance-edit.html">기록 수정</a>
             </div>
           </article>
+        </section>
+
+        <section class="dashboard-grid">
+          <article class="panel dashboard-region-panel">
+            <div class="panel-header">
+              <h3>지역별 운영 현황</h3>
+              <button type="button">지역 관리 ›</button>
+            </div>
+
+            <div class="dashboard-region-list" id="dashboardRegionList"></div>
+          </article>
+
+          <article class="panel dashboard-request-panel">
+            <div class="panel-header">
+              <h3>최근 요청사항</h3>
+              <button type="button">요청 관리 ›</button>
+            </div>
+
+            <div class="dashboard-request-list" id="dashboardRequestList"></div>
+          </article>
+        </section>
+
+        <section class="panel dashboard-activity-panel">
+          <div class="panel-header">
+            <h3>최근 관리자 활동</h3>
+            <button type="button">이력 보기 ›</button>
+          </div>
+
+          <div class="dashboard-activity-list" id="dashboardActivityList"></div>
         </section>
       </section>
     </main>
@@ -197,6 +135,5 @@
   <script src="../public/js/common.js"></script>
   <script src="../public/js/pc.js"></script>
   <script src="../public/js/admin.js"></script>
-
 </body>
 </html>
