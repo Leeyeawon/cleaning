@@ -97,4 +97,105 @@ if (adminSidebar) {
   `;
 }
 
-/*  */
+/* 관리자 상단 알림 버튼 */
+
+const adminNotifications = [
+  {
+    type: "긴급",
+    title: "미출근 직원 2명",
+    desc: "출근 예정 시간이 지났지만 출근 기록이 없습니다.",
+    time: "방금 전",
+    link: "admin-attendance-issue.html",
+  },
+  {
+    type: "확인 필요",
+    title: "지각 사유 미확인 3건",
+    desc: "지각 처리된 직원의 사유 확인이 필요합니다.",
+    time: "5분 전",
+    link: "admin-attendance-issue.html",
+  },
+  {
+    type: "위치 오류",
+    title: "위치 오류 출근 시도 1건",
+    desc: "배정 지역 밖에서 출근을 시도한 기록이 있습니다.",
+    time: "12분 전",
+    link: "admin-attendance-issue.html",
+  },
+  {
+    type: "수정 필요",
+    title: "출퇴근 수정 요청 4건",
+    desc: "출근 또는 퇴근 누락 기록 확인이 필요합니다.",
+    time: "20분 전",
+    link: "admin-attendance-edit.html",
+  },
+  {
+    type: "안내",
+    title: "미배정 직원 5명",
+    desc: "신규 직원의 근무지역 배정이 필요합니다.",
+    time: "1시간 전",
+    link: "admin-employees.html",
+  },
+];
+
+function createAdminNotification() {
+  const headerActions = document.querySelector(".top-header .header-actions");
+
+  if (!headerActions) return;
+
+  const notificationBox = document.createElement("div");
+  notificationBox.className = "admin-notification";
+
+  notificationBox.innerHTML = `
+    <button type="button" class="admin-notification-button" id="adminNotificationBtn">
+      <span>알림</span>
+      <strong>${adminNotifications.length}</strong>
+    </button>
+
+    <div class="admin-notification-dropdown" id="adminNotificationDropdown">
+      <div class="admin-notification-header">
+        <strong>알림</strong>
+        <span>${adminNotifications.length}건</span>
+      </div>
+
+      <div class="admin-notification-list">
+        ${adminNotifications
+          .map((notice) => {
+            return `
+              <a href="${notice.link}" class="admin-notification-item">
+                <div class="admin-notification-item-top">
+                  <span>${notice.type}</span>
+                  <em>${notice.time}</em>
+                </div>
+
+                <strong>${notice.title}</strong>
+                <p>${notice.desc}</p>
+              </a>
+            `;
+          })
+          .join("")}
+      </div>
+
+      <a href="admin.html" class="admin-notification-more">
+        전체 알림 보기 ›
+      </a>
+    </div>
+  `;
+
+  headerActions.prepend(notificationBox);
+
+  const notificationBtn = document.getElementById("adminNotificationBtn");
+  const notificationDropdown = document.getElementById("adminNotificationDropdown");
+
+  notificationBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
+    notificationDropdown.classList.toggle("open");
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!notificationBox.contains(event.target)) {
+      notificationDropdown.classList.remove("open");
+    }
+  });
+}
+
+createAdminNotification();

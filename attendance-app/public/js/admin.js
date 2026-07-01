@@ -5,26 +5,26 @@
 const dashboardTasks = [
   {
     title: "미확인 지각 사유",
-    desc: "오늘 지각 직원 중 사유가 미확인인 기록이 3건 있습니다.",
-    count: "3건",
+    desc: "지각 사유가 아직 입력되지 않은 직원이 있습니다.",
+    count: 3,
     link: "admin-attendance-issue.html",
   },
   {
     title: "미출근 연락 필요",
-    desc: "출근 예정 시간이 지났지만 아직 출근하지 않은 직원이 있습니다.",
-    count: "2건",
+    desc: "오늘 출근 기록이 없는 직원에게 확인이 필요합니다.",
+    count: 2,
     link: "admin-attendance-issue.html",
   },
   {
     title: "출퇴근 수정 요청",
-    desc: "퇴근 누락, GPS 오류 등 수정이 필요한 기록이 있습니다.",
-    count: "4건",
+    desc: "출근 또는 퇴근 기록 수정이 필요한 내역이 있습니다.",
+    count: 4,
     link: "admin-attendance-edit.html",
   },
   {
     title: "신규 직원 정보 확인",
-    desc: "최근 등록된 직원의 배정 지역 확인이 필요합니다.",
-    count: "1건",
+    desc: "등록 후 근무지역 배정이 필요한 직원이 있습니다.",
+    count: 5,
     link: "admin-employees.html",
   },
 ];
@@ -112,18 +112,21 @@ function setDashboardDate() {
 }
 
 function renderDashboardTasks() {
+  const dashboardTaskList = document.getElementById("dashboardTaskList");
+
   if (!dashboardTaskList) return;
 
   dashboardTaskList.innerHTML = dashboardTasks
     .map((task) => {
       return `
-        <div class="dashboard-task-item">
+        <a href="${task.link}" class="dashboard-task-item">
           <div>
             <strong>${task.title}</strong>
             <p>${task.desc}</p>
           </div>
-          <a href="${task.link}">${task.count}</a>
-        </div>
+
+          <span>${task.count}건</span>
+        </a>
       `;
     })
     .join("");

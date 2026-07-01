@@ -21,16 +21,8 @@
           <h2>대시보드</h2>
           <p id="dashboardDate">관리자 운영 현황을 확인합니다.</p>
         </div>
-
-        <div class="header-actions">
-          <button class="icon-button" type="button">
-            <span class="notice-dot"></span>
-          </button>
-
-          <button class="download-button" type="button" id="dashboardRefreshBtn">
-            새로고침
-          </button>
-        </div>
+          
+        <div class="header-actions"></div>
       </header>
 
       <section class="content">
@@ -80,7 +72,6 @@
           <article class="panel dashboard-task-panel">
             <div class="panel-header">
               <h3>오늘 관리자 체크리스트</h3>
-              <button type="button">전체 보기 ›</button>
             </div>
 
             <div class="dashboard-task-list" id="dashboardTaskList"></div>
@@ -102,18 +93,23 @@
 
         <section class="dashboard-grid">
           <article class="panel dashboard-region-panel">
-            <div class="panel-header">
-              <h3>지역별 운영 현황</h3>
-              <button type="button">지역 관리 ›</button>
-            </div>
+          <div class="panel-header">
+            <h3>지역별 운영 현황</h3>
 
+            <a href="admin-departments.html" class="panel-link-button">
+              지역 관리 ›
+            </a>
+          </div>
+          
             <div class="dashboard-region-list" id="dashboardRegionList"></div>
           </article>
 
           <article class="panel dashboard-request-panel">
             <div class="panel-header">
               <h3>최근 요청사항</h3>
-              <button type="button">요청 관리 ›</button>
+              <a href="admin-notices.html" class="panel-link-button">
+                요청 관리 ›
+              </a>
             </div>
 
             <div class="dashboard-request-list" id="dashboardRequestList"></div>
