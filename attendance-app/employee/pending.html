@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>승인 대기</title>
+
+  <link rel="stylesheet" href="../public/css/pending.css">
+</head>
+<body>
+  <div class="phone">
+    <main class="main pending-page">
+      <section class="card pending-card">
+        <div class="pending-icon">⏳</div>
+
+        <h1>관리자 승인 대기 중입니다</h1>
+
+        <p>
+          계정은 정상적으로 로그인되었지만<br />
+          관리자가 승인해야 앱을 사용할 수 있습니다.
+        </p>
+
+        <div class="pending-info">
+          <strong>현재 상태</strong>
+          <span>승인 대기</span>
+        </div>
+
+        <button id="logoutBtn" class="main-button">
+          로그아웃
+        </button>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="../public/js/pending.js"></script>
+</body>
+</html>
