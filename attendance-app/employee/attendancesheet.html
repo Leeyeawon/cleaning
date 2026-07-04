@@ -24,41 +24,28 @@
 
     <main class="sheet-main">
       <section class="month-card">
-        <button id="prevMonthBtn" class="month-button" type="button" aria-label="이전 달">
-          ‹
-        </button>
+        <button id="prevMonthBtn" class="month-button" type="button">‹</button>
 
         <button id="monthPickerBtn" class="month-picker-button" type="button">
-          <strong id="currentMonth"></strong>
+          <span class="month-emoji">📅</span>
+          <strong id="currentMonth">2026년 7월</strong>
         </button>
 
         <input id="monthPicker" class="month-picker-input" type="month" />
 
-        <button id="nextMonthBtn" class="month-button" type="button" aria-label="다음 달">
-          ›
-        </button>
+        <button id="nextMonthBtn" class="month-button" type="button">›</button>
       </section>
 
-      <section class="attendance-summary" id="attendanceSummary">
-        <article class="summary-card">
+      <section class="attendance-summary two">
+        <div class="summary-card">
           <p>총 근무</p>
           <strong id="totalWorkDays">0일</strong>
-        </article>
+        </div>
 
-        <article class="summary-card success">
+        <div class="summary-card success">
           <p>정상</p>
           <strong id="doneCount">0일</strong>
-        </article>
-
-        <article class="summary-card warning">
-          <p>근무 중</p>
-          <strong id="workingCount">0건</strong>
-        </article>
-
-        <article class="summary-card danger">
-          <p>미출근</p>
-          <strong id="absentCount">0일</strong>
-        </article>
+        </div>
       </section>
 
       <section class="calendar-card">
@@ -75,13 +62,10 @@
         <div class="calendar-grid" id="calendarGrid"></div>
       </section>
 
-      <section class="attendance-list" id="attendanceList">
+      <section class="attendance-list">
         <div class="detail-header">
-          <div>
-            <h2 id="selectedDateTitle">선택한 날짜</h2>
-          </div>
-
-          <span id="selectedStatusBadge" class="detail-badge normal">기록 없음</span>
+          <h2 id="selectedDateTitle">선택한 날짜</h2>
+          <span id="selectedStatusBadge" class="detail-badge">기록 없음</span>
         </div>
 
         <div class="detail-list">
@@ -96,19 +80,10 @@
           </div>
 
           <div class="detail-item">
-            <span>근무 지역</span>
-            <strong id="detailWorkplace">-</strong>
-          </div>
-
-          <div class="detail-item">
             <span>총 근무시간</span>
             <strong id="detailWorkTime">-</strong>
           </div>
         </div>
-
-        <button class="request-fix-button" type="button">
-          기록 수정 요청하기
-        </button>
       </section>
     </main>
 
