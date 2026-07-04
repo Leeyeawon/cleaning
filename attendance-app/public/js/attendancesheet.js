@@ -1,436 +1,247 @@
-/* =========================
-  직원 앱 출근부
-  - JS 자동 달력 생성
-  - Supabase 연결 전 샘플 데이터 사용
-========================= */
+import supabase from "./supabase.js";
 
-document.addEventListener("DOMContentLoaded", () => {
-  initAttendanceSheet();
+const attendanceList = document.getElementById("attendanceList");
+const totalWorkDays = document.getElementById("totalWorkDays");
+const doneCount = document.getElementById("doneCount");
+const workingCount = document.getElementById("workingCount");
+
+const currentMonth = document.getElementById("currentMonth");
+const prevMonthBtn = document.getElementById("prevMonthBtn");
+const nextMonthBtn = document.getElementById("nextMonthBtn");
+const todayBtn = document.getElementById("todayBtn");
+const monthPickerBtn = document.getElementById("monthPickerBtn");
+const monthPicker = document.getElementById("monthPicker");
+
+let selectedYear = new Date().getFullYear();
+let selectedMonth = new Date().getMonth(); // 0~11
+let currentUserId = null;
+let monthlyRecords = [];
+
+function updateMonthTitle() {
+  const date = new Date(selectedYear, selectedMonth, 1);
+
+  currentMonth.textContent = date.toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "long"
+  });
+
+  monthPicker.value = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}`;
+}
+
+function getMonthRange() {
+  const start = new Date(selectedYear, selectedMonth, 1);
+  const end = new Date(selectedYear, selectedMonth + 1, 1);
+
+  const startDate = start.toISOString().slice(0, 10);
+  const endDate = end.toISOString().slice(0, 10);
+
+  return { startDate, endDate };
+}
+
+async function changeMonth(diff) {
+  selectedMonth += diff;
+
+  if (selectedMonth < 0) {
+    selectedYear -= 1;
+    selectedMonth = 11;
+  }
+
+  if (selectedMonth > 11) {
+    selectedYear += 1;
+    selectedMonth = 0;
+  }
+
+  updateMonthTitle();
+  await loadMonthlyAttendance(currentUserId);
+}
+
+prevMonthBtn?.addEventListener("click", () => {
+  changeMonth(-1);
 });
 
-const today = new Date();
+nextMonthBtn?.addEventListener("click", () => {
+  changeMonth(1);
+});
 
-let currentYear = today.getFullYear();
-let currentMonth = today.getMonth(); // 0 = 1월, 6 = 7월
-let selectedDateKey = formatDateKey(today);
+todayBtn?.addEventListener("click", async () => {
+  const today = new Date();
+  selectedYear = today.getFullYear();
+  selectedMonth = today.getMonth();
 
-/* =========================
-  임시 출근 데이터
-  나중에 Supabase 데이터로 교체
-========================= */
+  updateMonthTitle();
+  await loadMonthlyAttendance(currentUserId);
+});
 
-const attendanceRecords = {
-  "2026-07-01": {
-    status: "normal",
-    checkIn: "09:02",
-    checkOut: "18:04",
-    region: "서면 B구역",
-    totalTime: "9시간 2분",
-  },
-  "2026-07-02": {
-    status: "normal",
-    checkIn: "08:58",
-    checkOut: "18:01",
-    region: "서면 B구역",
-    totalTime: "9시간 3분",
-  },
-  "2026-07-03": {
-    status: "late",
-    checkIn: "09:18",
-    checkOut: "18:03",
-    region: "해운대 A구역",
-    totalTime: "8시간 45분",
-  },
-  "2026-07-06": {
-    status: "normal",
-    checkIn: "09:00",
-    checkOut: "18:00",
-    region: "서면 B구역",
-    totalTime: "9시간",
-  },
-  "2026-07-07": {
-    status: "normal",
-    checkIn: "09:04",
-    checkOut: "18:05",
-    region: "해운대 A구역",
-    totalTime: "9시간 1분",
-  },
-  "2026-07-08": {
-    status: "normal",
-    checkIn: "08:55",
-    checkOut: "18:00",
-    region: "서면 B구역",
-    totalTime: "9시간 5분",
-  },
-  "2026-07-09": {
-    status: "late",
-    checkIn: "09:21",
-    checkOut: "18:02",
-    region: "서면 B구역",
-    totalTime: "8시간 41분",
-  },
-  "2026-07-10": {
-    status: "normal",
-    checkIn: "09:01",
-    checkOut: "18:04",
-    region: "해운대 A구역",
-    totalTime: "9시간 3분",
-  },
-  "2026-07-13": {
-    status: "normal",
-    checkIn: "09:00",
-    checkOut: "18:00",
-    region: "서면 B구역",
-    totalTime: "9시간",
-  },
-  "2026-07-14": {
-    status: "absent",
-    checkIn: "-",
-    checkOut: "-",
-    region: "서면 B구역",
-    totalTime: "-",
-  },
-};
+monthPickerBtn?.addEventListener("click", () => {
+  monthPicker.showPicker?.();
+  monthPicker.click();
+});
 
-/* =========================
-  초기 실행
-========================= */
+monthPicker?.addEventListener("change", async () => {
+  if (!monthPicker.value) return;
 
-function initAttendanceSheet() {
-  const prevMonthBtn = document.getElementById("prevMonthBtn");
-  const nextMonthBtn = document.getElementById("nextMonthBtn");
-  const todayBtn = document.getElementById("todayBtn");
+  const [year, month] = monthPicker.value.split("-").map(Number);
 
-  if (prevMonthBtn) {
-    prevMonthBtn.addEventListener("click", () => {
-      moveMonth(-1);
-    });
-  }
+  selectedYear = year;
+  selectedMonth = month - 1;
 
-  if (nextMonthBtn) {
-    nextMonthBtn.addEventListener("click", () => {
-      moveMonth(1);
-    });
-  }
+  updateMonthTitle();
+  await loadMonthlyAttendance(currentUserId);
+});
 
-  if (todayBtn) {
-    todayBtn.addEventListener("click", () => {
-      currentYear = today.getFullYear();
-      currentMonth = today.getMonth();
-      selectedDateKey = formatDateKey(today);
-      renderCalendar();
-    });
-  }
+async function init() {
+  currentUserId = await checkAccess();
+  if (!currentUserId) return;
 
-  renderCalendar();
+  updateMonthTitle();
+  await loadMonthlyAttendance(currentUserId);
 }
 
-/* =========================
-  월 이동
-========================= */
+init();
 
-function moveMonth(direction) {
-  currentMonth += direction;
+function formatDate(dateString) {
+  const date = new Date(dateString);
 
-  if (currentMonth < 0) {
-    currentMonth = 11;
-    currentYear -= 1;
-  }
-
-  if (currentMonth > 11) {
-    currentMonth = 0;
-    currentYear += 1;
-  }
-
-  selectedDateKey = "";
-
-  renderCalendar();
-}
-
-/* =========================
-  달력 생성
-========================= */
-
-function renderCalendar() {
-  const currentMonthElement = document.getElementById("currentMonth");
-  const calendarGrid = document.getElementById("calendarGrid");
-
-  if (!currentMonthElement || !calendarGrid) return;
-
-  currentMonthElement.textContent = `${currentYear년} ${currentMonth + 1월}`;
-
-  calendarGrid.innerHTML = "";
-
-  const firstDay = new Date(currentYear, currentMonth, 1);
-  const lastDate = new Date(currentYear, currentMonth + 1, 0).getDate();
-
-  const startDay = firstDay.getDay();
-
-  // 앞쪽 빈 칸 생성
-  for (let i = 0; i < startDay; i++) {
-    const emptyDay = document.createElement("button");
-    emptyDay.className = "day empty";
-    emptyDay.type = "button";
-    calendarGrid.appendChild(emptyDay);
-  }
-
-  // 실제 날짜 생성
-  for (let date = 1; date <= lastDate; date++) {
-    const dateObject = new Date(currentYear, currentMonth, date);
-    const dateKey = formatDateKey(dateObject);
-
-    const dayButton = createDayButton(date, dateObject, dateKey);
-
-    calendarGrid.appendChild(dayButton);
-  }
-
-  updateSummary();
-  updateSelectedDetail();
-}
-
-/* =========================
-  날짜 버튼 생성
-========================= */
-
-function createDayButton(date, dateObject, dateKey) {
-  const dayButton = document.createElement("button");
-  const record = attendanceRecords[dateKey];
-
-  const isToday = dateKey === formatDateKey(today);
-  const isSelected = dateKey === selectedDateKey;
-  const dayOfWeek = dateObject.getDay();
-
-  const status = getDateStatus(record, dateObject);
-
-  dayButton.type = "button";
-  dayButton.className = `day ${status}`;
-
-  if (isToday) {
-    dayButton.classList.add("today");
-  }
-
-  if (isSelected) {
-    dayButton.classList.add("active");
-  }
-
-  dayButton.dataset.date = dateKey;
-
-  dayButton.innerHTML = `
-    <span class="day-number">${date}</span>
-    <span class="day-status">${getStatusLabel(status, isToday)}</span>
-  `;
-
-  dayButton.addEventListener("click", () => {
-    selectedDateKey = dateKey;
-
-    document.querySelectorAll(".day").forEach((day) => {
-      day.classList.remove("active");
-    });
-
-    dayButton.classList.add("active");
-    updateSelectedDetail();
+  return date.toLocaleDateString("ko-KR", {
+    month: "long",
+    day: "numeric",
+    weekday: "short"
   });
-
-  return dayButton;
 }
 
-/* =========================
-  날짜 상태 계산
-========================= */
+function formatTime(timeString) {
+  if (!timeString) return "--:--";
 
-function getDateStatus(record, dateObject) {
-  const dateKey = formatDateKey(dateObject);
-  const todayKey = formatDateKey(today);
-  const dayOfWeek = dateObject.getDay();
+  const date = new Date(timeString);
 
-  if (record) {
-    return record.status;
-  }
-
-  // 토요일, 일요일은 휴무로 표시
-  if (dayOfWeek === 0 || dayOfWeek === 6) {
-    return "off";
-  }
-
-  // 오늘 이후 날짜는 예정
-  if (dateKey > todayKey) {
-    return "scheduled";
-  }
-
-  // 오늘 이전인데 기록이 없으면 미기록
-  if (dateKey < todayKey) {
-    return "missing";
-  }
-
-  return "scheduled";
-}
-
-function getStatusLabel(status, isToday) {
-  if (isToday) return "오늘";
-
-  const labels = {
-    normal: "정상",
-    late: "지각",
-    absent: "결근",
-    off: "휴무",
-    missing: "미기록",
-    scheduled: "예정",
-  };
-
-  return labels[status] || "예정";
-}
-
-/* =========================
-  요약 카드 자동 계산
-========================= */
-
-function updateSummary() {
-  const summaryCards = document.querySelectorAll(".summary-card strong");
-
-  if (summaryCards.length < 4) return;
-
-  let total = 0;
-  let normal = 0;
-  let late = 0;
-  let absent = 0;
-
-  Object.keys(attendanceRecords).forEach((dateKey) => {
-    const [year, month] = dateKey.split("-").map(Number);
-
-    if (year !== currentYear || month !== currentMonth + 1) return;
-
-    const status = attendanceRecords[dateKey].status;
-
-    if (status === "normal" || status === "late") {
-      total += 1;
-    }
-
-    if (status === "normal") normal += 1;
-    if (status === "late") late += 1;
-    if (status === "absent") absent += 1;
+  return date.toLocaleTimeString("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit"
   });
-
-  summaryCards[0].textContent = `${total}일`;
-  summaryCards[1].textContent = `${normal}일`;
-  summaryCards[2].textContent = `${late}일`;
-  summaryCards[3].textContent = `${absent}일`;
 }
 
-/* =========================
-  선택 날짜 상세
-========================= */
+async function checkAccess() {
+  const localUserId = localStorage.getItem("employeeUserId");
 
-function updateSelectedDetail() {
-  const title = document.querySelector(".detail-header h2");
-  const badge = document.querySelector(".detail-badge");
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
 
-  if (!title || !badge) return;
+  const userId = user?.id || localUserId;
 
-  if (!selectedDateKey) {
-    const firstDateKey = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-01`;
-    selectedDateKey = firstDateKey;
+  if (!userId) {
+    location.href = "../employee/login.html";
+    return null;
   }
 
-  const selectedDate = parseDateKey(selectedDateKey);
-  const record = attendanceRecords[selectedDateKey];
-  const status = getDateStatus(record, selectedDate);
+  const { data: profile, error } = await supabase
+    .from("users")
+    .select("id, status")
+    .eq("id", userId)
+    .maybeSingle();
 
-  title.textContent = formatKoreanDate(selectedDate);
+  if (error || !profile) {
+    location.href = "../employee/login.html";
+    return null;
+  }
 
-  badge.className = "detail-badge";
-  badge.classList.add(getBadgeClass(status));
-  badge.textContent = getDetailStatusLabel(status);
+  if (profile.status === "pending") {
+    location.href = "../employee/pending.html";
+    return null;
+  }
 
-  if (record) {
-    setDetailData(
-      record.checkIn,
-      record.checkOut,
-      record.region,
-      record.totalTime
-    );
+  if (profile.status !== "active") {
+    alert("사용할 수 없는 계정입니다.");
+    location.href = "../employee/login.html";
+    return null;
+  }
+
+  return profile.id;
+}
+
+async function loadMonthlyAttendance(userId) {
+  const { startDate, endDate } = getMonthRange();
+
+  const { data, error } = await supabase
+    .from("attendance")
+    .select(`
+      id,
+      work_date,
+      check_in_time,
+      check_out_time,
+      status,
+      workplaces (
+        name
+      )
+    `)
+    .eq("user_id", userId)
+    .gte("work_date", startDate)
+    .lt("work_date", endDate)
+    .order("work_date", { ascending: false });
+
+  if (error) {
+    console.error(error);
+    alert("출근부를 불러오지 못했습니다.");
     return;
   }
 
-  if (status === "off") {
-    setDetailData("-", "-", "휴무일", "-");
+  renderSummary(data || []);
+  renderAttendanceList(data || []);
+}
+
+function renderSummary(records) {
+  const total = records.length;
+  const done = records.filter((item) => item.status === "done").length;
+  const working = records.filter((item) => item.status === "working").length;
+
+  if (totalWorkDays) totalWorkDays.textContent = `${total}일`;
+  if (doneCount) doneCount.textContent = `${done}건`;
+  if (workingCount) workingCount.textContent = `${working}건`;
+}
+
+function renderAttendanceList(records) {
+  if (!attendanceList) return;
+
+  if (records.length === 0) {
+    attendanceList.innerHTML = `
+      <div class="empty-card">
+        이번 달 출근 기록이 없습니다.
+      </div>
+    `;
     return;
   }
 
-  if (status === "scheduled") {
-    setDetailData("-", "-", "근무 예정", "-");
-    return;
-  }
+  attendanceList.innerHTML = records
+    .map((record) => {
+      const workplaceName = record.workplaces?.name || "근무지 미지정";
+      const statusText = record.status === "done" ? "근무 완료" : "근무 중";
 
-  if (status === "missing") {
-    setDetailData("-", "-", "확인 필요", "-");
-    return;
-  }
+      return `
+        <article class="attendance-item">
+          <div>
+            <strong>${formatDate(record.work_date)}</strong>
+            <p>${workplaceName}</p>
+          </div>
 
-  setDetailData("-", "-", "-", "-");
+          <div class="attendance-time">
+            <p>출근 ${formatTime(record.check_in_time)}</p>
+            <p>퇴근 ${formatTime(record.check_out_time)}</p>
+          </div>
+
+          <span class="status-badge ${
+            record.status === "done" ? "success" : "neutral"
+          }">${statusText}</span>
+        </article>
+      `;
+    })
+    .join("");
 }
 
-function setDetailData(checkIn, checkOut, region, totalTime) {
-  const items = document.querySelectorAll(".detail-item strong");
+async function init() {
+  const userId = await checkAccess();
+  if (!userId) return;
 
-  if (items.length < 4) return;
-
-  items[0].textContent = checkIn;
-  items[1].textContent = checkOut;
-  items[2].textContent = region;
-  items[3].textContent = totalTime;
+  await loadMonthlyAttendance(userId);
 }
 
-/* =========================
-  상태 표시
-========================= */
-
-function getBadgeClass(status) {
-  if (status === "late") return "late";
-  if (status === "absent") return "absent";
-  if (status === "missing") return "missing";
-  if (status === "off") return "off";
-  if (status === "scheduled") return "scheduled";
-
-  return "normal";
-}
-
-function getDetailStatusLabel(status) {
-  const labels = {
-    normal: "정상",
-    late: "지각",
-    absent: "결근",
-    off: "휴무",
-    missing: "미기록",
-    scheduled: "예정",
-  };
-
-  return labels[status] || "예정";
-}
-
-/* =========================
-  날짜 유틸
-========================= */
-
-function formatDateKey(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-}
-
-function parseDateKey(dateKey) {
-  const [year, month, day] = dateKey.split("-").map(Number);
-
-  return new Date(year, month - 1, day);
-}
-
-function formatKoreanDate(date) {
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-
-  const weekdayLabels = ["일", "월", "화", "수", "목", "금", "토"];
-  const weekday = weekdayLabels[date.getDay()];
-
-  return `${month}월 ${day}일 ${weekday요일}`;
-}
+init();

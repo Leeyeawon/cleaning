@@ -9,12 +9,12 @@
   <link rel="stylesheet" href="../public/css/mobile.css" />
   <link rel="stylesheet" href="../public/css/index.css" />
 </head>
-<body>
+<body data-page="index">
   <div class="phone">
     <header class="home-header">
       <div>
-        <p class="today-date">2026년 7월 1일 수요일</p>
-        <h1>안녕하세요, <strong>김민준</strong> 님</h1>
+        <p id="todayDate" class="today-date"></p>
+        <h1>안녕하세요, <strong id="userName">직원</strong> 님</h1>
       </div>
 
       <a href="./mypage.html" class="profile-button" aria-label="마이페이지로 이동">
@@ -112,6 +112,6 @@
 
   <script src="../public/js/common.js"></script>
   <script src="../public/js/mobile.js"></script>
-  <script src="../public/js/index.js"></script>
+  <script type="module" src="../public/js/index.js"></script>
 </body>
 </html>

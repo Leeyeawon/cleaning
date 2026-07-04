@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>직원 로그인</title>
+
+  <link rel="stylesheet" href="../public/css/common.css" />
+  <link rel="stylesheet" href="../public/css/mobile.css" />
+  <link rel="stylesheet" href="../public/css/login.css" />
+</head>
+
+<body data-page="login">
+  <div class="phone">
+    <main class="login-main">
+      <section class="login-card">
+        <div class="login-logo">📍</div>
+
+        <h1>직원 출퇴근 체크</h1>
+        <p>로그인 후 관리자의 승인을 받아야 앱을 사용할 수 있습니다.</p>
+
+        <button id="googleLoginBtn" class="login-button google" type="button">
+          Google로 로그인
+        </button>
+
+        <div class="divider">
+          <span>또는</span>
+        </div>
+
+        <form id="phoneLoginForm" class="phone-form">
+        <label>
+            이름
+            <input id="userNameInput" type="text" />
+        </label>
+
+        <label>
+            전화번호
+            <input id="phoneInput" type="tel" />
+        </label>
+
+        <label>
+            직원번호
+            <input id="employeeCodeInput" type="text" />
+        </label>
+
+        <button class="login-button" type="submit">
+            직원 정보로 로그인
+        </button>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="../public/js/login.js"></script>
+</body>
+</html>

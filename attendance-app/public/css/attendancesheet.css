@@ -1,447 +1,82 @@
-/* =========================
-  직원 앱 출근부 화면
-========================= */
-
-.phone {
-  background: #f7f8fa;
+.attendance-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
 }
 
-/* 상단 */
-.sheet-header {
-  width: 100%;
-  height: 78px;
-  padding: 17px 18px 12px;
-  background: #ffffff;
-  border-bottom: 1px solid #eceef2;
-
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.page-label {
-  color: #9ca3af;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  line-height: 14px;
-  margin-bottom: 2px;
-}
-
-.sheet-header h1 {
-  color: #111827;
-  font-size: 20px;
-  font-weight: 800;
-  line-height: 28px;
-}
-
-.calendar-today-button {
-  height: 34px;
-  padding: 0 14px;
-  border-radius: 999px;
-  background: #111827;
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-/* 메인 */
-.sheet-main {
-  height: calc(100dvh - 78px - var(--bottom-nav-height) - env(safe-area-inset-bottom));
-  padding: 12px 14px 10px;
-  overflow: hidden;
-}
-
-/* 월 선택 */
-.month-card {
-  height: 48px;
-  padding: 0 10px;
+.attendance-summary > div {
+  padding: 16px 12px;
   border-radius: 18px;
   background: #ffffff;
-  border: 1px solid #edf0f4;
-
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.month-card strong {
-  color: #111827;
-  font-size: 17px;
-  font-weight: 800;
-}
-
-.month-button {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: #f3f4f6;
-  color: #111827;
-  font-size: 24px;
-  line-height: 1;
-  font-weight: 600;
-}
-
-/* 요약 카드 */
-.summary-grid {
-  margin-top: 10px;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-}
-
-.summary-card {
-  height: 68px;
-  padding: 10px 6px;
-  border-radius: 16px;
-  background: #ffffff;
-  border: 1px solid #edf0f4;
-
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 4px;
-}
-
-.summary-card p {
-  color: #8b95a1;
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 15px;
-}
-
-.summary-card strong {
-  color: #111827;
-  font-size: 18px;
-  font-weight: 900;
-  line-height: 23px;
-}
-
-.summary-card.success strong {
-  color: #168a4a;
-}
-
-.summary-card.warning strong {
-  color: #d97706;
-}
-
-.summary-card.danger strong {
-  color: #dc2626;
-}
-
-/* 달력 */
-.calendar-card {
-  margin-top: 10px;
-  padding: 12px;
-  border-radius: 20px;
-  background: #ffffff;
-  border: 1px solid #edf0f4;
-}
-
-.week-row {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  margin-bottom: 8px;
-}
-
-.week-row span {
-  color: #9ca3af;
-  font-size: 11px;
-  font-weight: 800;
-  line-height: 16px;
   text-align: center;
 }
 
-.week-row span:first-child {
-  color: #ef4444;
+.attendance-summary p {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 6px;
 }
 
-.week-row span:last-child {
-  color: #3b82f6;
+.attendance-summary strong {
+  font-size: 18px;
+  color: #111827;
 }
 
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
-}
-
-.day {
-  height: 48px;
-  border-radius: 14px;
-  background: #f9fafb;
-  border: 1px solid transparent;
-
+.attendance-list {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 2px;
-}
-
-.day.empty {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.day-number {
-  color: #111827;
-  font-size: 13px;
-  font-weight: 800;
-  line-height: 16px;
-}
-
-.day-status {
-  font-size: 9px;
-  font-weight: 800;
-  line-height: 12px;
-}
-
-/* 상태별 색상 */
-.day.normal .day-status {
-  color: #168a4a;
-}
-
-.day.late .day-status {
-  color: #d97706;
-}
-
-.day.absent .day-status {
-  color: #dc2626;
-}
-
-.day.off .day-number,
-.day.off .day-status {
-  color: #9ca3af;
-}
-
-.day.missing .day-number,
-.day.missing .day-status,
-.day.scheduled .day-number,
-.day.scheduled .day-status {
-  color: #c5cbd3;
-}
-
-/* 선택 날짜 */
-.day.active {
-  background: #111827;
-}
-
-.day.active .day-number,
-.day.active .day-status {
-  color: #ffffff;
-}
-
-/* 오늘 */
-.day.today {
-  border-color: #111827;
-  background: #ffffff;
-}
-
-.day.today .day-status {
-  color: #111827;
-}
-
-/* 상세 카드 */
-.detail-card {
-  margin-top: 10px;
-  padding: 14px;
-  border-radius: 20px;
-  background: #ffffff;
-  border: 1px solid #edf0f4;
-}
-
-.detail-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   gap: 12px;
 }
 
-.detail-label {
-  color: #9ca3af;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  line-height: 14px;
-  margin-bottom: 2px;
-}
-
-.detail-header h2 {
-  color: #111827;
-  font-size: 16px;
-  font-weight: 900;
-  line-height: 23px;
-}
-
-.detail-badge {
-  min-width: 52px;
-  height: 26px;
-  padding: 0 10px;
-  border-radius: 999px;
-
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-
-  font-size: 11px;
-  font-weight: 900;
-}
-
-.detail-badge.normal {
-  background: #e8f7ef;
-  color: #168a4a;
-}
-
-.detail-badge.late {
-  background: #fff4e5;
-  color: #d97706;
-}
-
-.detail-badge.absent {
-  background: #fee2e2;
-  color: #dc2626;
-}
-
-.detail-list {
-  margin-top: 12px;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-}
-
-.detail-item {
-  min-height: 52px;
-  padding: 9px 10px;
-  border-radius: 14px;
-  background: #f9fafb;
-
+.attendance-item {
+  padding: 16px;
+  border-radius: 20px;
+  background: #ffffff;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 3px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
-.detail-item span {
-  color: #8b95a1;
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 15px;
-}
-
-.detail-item strong {
+.attendance-item strong {
+  font-size: 15px;
   color: #111827;
-  font-size: 14px;
-  font-weight: 900;
-  line-height: 19px;
 }
 
-.request-fix-button {
-  width: 100%;
-  height: 46px;
-  margin-top: 12px;
-  border-radius: 15px;
-  background: #f3f4f6;
-  color: #111827;
-  font-size: 14px;
-  font-weight: 900;
-}
-
-/* 작은 기기 대응 */
-@media (max-height: 760px) {
-  .sheet-header {
-    height: 70px;
-    padding: 13px 16px 10px;
-  }
-
-  .sheet-header h1 {
-    font-size: 19px;
-    line-height: 25px;
-  }
-
-  .sheet-main {
-    height: calc(100dvh - 70px - var(--bottom-nav-height) - env(safe-area-inset-bottom));
-    padding: 10px 12px 8px;
-  }
-
-  .month-card {
-    height: 44px;
-    border-radius: 16px;
-  }
-
-  .summary-card {
-    height: 58px;
-    padding: 8px 4px;
-  }
-
-  .summary-card strong {
-    font-size: 16px;
-    line-height: 21px;
-  }
-
-  .calendar-card {
-    margin-top: 8px;
-    padding: 10px;
-  }
-
-  .calendar-grid {
-    gap: 5px;
-  }
-
-  .day {
-    height: 40px;
-    border-radius: 12px;
-  }
-
-  .day-number {
-    font-size: 12px;
-    line-height: 15px;
-  }
-
-  .day-status {
-    font-size: 8px;
-    line-height: 11px;
-  }
-
-  .detail-card {
-    margin-top: 8px;
-    padding: 12px;
-  }
-
-  .detail-list {
-    margin-top: 9px;
-    gap: 7px;
-  }
-
-  .detail-item {
-    min-height: 45px;
-    padding: 7px 9px;
-  }
-
-  .request-fix-button {
-    height: 42px;
-    margin-top: 9px;
-  }
-}
-
-/* 자동 생성 달력 추가 상태 */
-.day.scheduled .day-number,
-.day.scheduled .day-status {
-  color: #c5cbd3;
-}
-
-.detail-badge.missing {
-  background: #f3f4f6;
+.attendance-item p {
+  font-size: 12px;
   color: #6b7280;
 }
 
-.detail-badge.off {
-  background: #f3f4f6;
-  color: #9ca3af;
+.attendance-time {
+  text-align: right;
 }
 
-.detail-badge.scheduled {
-  background: #f3f4f6;
-  color: #9ca3af;
+.empty-card {
+  padding: 28px 18px;
+  border-radius: 20px;
+  background: #ffffff;
+  text-align: center;
+  color: #6b7280;
+}
+
+.month-picker-button {
+  border: none;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  color: inherit;
+}
+
+.month-picker-button strong {
+  font-size: 18px;
+}
+
+.month-picker-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 1px;
+  height: 1px;
 }

@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="../public/css/mobile.css" />
   <link rel="stylesheet" href="../public/css/attendancesheet.css" />
 </head>
-<body>
+<body data-page="attendance">
   <div class="phone">
     <header class="sheet-header">
       <div>
@@ -28,32 +28,36 @@
           ‹
         </button>
 
-        <strong id="currentMonth">2026년 7월</strong>
+        <button id="monthPickerBtn" class="month-picker-button" type="button">
+          <strong id="currentMonth"></strong>
+        </button>
+
+        <input id="monthPicker" class="month-picker-input" type="month" />
 
         <button id="nextMonthBtn" class="month-button" type="button" aria-label="다음 달">
           ›
         </button>
       </section>
 
-      <section class="summary-grid">
+      <section class="attendance-summary" id="attendanceSummary">
         <article class="summary-card">
           <p>총 근무</p>
-          <strong>18일</strong>
+          <strong id="totalWorkDays">0일</strong>
         </article>
 
         <article class="summary-card success">
           <p>정상</p>
-          <strong>15일</strong>
+          <strong id="doneCount">0일</strong>
         </article>
 
         <article class="summary-card warning">
-          <p>지각</p>
-          <strong>2일</strong>
+          <p>근무 중</p>
+          <strong id="workingCount">0건</strong>
         </article>
 
         <article class="summary-card danger">
-          <p>결근</p>
-          <strong>1일</strong>
+          <p>미출근</p>
+          <strong id="absentCount">0일</strong>
         </article>
       </section>
 
@@ -71,35 +75,34 @@
         <div class="calendar-grid" id="calendarGrid"></div>
       </section>
 
-      <section class="detail-card">
+      <section class="attendance-list" id="attendanceList">
         <div class="detail-header">
           <div>
-            <p class="detail-label">선택한 날짜</p>
-            <h2>7월 1일 수요일</h2>
+            <h2 id="selectedDateTitle">선택한 날짜</h2>
           </div>
 
-          <span class="detail-badge normal">정상</span>
+          <span id="selectedStatusBadge" class="detail-badge normal">기록 없음</span>
         </div>
 
         <div class="detail-list">
           <div class="detail-item">
             <span>출근 시간</span>
-            <strong>09:02</strong>
+            <strong id="detailCheckIn">--:--</strong>
           </div>
 
           <div class="detail-item">
             <span>퇴근 시간</span>
-            <strong>18:04</strong>
+            <strong id="detailCheckOut">--:--</strong>
           </div>
 
           <div class="detail-item">
             <span>근무 지역</span>
-            <strong>서면 B구역</strong>
+            <strong id="detailWorkplace">-</strong>
           </div>
 
           <div class="detail-item">
             <span>총 근무시간</span>
-            <strong>9시간 2분</strong>
+            <strong id="detailWorkTime">-</strong>
           </div>
         </div>
 
@@ -114,6 +117,7 @@
 
   <script src="../public/js/common.js"></script>
   <script src="../public/js/mobile.js"></script>
-  <script src="../public/js/attendancesheet.js"></script>
+  <script type="module" src="../public/js/attendancesheet.js"></script>
+
 </body>
 </html>
