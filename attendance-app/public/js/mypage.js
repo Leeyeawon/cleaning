@@ -104,8 +104,7 @@ async function loadMyWorkplaces() {
   }
 
   if (!data || data.length === 0) {
-    regionList.innerHTML = `<span class="region-chip empty">배정된 근무지역 없음</span>`;
-    return;
+    regionList.innerHTML = `<span class="region-chip empty">배정된 근무지역 없음</span>`;    return;
   }
 
   regionList.innerHTML = data
