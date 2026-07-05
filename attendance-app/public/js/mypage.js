@@ -252,29 +252,22 @@ function initNotificationSetting() {
   });
 }
 
-async function handleLogout() {
-  const confirmed = confirm("로그아웃하시겠습니까?");
-
-  if (!confirmed) return;
-
-  await logoutEmployee();
-}
-
 async function init() {
-  currentEmployee = await getCurrentEmployee();
+  const profile = await getCurrentEmployee();
 
-  if (!currentEmployee) return;
+  if (!profile) return;
 
-  renderProfile(currentEmployee);
+  renderProfile(profile);
+
   await loadMyWorkplaces();
   await checkLocationPermission();
 
-  editPhoneBtn?.addEventListener("click", requestPhoneChange);
-  infoRequestBtn?.addEventListener("click", requestProfileChange);
-  locationSettingBtn?.addEventListener("click", requestLocationPermission);
-  logoutButton?.addEventListener("click", handleLogout);
+  logoutButton?.addEventListener("click", async () => {
+    const confirmed = confirm("로그아웃하시겠습니까?");
+    if (!confirmed) return;
 
-  initNotificationSetting();
+    await logoutEmployee();
+  });
 }
 
 init();

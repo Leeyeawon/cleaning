@@ -1,7 +1,20 @@
 import supabase from "./supabase.js";
+import {
+  getEmployeeSessionToken,
+  getCurrentEmployee,
+} from "./employeeAuth.js";
 
 const todayDate = document.getElementById("todayDate");
 const userName = document.getElementById("userName");
+
+const attendanceBtn = document.getElementById("attendanceBtn");
+const buttonText = document.getElementById("buttonText");
+const workStatus = document.getElementById("workStatus");
+const checkInTime = document.getElementById("checkInTime");
+const checkOutTime = document.getElementById("checkOutTime");
+
+let currentEmployee = null;
+let todayAttendance = null;
 
 function setTodayDate() {
   if (!todayDate) return;
@@ -12,110 +25,25 @@ function setTodayDate() {
     year: "numeric",
     month: "long",
     day: "numeric",
-    weekday: "long"
+    weekday: "long",
   });
 
   todayDate.textContent = formatted;
 }
 
-async function checkAccess() {
-  const loginType = localStorage.getItem("employeeLoginType");
-  const localUserId = localStorage.getItem("employeeUserId");
+function formatTime(dateString) {
+  if (!dateString) return "--:--";
 
-  // 구글 로그인 사용자 확인
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
+  const date = new Date(dateString);
 
-  let userId = user?.id || localUserId;
+  if (Number.isNaN(date.getTime())) return "--:--";
 
-  if (!userId) {
-    location.href = "../employee/login.html";
-    return;
-  }
-
-  const { data: profile, error } = await supabase
-    .from("users")
-    .select("id, name, status")
-    .eq("id", userId)
-    .maybeSingle();
-
-  if (error) {
-    console.error(error);
-    alert("사용자 정보를 확인하는 중 오류가 발생했습니다.");
-    location.href = "../employee/login.html";
-    return;
-  }
-
-  if (!profile) {
-    location.href = "../employee/login.html";
-    return;
-  }
-
-  if (profile.status === "pending") {
-    location.href = "../employee/pending.html";
-    return;
-  }
-
-  if (profile.status === "inactive") {
-    alert("비활성화된 계정입니다. 관리자에게 문의해주세요.");
-    location.href = "../employee/login.html";
-    return;
-  }
-
-  if (profile.status !== "active") {
-    location.href = "../employee/pending.html";
-    return;
-  }
-
-  localStorage.setItem("employeeUserId", profile.id);
-  localStorage.setItem("employeeName", profile.name || "직원");
-
-  currentUserId = profile.id;
-
-  if (userName) {
-    userName.textContent = profile.name || "직원";
-  }
+  return date.toLocaleTimeString("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
-async function init() {
-  setTodayDate();
-  await checkAccess();
-  await loadTodayAttendance();
-}
-
-init();
-
-const attendanceBtn = document.getElementById("attendanceBtn");
-const buttonText = document.getElementById("buttonText");
-const workStatus = document.getElementById("workStatus");
-const checkInTime = document.getElementById("checkInTime");
-const checkOutTime = document.getElementById("checkOutTime");
-
-let currentUserId = null;
-let todayAttendance = null;
-
-// 두 GPS 좌표 사이 거리 계산
-function getDistanceMeter(lat1, lon1, lat2, lon2) {
-  const R = 6371000;
-  const rad = Math.PI / 180;
-
-  const dLat = (lat2 - lat1) * rad;
-  const dLon = (lon2 - lon1) * rad;
-
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * rad) *
-      Math.cos(lat2 * rad) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-  return R * c;
-}
-
-// 현재 위치 가져오기
 function getCurrentPosition() {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
@@ -128,7 +56,7 @@ function getCurrentPosition() {
         resolve({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy
+          accuracy: position.coords.accuracy,
         });
       },
       (error) => {
@@ -137,62 +65,22 @@ function getCurrentPosition() {
       {
         enableHighAccuracy: true,
         timeout: 10000,
-        maximumAge: 0
+        maximumAge: 0,
       }
     );
   });
 }
 
-// 오늘 날짜 YYYY-MM-DD
-function getTodayString() {
-  const today = new Date();
-  const yyyy = today.getFullYear();
-  const mm = String(today.getMonth() + 1).padStart(2, "0");
-  const dd = String(today.getDate()).padStart(2, "0");
-
-  return `${yyyy}-${mm}-${dd}`;
-}
-
-// 시간 표시
-function formatTime(dateString) {
-  if (!dateString) return "--:--";
-
-  const date = new Date(dateString);
-
-  return date.toLocaleTimeString("ko-KR", {
-    hour: "2-digit",
-    minute: "2-digit"
-  });
-}
-
-async function loadTodayAttendance() {
-  if (!currentUserId) return;
-
-  const today = getTodayString();
-
-  const { data, error } = await supabase
-    .from("attendance")
-    .select("*")
-    .eq("user_id", currentUserId)
-    .eq("work_date", today)
-    .maybeSingle();
-
-  if (error) {
-    console.error(error);
-    return;
-  }
-
-  todayAttendance = data;
-
-  updateAttendanceUI();
-}
-
 function updateAttendanceUI() {
+  if (!workStatus || !buttonText || !checkInTime || !checkOutTime) return;
+
   if (!todayAttendance) {
     workStatus.textContent = "출근 전";
     buttonText.textContent = "출근하기";
     checkInTime.textContent = "--:--";
     checkOutTime.textContent = "--:--";
+
+    if (attendanceBtn) attendanceBtn.disabled = false;
     return;
   }
 
@@ -202,133 +90,129 @@ function updateAttendanceUI() {
   if (todayAttendance.check_in_time && !todayAttendance.check_out_time) {
     workStatus.textContent = "근무 중";
     buttonText.textContent = "퇴근하기";
+
+    if (attendanceBtn) attendanceBtn.disabled = false;
     return;
   }
 
   if (todayAttendance.check_in_time && todayAttendance.check_out_time) {
     workStatus.textContent = "근무 완료";
     buttonText.textContent = "퇴근 완료";
-    attendanceBtn.disabled = true;
-    return;
+
+    if (attendanceBtn) attendanceBtn.disabled = true;
   }
 }
 
-async function findAvailableWorkplace(latitude, longitude) {
-  const { data: assignments, error } = await supabase
-    .from("workplace_users")
-    .select(`
-      workplace_id,
-      workplaces (
-        id,
-        name,
-        latitude,
-        longitude,
-        radius_m,
-        is_active
-      )
-    `)
-    .eq("user_id", currentUserId);
+function getErrorMessage(error) {
+  const message = error?.message || "";
+
+  if (message.includes("INVALID_SESSION")) {
+    return "로그인 정보가 만료되었습니다. 다시 로그인해주세요.";
+  }
+
+  if (message.includes("ALREADY_CHECKED_IN")) {
+    return "이미 오늘 출근 처리되었습니다.";
+  }
+
+  if (message.includes("OUT_OF_WORKPLACE_RANGE")) {
+    return "현재 위치가 배정된 근무지 범위 밖입니다.";
+  }
+
+  if (message.includes("NO_WORKING_ATTENDANCE")) {
+    return "퇴근 처리할 출근 기록이 없습니다.";
+  }
+
+  return "처리 중 오류가 발생했습니다.";
+}
+
+async function loadTodayAttendance() {
+  const token = getEmployeeSessionToken();
+
+  if (!token) {
+    location.href = "../employee/login.html";
+    return;
+  }
+
+  const { data, error } = await supabase.rpc("get_my_today_attendance", {
+    p_session_token: token,
+  });
 
   if (error) {
-    console.error(error);
-    throw new Error("배정된 근무지를 불러오지 못했습니다.");
+    console.error("오늘 출근 기록 조회 오류:", error);
+    alert("오늘 근무 정보를 불러오지 못했습니다.");
+    return;
   }
 
-  if (!assignments || assignments.length === 0) {
-    throw new Error("배정된 근무지가 없습니다. 관리자에게 문의해주세요.");
-  }
+  todayAttendance = data?.[0] || null;
 
-  for (const item of assignments) {
-    const workplace = item.workplaces;
-
-    if (!workplace || !workplace.is_active) continue;
-
-    const distance = getDistanceMeter(
-      latitude,
-      longitude,
-      Number(workplace.latitude),
-      Number(workplace.longitude)
-    );
-
-    if (distance <= workplace.radius_m) {
-      return {
-        ...workplace,
-        distance
-      };
-    }
-  }
-
-  throw new Error("현재 위치가 배정된 근무지 범위 밖입니다.");
+  updateAttendanceUI();
 }
 
 async function checkIn() {
-  const position = await getCurrentPosition();
+  const token = getEmployeeSessionToken();
 
-  const workplace = await findAvailableWorkplace(
-    position.latitude,
-    position.longitude
-  );
-
-  const { data, error } = await supabase
-    .from("attendance")
-    .insert({
-      user_id: currentUserId,
-      workplace_id: workplace.id,
-      work_date: getTodayString(),
-      check_in_time: new Date().toISOString(),
-      check_in_latitude: position.latitude,
-      check_in_longitude: position.longitude,
-      status: "working"
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error(error);
-    throw new Error("출근 저장에 실패했습니다.");
+  if (!token) {
+    location.href = "../employee/login.html";
+    return;
   }
 
-  todayAttendance = data;
+  const position = await getCurrentPosition();
+
+  const { data, error } = await supabase.rpc("employee_check_in", {
+    p_session_token: token,
+    p_lat: position.latitude,
+    p_lng: position.longitude,
+  });
+
+  if (error) {
+    console.error("출근 오류:", error);
+    throw new Error(getErrorMessage(error));
+  }
+
+  todayAttendance = data?.[0] || null;
+
   updateAttendanceUI();
 
-  alert(`${workplace.name} 출근 완료`);
+  const workplaceName = todayAttendance?.workplace_name || "근무지";
+  alert(`${workplaceName} 출근 완료`);
 }
 
 async function checkOut() {
-  const position = await getCurrentPosition();
+  const token = getEmployeeSessionToken();
 
-  const workplace = await findAvailableWorkplace(
-    position.latitude,
-    position.longitude
-  );
-
-  const { data, error } = await supabase
-    .from("attendance")
-    .update({
-      check_out_time: new Date().toISOString(),
-      check_out_latitude: position.latitude,
-      check_out_longitude: position.longitude,
-      status: "done"
-    })
-    .eq("id", todayAttendance.id)
-    .select()
-    .single();
-
-  if (error) {
-    console.error(error);
-    throw new Error("퇴근 저장에 실패했습니다.");
+  if (!token) {
+    location.href = "../employee/login.html";
+    return;
   }
 
-  todayAttendance = data;
+  const position = await getCurrentPosition();
+
+  const { data, error } = await supabase.rpc("employee_check_out", {
+    p_session_token: token,
+    p_lat: position.latitude,
+    p_lng: position.longitude,
+  });
+
+  if (error) {
+    console.error("퇴근 오류:", error);
+    throw new Error(getErrorMessage(error));
+  }
+
+  todayAttendance = data?.[0] || null;
+
   updateAttendanceUI();
 
-  alert(`${workplace.name} 퇴근 완료`);
+  const workplaceName = todayAttendance?.workplace_name || "근무지";
+  alert(`${workplaceName} 퇴근 완료`);
 }
 
 attendanceBtn?.addEventListener("click", async () => {
   try {
     attendanceBtn.disabled = true;
-    buttonText.textContent = "위치 확인 중...";
+
+    if (buttonText) {
+      buttonText.textContent = "위치 확인 중...";
+    }
 
     if (!todayAttendance) {
       await checkIn();
@@ -345,8 +229,21 @@ attendanceBtn?.addEventListener("click", async () => {
   } finally {
     updateAttendanceUI();
 
-    if (!todayAttendance?.check_out_time) {
+    if (!todayAttendance?.check_out_time && attendanceBtn) {
       attendanceBtn.disabled = false;
     }
   }
 });
+
+async function init() {
+  currentEmployee = await checkAccess();
+
+  if (!currentEmployee) return;
+
+  selectedDate = toDateKey(new Date());
+
+  updateMonthTitle();
+  await loadMonthlyAttendance();
+}
+
+init();

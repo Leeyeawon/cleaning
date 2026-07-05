@@ -4,6 +4,13 @@ export function getEmployeeSessionToken() {
   return localStorage.getItem("employeeSessionToken");
 }
 
+export function clearEmployeeSession() {
+  localStorage.removeItem("employeeSessionToken");
+  localStorage.removeItem("employeeUserId");
+  localStorage.removeItem("employeeName");
+  localStorage.removeItem("employeeLoginType");
+}
+
 export async function getCurrentEmployee() {
   const token = getEmployeeSessionToken();
 
@@ -64,11 +71,4 @@ export async function logoutEmployee() {
 
   clearEmployeeSession();
   location.href = "../employee/login.html";
-}
-
-export function clearEmployeeSession() {
-  localStorage.removeItem("employeeSessionToken");
-  localStorage.removeItem("employeeUserId");
-  localStorage.removeItem("employeeName");
-  localStorage.removeItem("employeeLoginType");
 }

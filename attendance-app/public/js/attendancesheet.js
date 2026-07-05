@@ -1,4 +1,8 @@
 import supabase from "./supabase.js";
+import {
+  getEmployeeSessionToken,
+  getCurrentEmployee,
+} from "./employeeAuth.js";
 
 const totalWorkDays = document.getElementById("totalWorkDays");
 const doneCount = document.getElementById("doneCount");
@@ -22,7 +26,7 @@ let selectedYear = new Date().getFullYear();
 let selectedMonth = new Date().getMonth();
 let selectedDate = toDateKey(new Date());
 
-let currentUserId = null;
+let currentEmployee = null;
 let monthlyRecords = [];
 
 function toDateKey(date) {
@@ -183,12 +187,14 @@ function renderCalendar() {
 
   let calendarHTML = "";
 
+  // 1일 전 빈칸
   for (let i = 0; i < firstDay; i += 1) {
     calendarHTML += `
       <button class="calendar-day empty" type="button" disabled></button>
     `;
   }
 
+  // 실제 날짜
   for (let day = 1; day <= daysInMonth; day += 1) {
     const date = new Date(selectedYear, selectedMonth, day);
     const dateKey = toDateKey(date);
@@ -255,7 +261,12 @@ function renderSelectedDateDetail() {
 }
 
 async function checkAccess() {
-  const localUserId = localStorage.getItem("employeeUserId");
+  const employee = await getCurrentEmployee();
+
+  if (!employee) return null;
+
+  return employee;
+}
 
   const {
     data: { user },
@@ -293,27 +304,24 @@ async function checkAccess() {
   return profile.id;
 }
 
-async function loadMonthlyAttendance(userId) {
-  if (!userId) return;
+async function loadMonthlyAttendance() {
+  const token = getEmployeeSessionToken();
+
+  if (!token) {
+    location.href = "../employee/login.html";
+    return;
+  }
 
   const { startDate, endDate } = getMonthRange();
 
-  const { data, error } = await supabase
-    .from("attendance")
-    .select(`
-      id,
-      work_date,
-      check_in_time,
-      check_out_time,
-      status
-    `)
-    .eq("user_id", userId)
-    .gte("work_date", startDate)
-    .lt("work_date", endDate)
-    .order("work_date", { ascending: true });
+  const { data, error } = await supabase.rpc("get_my_monthly_attendance", {
+    p_session_token: token,
+    p_start_date: startDate,
+    p_end_date: endDate,
+  });
 
   if (error) {
-    console.error(error);
+    console.error("출근부 조회 오류:", error);
     alert("출근부를 불러오지 못했습니다.");
     return;
   }
@@ -341,7 +349,7 @@ async function changeMonth(diff) {
   selectedDate = toDateKey(new Date(selectedYear, selectedMonth, 1));
 
   updateMonthTitle();
-  await loadMonthlyAttendance(currentUserId);
+  await loadMonthlyAttendance();
 }
 
 prevMonthBtn?.addEventListener("click", () => {
@@ -360,7 +368,7 @@ todayBtn?.addEventListener("click", async () => {
   selectedDate = toDateKey(today);
 
   updateMonthTitle();
-  await loadMonthlyAttendance(currentUserId);
+  await loadMonthlyAttendance();await loadMonthlyAttendance();
 });
 
 monthPickerBtn?.addEventListener("click", () => {
@@ -383,18 +391,18 @@ monthPicker?.addEventListener("change", async () => {
   selectedDate = toDateKey(new Date(selectedYear, selectedMonth, 1));
 
   updateMonthTitle();
-  await loadMonthlyAttendance(currentUserId);
+  await loadMonthlyAttendance();
 });
 
 async function init() {
-  currentUserId = await checkAccess();
+  currentEmployee = await checkAccess();
 
-  if (!currentUserId) return;
+  if (!currentEmployee) return;
 
   selectedDate = toDateKey(new Date());
 
   updateMonthTitle();
-  await loadMonthlyAttendance(currentUserId);
+  await loadMonthlyAttendance();
 }
 
 init();
