@@ -26,25 +26,10 @@ function goByStatus(status) {
     return;
   }
 
+  alert("승인되지 않은 계정입니다.");
   location.href = "../employee/pending.html";
 }
 
-// Google 로그인
-googleLoginBtn?.addEventListener("click", async () => {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo: `${location.origin}/employee/login.html`
-    }
-  });
-
-  if (error) {
-    alert("Google 로그인 중 오류가 발생했습니다.");
-    console.error(error);
-  }
-});
-
-// 이름 + 전화번호 + 직원번호 로그인
 phoneLoginForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
 
@@ -57,83 +42,34 @@ phoneLoginForm?.addEventListener("submit", async (event) => {
     return;
   }
 
-  const { data: user, error } = await supabase
-    .from("users")
-    .select("id, name, phone, employee_code, status")
-    .eq("name", name)
-    .eq("phone", phone)
-    .eq("employee_code", employeeCode)
-    .maybeSingle();
-
-  function normalizePhone(phone) {
-    return phone.replaceAll("-", "").replaceAll(" ", "").trim();
-  }
+  const { data, error } = await supabase.rpc("create_employee_session", {
+    p_name: name,
+    p_phone: phone,
+    p_employee_code: employeeCode,
+  });
 
   if (error) {
-    alert("직원 정보를 확인하는 중 오류가 발생했습니다.");
-    console.error(error);
+    console.error("직원 로그인 오류:", error);
+    alert("로그인에 실패했습니다. 이름, 전화번호, 직원번호를 확인해주세요.");
     return;
   }
 
-  if (!user) {
-    alert("등록된 직원 정보가 없습니다. 이름, 전화번호, 직원번호를 확인해주세요.");
+  const session = data?.[0];
+
+  if (!session?.session_token) {
+    alert("로그인 정보를 확인하지 못했습니다.");
     return;
   }
 
-  localStorage.setItem("employeeUserId", user.id);
-  localStorage.setItem("employeeName", user.name);
+  localStorage.setItem("employeeSessionToken", session.session_token);
+  localStorage.setItem("employeeName", session.user_name || "직원");
   localStorage.setItem("employeeLoginType", "phone");
 
-  goByStatus(user.status);
+  localStorage.removeItem("employeeUserId");
+
+  goByStatus(session.user_status);
 });
 
-// Google 로그인 후 돌아왔을 때 상태 확인
-async function checkGoogleLogin() {
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
-
-  if (!user) return;
-
-  const { data: profile, error } = await supabase
-    .from("users")
-    .select("id, name, email, status")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (error) {
-    console.error(error);
-    return;
-  }
-
-  if (!profile) {
-    const { error: insertError } = await supabase.from("users").insert({
-      id: user.id,
-      email: user.email,
-      name: user.user_metadata?.full_name || "직원",
-      login_type: "google",
-      status: "pending"
-    });
-
-    if (insertError) {
-      console.error(insertError);
-      alert("사용자 등록 중 오류가 발생했습니다.");
-      return;
-    }
-
-    localStorage.setItem("employeeUserId", user.id);
-    localStorage.setItem("employeeName", user.user_metadata?.full_name || "직원");
-    localStorage.setItem("employeeLoginType", "google");
-
-    location.href = "../employee/pending.html";
-    return;
-  }
-
-  localStorage.setItem("employeeUserId", profile.id);
-  localStorage.setItem("employeeName", profile.name || "직원");
-  localStorage.setItem("employeeLoginType", "google");
-
-  goByStatus(profile.status);
-}
-
-checkGoogleLogin();
+googleLoginBtn?.addEventListener("click", () => {
+  alert("현재 직원 로그인은 이름 + 전화번호 + 직원번호 방식으로 사용해주세요.");
+});

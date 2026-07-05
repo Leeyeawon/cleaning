@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="../public/css/mobile.css" />
   <link rel="stylesheet" href="../public/css/attendancesheet.css" />
 </head>
-<body data-page="attendance">
+<body>
   <div class="phone">
     <header class="sheet-header">
       <div>
@@ -36,7 +36,7 @@
         <button id="nextMonthBtn" class="month-button" type="button">›</button>
       </section>
 
-      <section class="attendance-summary two">
+      <section class="attendance-summary">
         <div class="summary-card">
           <p>총 근무</p>
           <strong id="totalWorkDays">0일</strong>
@@ -87,12 +87,32 @@
       </section>
     </main>
 
+    <nav class="bottom-nav">
+      <a href="index.html">
+        <span>🏠</span>
+        <p>홈</p>
+      </a>
+
+      <a href="attendancesheet.html" class="active">
+        <span>🧾</span>
+        <p>출근부</p>
+      </a>
+
+      <a href="request.html">
+        <span>📝</span>
+        <p>요청</p>
+      </a>
+
+      <a href="mypage.html">
+        <span>👤</span>
+        <p>내 정보</p>
+      </a>
+    </nav>
     <div id="bottomNav"></div>
   </div>
 
   <script src="../public/js/common.js"></script>
   <script src="../public/js/mobile.js"></script>
   <script type="module" src="../public/js/attendancesheet.js"></script>
-
 </body>
 </html>

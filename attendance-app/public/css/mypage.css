@@ -439,4 +439,24 @@
     height: 42px;
     margin-top: 8px;
   }
+
+  .employee-status.active {
+  background: #e8f7ef;
+  color: #168a4a;
+}
+
+.employee-status.pending {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+.employee-status.inactive,
+.employee-status.blocked {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.region-chip.empty {
+  background: #f3f4f6;
+  color: #9ca3af;
 }

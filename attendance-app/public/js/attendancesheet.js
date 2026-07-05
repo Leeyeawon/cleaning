@@ -19,20 +19,17 @@ const detailCheckOut = document.getElementById("detailCheckOut");
 const detailWorkTime = document.getElementById("detailWorkTime");
 
 let selectedYear = new Date().getFullYear();
-let selectedMonth = new Date().getMonth(); // 0~11
+let selectedMonth = new Date().getMonth();
 let selectedDate = toDateKey(new Date());
 
 let currentUserId = null;
 let monthlyRecords = [];
 
-/* =========================
-   날짜 / 시간 유틸
-========================= */
-
 function toDateKey(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
+
   return `${year}-${month}-${day}`;
 }
 
@@ -69,17 +66,19 @@ function formatWorkTime(checkIn, checkOut) {
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return "-";
 
   const diffMs = end - start;
+
   if (diffMs <= 0) return "-";
 
   const totalMinutes = Math.floor(diffMs / 1000 / 60);
 
-  // 30분 단위 내림 표시
-  const roundedMinutes = Math.floor(totalMinutes / 30) * 30;
+  // 화면 표시용: 30분 단위 내림
+  const displayMinutes = Math.floor(totalMinutes / 30) * 30;
 
-  const hours = Math.floor(roundedMinutes / 60);
-  const minutes = roundedMinutes % 60;
+  if (displayMinutes < 30) return "30분 미만";
 
-  if (hours === 0 && minutes === 0) return "30분 미만";
+  const hours = Math.floor(displayMinutes / 60);
+  const minutes = displayMinutes % 60;
+
   if (hours === 0) return `${minutes}분`;
   if (minutes === 0) return `${hours}시간`;
 
@@ -96,22 +95,9 @@ function getMonthRange() {
   };
 }
 
-function isSameMonthAsToday() {
-  const today = new Date();
-
-  return (
-    selectedYear === today.getFullYear() &&
-    selectedMonth === today.getMonth()
-  );
-}
-
 function getDaysInMonth(year, month) {
   return new Date(year, month + 1, 0).getDate();
 }
-
-/* =========================
-   화면 표시
-========================= */
 
 function updateMonthTitle() {
   const date = new Date(selectedYear, selectedMonth, 1);
@@ -141,11 +127,11 @@ function getRecordStatus(record) {
     };
   }
 
-  // 정상 출퇴근: 파란색
   if (
     record.status === "done" ||
     record.status === "normal" ||
-    record.status === "complete"
+    record.status === "complete" ||
+    record.status === "completed"
   ) {
     return {
       text: "정상 출퇴근",
@@ -154,7 +140,6 @@ function getRecordStatus(record) {
     };
   }
 
-  // 지각: 빨간색
   if (
     record.status === "late" ||
     record.status === "delay"
@@ -166,7 +151,6 @@ function getRecordStatus(record) {
     };
   }
 
-  // 기타: 노란색
   return {
     text: "기타",
     className: "detail-badge etc",
@@ -178,20 +162,16 @@ function renderSummary(records) {
   const total = records.length;
 
   const done = records.filter((item) => {
-    return item.status === "done" || item.status === "normal";
+    return (
+      item.status === "done" ||
+      item.status === "normal" ||
+      item.status === "complete" ||
+      item.status === "completed"
+    );
   }).length;
 
   if (totalWorkDays) totalWorkDays.textContent = `${total}일`;
   if (doneCount) doneCount.textContent = `${done}일`;
-}
-
-  /* status === "absent" 데이터가 있을 때만 카운트하도록 처리하기 */
-  const absent = records.filter((item) => item.status === "absent").length;
-
-  if (totalWorkDays) totalWorkDays.textContent = `${total}일`;
-  if (doneCount) doneCount.textContent = `${done}일`;
-  if (workingCount) workingCount.textContent = `${working}건`;
-  if (absentCount) absentCount.textContent = `${absent}일`;
 }
 
 function renderCalendar() {
@@ -223,27 +203,14 @@ function renderCalendar() {
       .filter(Boolean)
       .join(" ");
 
-    const todayCircle = dateKey === todayKey
-      ? `<span class="today-number">${day}</span>`
-      : `<span class="day-number">${day}</span>`;
+    const numberClass = dateKey === todayKey ? "today-number" : "day-number";
 
     calendarHTML += `
       <button class="${classes}" type="button" data-date="${dateKey}">
-        ${todayCircle}
+        <span class="${numberClass}">${day}</span>
       </button>
     `;
   }
-
-  calendarGrid.innerHTML = calendarHTML;
-
-  calendarGrid.querySelectorAll(".calendar-day[data-date]").forEach((button) => {
-    button.addEventListener("click", () => {
-      selectedDate = button.dataset.date;
-      renderCalendar();
-      renderSelectedDateDetail();
-    });
-  });
-}
 
   calendarGrid.innerHTML = calendarHTML;
 
@@ -286,10 +253,6 @@ function renderSelectedDateDetail() {
     );
   }
 }
-
-/* =========================
-   Supabase
-========================= */
 
 async function checkAccess() {
   const localUserId = localStorage.getItem("employeeUserId");
@@ -342,10 +305,7 @@ async function loadMonthlyAttendance(userId) {
       work_date,
       check_in_time,
       check_out_time,
-      status,
-      workplaces (
-        name
-      )
+      status
     `)
     .eq("user_id", userId)
     .gte("work_date", startDate)
@@ -364,10 +324,6 @@ async function loadMonthlyAttendance(userId) {
   renderCalendar();
   renderSelectedDateDetail();
 }
-
-/* =========================
-   월 이동 / 월 선택
-========================= */
 
 async function changeMonth(diff) {
   selectedMonth += diff;
@@ -424,30 +380,18 @@ monthPicker?.addEventListener("change", async () => {
 
   selectedYear = year;
   selectedMonth = month - 1;
-
-  const targetDate = new Date(selectedYear, selectedMonth, 1);
-  selectedDate = toDateKey(targetDate);
+  selectedDate = toDateKey(new Date(selectedYear, selectedMonth, 1));
 
   updateMonthTitle();
   await loadMonthlyAttendance(currentUserId);
 });
-
-/* =========================
-   시작
-========================= */
 
 async function init() {
   currentUserId = await checkAccess();
 
   if (!currentUserId) return;
 
-  /*
-    현재 달이면 오늘 날짜를 선택,
-    다른 달이면 1일을 선택.
-  */
-  if (!isSameMonthAsToday()) {
-    selectedDate = toDateKey(new Date(selectedYear, selectedMonth, 1));
-  }
+  selectedDate = toDateKey(new Date());
 
   updateMonthTitle();
   await loadMonthlyAttendance(currentUserId);
