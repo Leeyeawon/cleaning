@@ -94,3 +94,36 @@
     line-height: 14px;
   }
 }
+
+/* ===============================
+   👵 큰글자 모드 (간편 간판 모드)
+=============================== */
+body.large-mode {
+  /* 전체 폰트 크기 강제 상향 */
+  font-size: 18px !important;
+}
+
+/* 주요 제목 더 크게 */
+body.large-mode h1 {
+  font-size: 32px !important;
+}
+body.large-mode h2 {
+  font-size: 24px !important;
+}
+
+/* 출근/퇴근 메인 버튼 더 크고 확실하게! */
+body.large-mode #attendanceBtn {
+  height: 80px !important;
+  font-size: 24px !important;
+  font-weight: 900 !important;
+}
+
+/* 출근부 달력 날짜 글씨 키우기 */
+body.large-mode .calendar-day {
+  font-size: 16px !important;
+}
+body.large-mode .day-number,
+body.large-mode .today-number {
+  width: 32px !important;
+  height: 32px !important;
+}

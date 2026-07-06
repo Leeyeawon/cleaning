@@ -1,4 +1,6 @@
-/* 직원 앱 홈 화면 */
+/* ===============================
+   직원 앱 홈 화면 (레이아웃 최적화)
+=============================== */
 
 .phone {
   background: #f7f8fa;
@@ -35,48 +37,82 @@
   font-weight: 800;
 }
 
-.profile-button {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+/* 👵 상단 우측 '글자 크게' 버튼 (프로필 아이콘 대체) */
+.font-size-btn {
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
   background: #f3f4f6;
-  border: 1px solid #e5e7eb;
-  display: flex;
-  justify-content: center;
+  color: #374151;
+  display: inline-flex;
   align-items: center;
-  font-size: 19px;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
 }
 
-/* 메인 영역 */
+.font-size-btn:active {
+  transform: scale(0.96);
+}
+
+.font-icon {
+  font-size: 14px;
+  font-weight: 900;
+  color: #2563eb;
+}
+
+/* 큰글자 모드 활성화 시 버튼 스타일 */
+body.large-mode .font-size-btn {
+  background: #111827;
+  color: #ffffff;
+  border-color: #111827;
+}
+body.large-mode .font-size-btn .font-icon {
+  color: #60a5fa;
+}
+
+/* ===============================
+   🔥 메인 영역 (정렬 및 간격 최적화)
+=============================== */
 .home-main {
-  height: calc(100dvh - 86px - var(--bottom-nav-height) - env(safe-area-inset-bottom));
-  padding: 12px 16px 10px;
-  overflow: hidden;
+  height: calc(100dvh - 86px - var(--bottom-nav-height, 65px) - env(safe-area-inset-bottom));
+  padding: 16px 18px 16px;
+  
+  /* 카드들을 수직으로 균형 있게 배치 */
+  display: flex;
+  flex-direction: column;
+  gap: 14px; /* 카드 사이의 여백을 일정하게 유지 */
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
-/* 공통 카드 */
+/* 공통 카드 스타일 */
 .location-card,
 .work-card,
-.notice-card,
-.quick-card {
+.notice-card {
   background: #ffffff;
   border: 1px solid #edf0f4;
-  box-shadow: none;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.02);
 }
 
-/* 위치 카드 */
+/* 1. 위치 카드 (상단 고정) */
 .location-card {
-  min-height: 66px;
-  padding: 12px 14px;
-  border-radius: 18px;
+  min-height: 68px;
+  padding: 14px 16px;
+  border-radius: 20px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  flex-shrink: 0;
 }
 
 .location-icon {
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   border-radius: 14px;
   background: #eef6ff;
   display: flex;
@@ -111,7 +147,7 @@
   justify-content: center;
   min-width: 54px;
   height: 26px;
-  padding: 0 9px;
+  padding: 0 10px;
   border-radius: 999px;
   font-size: 11px;
   font-weight: 800;
@@ -128,11 +164,17 @@
   color: #6b7280;
 }
 
-/* 근무 카드 */
+/* 2. 🔥 근무 카드 (화면 중앙을 여유롭게 채우도록 확장) */
 .work-card {
-  margin-top: 10px;
-  padding: 15px;
-  border-radius: 20px;
+  padding: 22px 18px;
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  
+  /* quick-menu가 빠진 빈 공간을 자연스럽게 차지하도록 flex: 1 설정 */
+  flex: 1; 
+  min-height: 250px;
 }
 
 .section-title-row {
@@ -148,27 +190,29 @@
   font-weight: 800;
   letter-spacing: 0.08em;
   line-height: 14px;
-  margin-bottom: 1px;
+  margin-bottom: 2px;
 }
 
 .section-title-row h2 {
   color: #111827;
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 800;
   line-height: 24px;
 }
 
+/* 시간 그리드 (더 큼직하고 시원하게) */
 .time-grid {
-  margin-top: 12px;
+  margin: auto 0; /* 위아래 여백을 자동으로 나누어 중앙 정렬 */
+  padding: 14px 0;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  gap: 12px;
 }
 
 .time-box {
-  min-height: 74px;
-  padding: 10px;
-  border-radius: 16px;
+  min-height: 82px;
+  padding: 12px;
+  border-radius: 18px;
   background: #f9fafb;
   border: 1px solid #eef0f3;
   display: flex;
@@ -182,29 +226,31 @@
   color: #8b95a1;
   font-size: 12px;
   line-height: 17px;
+  font-weight: 600;
 }
 
 .time-box strong {
-  color: #c5cbd3;
-  font-size: 23px;
+  color: #111827; /* 글씨를 더 선명하게 변경 */
+  font-size: 24px;
   font-weight: 800;
-  line-height: 30px;
+  line-height: 32px;
 }
 
-/* 출근 버튼 */
+/* 출근 버튼 (더 높고 묵직하게 강조) */
 .attendance-button {
   width: 100%;
-  height: 54px;
-  margin-top: 12px;
-  border-radius: 16px;
+  height: 60px; /* 54px -> 60px로 확대 */
+  border-radius: 18px;
   background: #111827;
   color: #ffffff;
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 8px;
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 800;
+  box-shadow: 0 6px 20px rgba(17, 24, 39, 0.15);
+  transition: all 0.15s ease;
 }
 
 .attendance-button:active {
@@ -213,77 +259,34 @@
 
 .attendance-button.disabled {
   background: #c7ccd3;
+  box-shadow: none;
   cursor: default;
 }
 
 .button-icon {
-  width: 23px;
-  height: 23px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.18);
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .work-guide {
-  margin-top: 8px;
+  margin-top: 10px;
   color: #8b95a1;
   font-size: 11px;
   line-height: 16px;
   text-align: center;
 }
 
-/* 바로가기 */
-.quick-menu {
-  margin-top: 10px;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-
-.quick-card {
-  min-height: 74px;
-  padding: 12px;
-  border-radius: 18px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.quick-card span {
-  width: 34px;
-  height: 34px;
-  border-radius: 14px;
-  background: #f3f4f6;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 18px;
-  flex-shrink: 0;
-}
-
-.quick-card strong {
-  display: block;
-  color: #111827;
-  font-size: 13px;
-  font-weight: 800;
-  line-height: 18px;
-}
-
-.quick-card p {
-  color: #8b95a1;
-  font-size: 11px;
-  line-height: 16px;
-  margin-top: 1px;
-}
-
-/* 공지사항 */
+/* 3. 공지사항 카드 (하단 안정적으로 고정) */
 .notice-card {
-  margin-top: 10px;
-  padding: 14px;
-  border-radius: 20px;
+  padding: 16px;
+  border-radius: 22px;
+  flex-shrink: 0;
 }
 
 .more-button {
@@ -294,21 +297,23 @@
 
 .notice-item {
   margin-top: 10px;
-  padding: 11px 12px;
-  border-radius: 15px;
+  padding: 12px 14px;
+  border-radius: 16px;
   background: #f9fafb;
   display: flex;
-  gap: 10px;
+  align-items: center;
+  gap: 12px;
 }
 
 .notice-icon {
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   border-radius: 12px;
   background: #fff4e5;
   display: flex;
   justify-content: center;
   align-items: center;
+  font-size: 16px;
   flex-shrink: 0;
 }
 
@@ -316,7 +321,7 @@
   color: #374151;
   font-size: 12px;
   line-height: 18px;
-
+  font-weight: 500;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -331,6 +336,7 @@
   line-height: 15px;
 }
 
+/* 작은 화면(아이폰 SE, 구형 보급형폰 등) 대응 */
 @media (max-height: 760px) {
   .home-header {
     height: 78px;
@@ -338,7 +344,17 @@
   }
 
   .home-main {
-    height: calc(100dvh - 78px - var(--bottom-nav-height) - env(safe-area-inset-bottom));
-    padding: 10px 14px 8px;
+    height: calc(100dvh - 78px - var(--bottom-nav-height, 60px) - env(safe-area-inset-bottom));
+    padding: 12px 14px 10px;
+    gap: 10px;
+  }
+  
+  .work-card {
+    padding: 16px 14px;
+  }
+  
+  .attendance-button {
+    height: 54px;
+    font-size: 16px;
   }
 }

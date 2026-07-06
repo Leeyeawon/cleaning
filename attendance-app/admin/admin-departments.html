@@ -84,47 +84,39 @@
           </div>
         </section>
 
-        <section class="zone-layout">
-          <article class="panel zone-table-panel">
-            <div class="panel-header">
-              <h3>근무지역 목록</h3>
-              <button type="button">전체 보기 ›</button>
-            </div>
+        <section class="panel">
+          <div class="panel-header">
+            <h3>근무 지역 목록</h3>
+            <button type="button" id="btnOpenAddModal" style="background:#2563eb; color:#fff; padding:6px 14px; border-radius:6px;">+ 근무지 추가</button>
+          </div>
 
-            <div class="attendance-table-wrap">
-              <table class="attendance-table zone-table">
-                <thead>
-                  <tr>
-                    <th>지역명</th>
-                    <th>주소</th>
-                    <th>허용 반경</th>
-                    <th>배정 직원</th>
-                    <th>상태</th>
-                    <th>오늘 운영</th>
-                    <th>관리</th>
-                  </tr>
-                </thead>
-
-                <tbody id="zoneTableBody"></tbody>
-              </table>
-            </div>
-          </article>
-
-          <aside class="panel zone-map-panel">
-            <div class="panel-header">
-              <h3>위치 기준점</h3>
-            </div>
-
-            <div class="zone-map-placeholder">
-              <strong>지도 영역</strong>
-              <p>나중에 카카오맵 또는 네이버지도 API 연결</p>
-            </div>
-
-            <div class="zone-map-info" id="zoneMapInfo">
-              <p>지역을 선택하면 기준 위치 정보가 표시됩니다.</p>
-            </div>
-          </aside>
+          <div class="attendance-table-wrap">
+            <table class="attendance-table">
+              <thead>
+                <tr>
+                  <th>근무지명</th>
+                  <th>주소</th>
+                  <th>반경(m)</th>
+                  <th>배정 직원</th>
+                  <th>관리</th>
+                </tr>
+              </thead>
+              <tbody id="workplaceTableBody"></tbody>
+            </table>
+          </div>
         </section>
+
+        <div id="wpModal" class="modal" style="display:none;">
+          <div class="modal-content">
+            <h3>근무지 정보 등록</h3>
+            <input type="text" id="wpName" placeholder="근무지명 (예: 서면지점)">
+            <input type="text" id="wpAddress" placeholder="주소">
+            <input type="number" id="wpLat" placeholder="위도 (예: 35.15)">
+            <input type="number" id="wpLng" placeholder="경도 (예: 129.05)">
+            <input type="number" id="wpRadius" placeholder="허용 반경 (미터)">
+            <button id="btnSaveWorkplace">저장하기</button>
+          </div>
+        </div>
       </section>
     </main>
   </div>
@@ -240,6 +232,6 @@
 
   <script src="../public/js/common.js"></script>
   <script src="../public/js/pc.js"></script>
-  <script src="../public/js/admin-departments.js"></script>
+  <script type="module" src="../public/js/admin-departments.js"></script>
 </body>
 </html>

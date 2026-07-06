@@ -39,31 +39,31 @@
         <section class="stats-grid dashboard-summary-grid">
           <article class="stat-card">
             <p>전체 직원</p>
-            <strong>48</strong>
+            <strong id="statTotalEmployees">0</strong>
             <span>명</span>
           </article>
 
           <article class="stat-card">
             <p>활성 근무 지역</p>
-            <strong>12</strong>
+            <strong id="statActiveWorkplaces">0</strong>
             <span>개</span>
           </article>
 
           <article class="stat-card warning">
             <p>오늘 처리 필요</p>
-            <strong>9</strong>
+            <strong id="statTodayIssues">0</strong>
             <span>건</span>
           </article>
 
           <article class="stat-card warning">
             <p>미확인 요청</p>
-            <strong>5</strong>
+            <strong id="statPendingRequests">0</strong>
             <span>건</span>
           </article>
 
           <article class="stat-card dark">
-            <p>반복 지각 직원</p>
-            <strong>3</strong>
+            <p>신규 가입 대기</p>
+            <strong id="statPendingUsers">0</strong>
             <span>명</span>
           </article>
         </section>
@@ -130,6 +130,6 @@
 
   <script src="../public/js/common.js"></script>
   <script src="../public/js/pc.js"></script>
-  <script src="../public/js/admin.js"></script>
+  <script type="module" src="../public/js/admin.js"></script>
 </body>
 </html>

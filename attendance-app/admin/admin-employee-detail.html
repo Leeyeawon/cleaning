@@ -9,6 +9,240 @@
   <link rel="stylesheet" href="../public/css/common.css" />
   <link rel="stylesheet" href="../public/css/pc.css" />
   <link rel="stylesheet" href="../public/css/admin.css" />
+  <style>
+    /* =========================================
+       💻 일반 웹 화면 디자인 (디테일 보정 완료)
+    ========================================= */
+    .employee-detail-hero {
+      display: flex !important;
+      justify-content: space-between !important;
+      align-items: center !important;
+      flex-wrap: wrap !important;
+      gap: 16px !important;
+      padding: 24px !important;
+      background: #ffffff !important;
+      border-radius: 16px !important;
+      border: 1px solid #e5e7eb !important;
+      margin-bottom: 24px !important;
+    }
+
+    .employee-profile {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .employee-detail-actions {
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      flex-wrap: wrap !important;
+    }
+
+    .employee-detail-actions button {
+      height: 38px;
+      padding: 0 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: bold;
+      border: 1px solid #d1d5db;
+      background: #ffffff;
+      color: #374151;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .employee-detail-actions button:hover {
+      background: #f9fafb;
+      border-color: #9ca3af;
+    }
+
+    /* 🔥 1. 뷰 모드 탭 정렬 (좌측에서 16px 띄워서 안착감 부여) */
+    .view-mode-tabs {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 0 16px 14px 16px; /* 👈 좌측 16px 여백 추가! */
+      margin-bottom: 16px;
+    }
+    .view-tab-btn {
+      padding: 6px 14px;
+      border-radius: 8px;
+      background: #f3f4f6;
+      color: #4b5563;
+      font-size: 13px;
+      font-weight: bold;
+      border: 1px solid #e5e7eb;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .view-tab-btn:hover { background: #e5e7eb; }
+    .view-tab-btn.active { background: #111827; color: #ffffff; border-color: #111827; }
+    
+    /* 🔥 2. 상단 중앙 년·월 네비게이터 (폰트 15px로 축소 & 바 전체 크기 슬림화) */
+    .time-navigator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px; /* 20px -> 14px 축소 */
+      margin: 10px auto 20px;
+      padding: 8px 18px; /* 12px 24px -> 8px 18px 축소 */
+      background: #f8fafc;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+      max-width: 340px; /* 420px -> 340px 축소 */
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    .nav-arrow-btn {
+      width: 28px; /* 34px -> 28px 축소 */
+      height: 28px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .nav-arrow-btn:hover { background: #f1f5f9; }
+    .time-navigator strong { 
+      font-size: 15px; /* 👈 18px -> 15px로 콤팩트하게 변경! */
+      color: #0f172a; 
+      min-width: 130px; 
+      text-align: center; 
+    }
+    
+    /* 직접 지정 기간 검색창 정렬 */
+    .employee-attendance-filter {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: center;
+      background: #f8fafc;
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      margin: 0 16px 20px 16px; /* 좌우 16px 여백 일치 */
+    }
+    .employee-attendance-filter label { font-size: 13px; font-weight: bold; color: #475569; display: flex; align-items: center; gap: 6px; }
+    .employee-attendance-filter input[type="date"] { padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 13px; }
+    .employee-attendance-filter button { padding: 7px 16px; background: #2563eb; color: #fff; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; }
+
+    .attendance-table th, .attendance-table td {
+      vertical-align: middle !important;
+      text-align: center !important;
+    }
+
+    /* 🔥 3. 메모 작성 영역 (좌우 16px 여백 추가) */
+    .memo-editor-box { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 10px; 
+      margin-bottom: 16px; 
+      padding: 0 16px; /* 👈 좌우 16px 여백 추가! */
+    }
+    .memo-editor-box textarea { width: 100%; height: 80px; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 13px; resize: vertical; }
+    .memo-save-btn { align-self: flex-end; padding: 8px 18px; background: #2563eb; color: white; border-radius: 6px; font-weight: bold; font-size: 13px; border: none; cursor: pointer; }
+    .memo-save-btn:hover { background: #1d4ed8; }
+    
+    /* 🔥 4. 메모 히스토리 및 빈 텍스트 영역 (입력창과 동일하게 좌우 16px 여백 일치) */
+    .memo-history-list { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 10px; 
+      padding: 0 16px 16px 16px; /* 👈 입력창과 완벽한 좌우 라인 일치! */
+    }
+    .memo-item { padding: 14px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #3b82f6; border: 1px solid #e2e8f0; border-left-width: 4px; }
+    .memo-item-top { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 11px; color: #64748b; }
+    .memo-item-content { font-size: 13px; color: #1e293b; white-space: pre-wrap; line-height: 1.5; text-align: left; }
+
+    .print-only-header { display: none; }
+
+    /* =========================================
+       🖨️ 인쇄/PDF 출력 전용 스타일 (@media print)
+    ========================================= */
+    @media print {
+      #adminSidebar,
+      .top-header,
+      .employee-detail-hero,
+      .employee-summary-grid,
+      .employee-detail-grid,
+      .view-mode-tabs,
+      .time-navigator,
+      .employee-attendance-filter,
+      .memo-editor-box,
+      .panel-header button,
+      button {
+        display: none !important;
+      }
+
+      body, html, .admin-layout, .main, .content {
+        width: 100% !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+        overflow: visible !important;
+      }
+
+      .print-only-header {
+        display: block !important;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #111827;
+        text-align: center;
+      }
+      .print-only-header h1 { font-size: 24px; color: #000; margin-bottom: 6px; font-weight: bold; }
+      .print-only-header p { font-size: 14px; color: #444; margin: 0; }
+
+      .panel {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin-bottom: 30px !important;
+      }
+      
+      .panel-header h3 {
+        font-size: 16px !important;
+        color: #000 !important;
+        margin-bottom: 10px;
+        border-left: 4px solid #000;
+        padding-left: 8px;
+      }
+
+      .attendance-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-size: 11pt !important;
+      }
+      .attendance-table th, .attendance-table td {
+        border: 1px solid #999 !important;
+        padding: 8px 6px !important;
+        color: #000 !important;
+        text-align: center;
+      }
+      .attendance-table th {
+        background-color: #f0f0f0 !important;
+        font-weight: bold;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      tr { page-break-inside: avoid; page-break-after: auto; }
+
+      .memo-item {
+        border: 1px solid #ccc !important;
+        border-left: 4px solid #000 !important;
+        background: #fff !important;
+        page-break-inside: avoid;
+        margin-bottom: 8px !important;
+      }
+    }
+  </style>
 </head>
 
 <body data-admin-page="employees">
@@ -33,18 +267,18 @@
       <section class="content">
         <section class="employee-detail-hero">
           <div class="employee-profile">
-            <span class="avatar large" id="detailAvatar">-</span>
-
+            <!-- 🔥 5. 직원 이름 옆에 있던 불필요한 네모(아바타 박스) 삭제! -->
             <div>
-              <strong id="detailName">직원명</strong>
-              <p id="detailInfo">소속 · 상태</p>
+              <strong id="detailName" style="font-size: 20px; color: #111827; display: block;">직원명</strong>
+              <p id="detailInfo" style="margin-top: 4px; color: #6b7280; font-size: 13px;">소속 · 상태</p>
             </div>
           </div>
 
           <div class="employee-detail-actions">
-            <button type="button">월간 출근부</button>
-            <button type="button">비밀번호 초기화</button>
-            <button type="button">계정 비활성화</button>
+            <button type="button" id="btnViewMonthly" style="background:#2563eb; color:#fff; border-color:#2563eb;">📅 월간 출근부(근무표) 출력</button>
+            <button type="button" id="btnResetPassword">비밀번호 초기화</button>
+            <button type="button" id="btnDeactivate">계정 비활성화</button>
+            <button type="button" id="btnDeleteAccount" style="color: #dc2626; border-color: #fca5a5; background: #fef2f2;">계정 삭제</button>
           </div>
         </section>
 
@@ -54,19 +288,16 @@
             <strong id="detailWorkDays">0</strong>
             <span>일</span>
           </article>
-
           <article class="stat-card warning">
             <p>지각</p>
             <strong id="detailLateCount">0</strong>
             <span>회</span>
           </article>
-
           <article class="stat-card warning">
             <p>미출근</p>
             <strong id="detailAbsentCount">0</strong>
             <span>회</span>
           </article>
-
           <article class="stat-card">
             <p>총 근무시간</p>
             <strong id="detailWorkHours">0</strong>
@@ -76,92 +307,83 @@
 
         <section class="employee-detail-grid">
           <article class="panel">
-            <div class="panel-header">
-              <h3>기본 정보</h3>
-            </div>
-
+            <div class="panel-header"><h3>기본 정보</h3></div>
             <div class="employee-info-list detail-page-info">
-              <div>
-                <span>연락처</span>
-                <strong id="detailPhone">-</strong>
-              </div>
-
-              <div>
-                <span>로그인 ID</span>
-                <strong id="detailLoginId">-</strong>
-              </div>
-
-              <div>
-                <span>등록일</span>
-                <strong id="detailJoinDate">-</strong>
-              </div>
-
-              <div>
-                <span>상태</span>
-                <strong id="detailStatus">-</strong>
-              </div>
+              <div><span>연락처</span><strong id="detailPhone">-</strong></div>
+              <div><span>로그인 ID</span><strong id="detailLoginId">-</strong></div>
+              <div><span>등록일</span><strong id="detailJoinDate">-</strong></div>
+              <div><span>상태</span><strong id="detailStatus">-</strong></div>
             </div>
           </article>
 
           <article class="panel">
             <div class="panel-header">
               <h3>배정 지역</h3>
-              <button type="button">지역 수정 ›</button>
+              <button type="button" id="btnEditRegion">지역 수정 ›</button>
             </div>
-
-            <div class="employee-region-list detail-page-regions" id="detailRegionList"></div>
+            <div class="employee-region-list detail-page-regions" id="detailRegionList">
+              <p style="color: #64748b; font-size: 13px;">배정된 지역 정보를 불러오는 중...</p>
+            </div>
           </article>
         </section>
 
         <section class="panel">
-            <div class="panel-header">
-                <h3>개인 출근부</h3>
-                <button type="button" id="attendanceResetBtn">이번 달 보기</button>
-            </div>
+          <div class="panel-header">
+            <h3>개인 출근부 및 근무표</h3>
+            <button type="button" id="btnExcelPrint" style="background:#111827; color:#fff; padding:6px 14px; border-radius:6px; font-weight:bold; border:none; cursor:pointer;">
+              🖨️ 근무표만 깔끔하게 출력/PDF 저장
+            </button>
+          </div>
 
-            <div class="employee-attendance-filter">
-                <label>
-                시작일
-                <input type="date" id="attendanceStartDate" />
-                </label>
+          <div class="print-only-header" id="printHeader">
+            <h1 id="printTitle">직원 근무표 (출근부)</h1>
+            <p id="printSubtitle">출력일자: 2026. 07. 06. | 소속: 디자인팀 | 성명: 박서연</p>
+          </div>
 
-                <label>
-                종료일
-                <input type="date" id="attendanceEndDate" />
-                </label>
+          <div class="view-mode-tabs">
+            <button type="button" class="view-tab-btn active" data-mode="monthly">월간 근무표</button>
+            <button type="button" class="view-tab-btn" data-mode="yearly">연도별 근무표</button>
+            <button type="button" class="view-tab-btn" data-mode="custom">직접 기간 지정</button>
+          </div>
 
-                <button type="button" id="attendanceSearchBtn">
-                검색
-                </button>
-            </div>
+          <div class="time-navigator" id="timeNavigator">
+            <button type="button" class="nav-arrow-btn" id="prevTimeBtn">‹</button>
+            <strong id="currentTimeDisplay">2026년 7월</strong>
+            <button type="button" class="nav-arrow-btn" id="nextTimeBtn">›</button>
+          </div>
 
-            <div class="attendance-table-wrap">
-                <table class="attendance-table">
-                <thead>
-                    <tr>
-                    <th>날짜</th>
-                    <th>배정 지역</th>
-                    <th>출근</th>
-                    <th>퇴근</th>
-                    <th>근무시간</th>
-                    <th>상태</th>
-                    <th>메모</th>
-                    </tr>
-                </thead>
+          <div class="employee-attendance-filter" id="customDateFilter" style="display: none;">
+            <label>시작일 <input type="date" id="attendanceStartDate" /></label>
+            <label>종료일 <input type="date" id="attendanceEndDate" /></label>
+            <button type="button" id="attendanceSearchBtn">기간 검색</button>
+          </div>
 
-                <tbody id="detailRecordTableBody"></tbody>
-                </table>
-            </div>
+          <div class="attendance-table-wrap">
+            <table class="attendance-table">
+              <thead>
+                <tr>
+                  <th>일자</th>
+                  <th>요일</th>
+                  <th>근무시간</th>
+                  <th>시간합계</th>
+                  <th>기타사항</th>
+                  <th>비고</th>
+                </tr>
+              </thead>
+              <tbody id="detailRecordTableBody"></tbody>
+            </table>
+          </div>
         </section>
 
         <section class="panel">
-          <div class="panel-header">
-            <h3>관리자 메모</h3>
+          <div class="panel-header"><h3>관리자 메모 (날짜별 기록)</h3></div>
+          <div class="memo-editor-box">
+            <textarea id="newMemoInput" placeholder="직원에 대한 특이사항, 면담 내용, 출퇴근 수정 사유 등을 입력하세요."></textarea>
+            <button type="button" class="memo-save-btn" id="saveMemoBtn">메모 작성 및 저장</button>
           </div>
-
-          <p class="employee-memo detail-page-memo" id="detailMemo">
-            등록된 메모가 없습니다.
-          </p>
+          <div class="memo-history-list" id="memoHistoryList">
+            <p style="color: #64748b; font-size: 13px; margin: 0;">등록된 메모가 없습니다.</p>
+          </div>
         </section>
       </section>
     </main>
@@ -169,7 +391,6 @@
 
   <script src="../public/js/common.js"></script>
   <script src="../public/js/pc.js"></script>
-  <script src="../public/js/admin-employees-data.js"></script>
-  <script src="../public/js/admin-employee-detail.js"></script>
+  <script type="module" src="../public/js/admin-employee-detail.js"></script>
 </body>
 </html>

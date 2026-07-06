@@ -64,3 +64,32 @@ function getCurrentPageName() {
 
   return pageName || "index.html";
 }
+
+// <!-- 큰 글자 모드  -->
+
+// 1. 페이지가 열릴 때 기존에 설정한 글자 크기 불러오기
+const savedSizeMode = localStorage.getItem("textSizeMode");
+const fontToggleBtn = document.getElementById("fontToggleBtn");
+
+if (savedSizeMode === "large") {
+  document.body.classList.add("large-mode");
+  if (fontToggleBtn) fontToggleBtn.textContent = "🔍 기본 글자";
+}
+
+// 2. 버튼 클릭 시 토글 기능
+if (fontToggleBtn) {
+  fontToggleBtn.addEventListener("click", () => {
+    document.body.classList.toggle("large-mode");
+    
+    const isLarge = document.body.classList.contains("large-mode");
+    if (isLarge) {
+      localStorage.setItem("textSizeMode", "large");
+      fontToggleBtn.textContent = "🔍 기본 글자";
+      alert(" 큰글자 모드가 켜졌습니다.");
+    } else {
+      localStorage.setItem("textSizeMode", "normal");
+      fontToggleBtn.textContent = "🔍 글자 크게";
+      alert("기본 글자 크기로 변경되었습니다.");
+    }
+  });
+}

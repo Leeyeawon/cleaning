@@ -16,11 +16,11 @@ const checkOutTime = document.getElementById("checkOutTime");
 let currentEmployee = null;
 let todayAttendance = null;
 
+// 상단에 오늘 날짜 표시
 function setTodayDate() {
   if (!todayDate) return;
 
   const today = new Date();
-
   const formatted = today.toLocaleDateString("ko-KR", {
     year: "numeric",
     month: "long",
@@ -31,11 +31,11 @@ function setTodayDate() {
   todayDate.textContent = formatted;
 }
 
+// 시간 포맷 (예: 09:02)
 function formatTime(dateString) {
   if (!dateString) return "--:--";
 
   const date = new Date(dateString);
-
   if (Number.isNaN(date.getTime())) return "--:--";
 
   return date.toLocaleTimeString("ko-KR", {
@@ -44,6 +44,7 @@ function formatTime(dateString) {
   });
 }
 
+// 브라우저/스마트폰 GPS 위치 가져오기
 function getCurrentPosition() {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
@@ -71,6 +72,7 @@ function getCurrentPosition() {
   });
 }
 
+// 화면 UI 상태 업데이트 (출근 전 / 근무 중 / 근무 완료)
 function updateAttendanceUI() {
   if (!workStatus || !buttonText || !checkInTime || !checkOutTime) return;
 
@@ -103,21 +105,19 @@ function updateAttendanceUI() {
   }
 }
 
+// 에러 메시지 한글화
 function getErrorMessage(error) {
   const message = error?.message || "";
 
   if (message.includes("INVALID_SESSION")) {
     return "로그인 정보가 만료되었습니다. 다시 로그인해주세요.";
   }
-
   if (message.includes("ALREADY_CHECKED_IN")) {
     return "이미 오늘 출근 처리되었습니다.";
   }
-
   if (message.includes("OUT_OF_WORKPLACE_RANGE")) {
     return "현재 위치가 배정된 근무지 범위 밖입니다.";
   }
-
   if (message.includes("NO_WORKING_ATTENDANCE")) {
     return "퇴근 처리할 출근 기록이 없습니다.";
   }
@@ -125,9 +125,9 @@ function getErrorMessage(error) {
   return "처리 중 오류가 발생했습니다.";
 }
 
+// 오늘 출퇴근 기록 조회
 async function loadTodayAttendance() {
   const token = getEmployeeSessionToken();
-
   if (!token) {
     location.href = "../employee/login.html";
     return;
@@ -144,13 +144,12 @@ async function loadTodayAttendance() {
   }
 
   todayAttendance = data?.[0] || null;
-
   updateAttendanceUI();
 }
 
+// 출근 처리 함수
 async function checkIn() {
   const token = getEmployeeSessionToken();
-
   if (!token) {
     location.href = "../employee/login.html";
     return;
@@ -170,16 +169,15 @@ async function checkIn() {
   }
 
   todayAttendance = data?.[0] || null;
-
   updateAttendanceUI();
 
   const workplaceName = todayAttendance?.workplace_name || "근무지";
   alert(`${workplaceName} 출근 완료`);
 }
 
+// 퇴근 처리 함수
 async function checkOut() {
   const token = getEmployeeSessionToken();
-
   if (!token) {
     location.href = "../employee/login.html";
     return;
@@ -199,15 +197,33 @@ async function checkOut() {
   }
 
   todayAttendance = data?.[0] || null;
-
   updateAttendanceUI();
 
   const workplaceName = todayAttendance?.workplace_name || "근무지";
   alert(`${workplaceName} 퇴근 완료`);
 }
 
+// 🔥 핵심: 출퇴근 버튼 클릭 이벤트 (확인창 팝업 기능 추가!)
 attendanceBtn?.addEventListener("click", async () => {
   try {
+    // 1. 출근 전 상태일 때 -> 출근 확인창 띄우기
+    if (!todayAttendance) {
+      if (!confirm("출근하시겠습니까?")) {
+        return; // '아니오/취소'를 누르면 여기서 바로 멈춤!
+      }
+    }
+    // 2. 근무 중(출근 완료, 퇴근 전) 상태일 때 -> 퇴근 확인창 띄우기
+    else if (todayAttendance.check_in_time && !todayAttendance.check_out_time) {
+      if (!confirm("퇴근하시겠습니까?")) {
+        return; // '아니오/취소'를 누르면 여기서 바로 멈춤!
+      }
+    }
+    // 3. 이미 퇴근까지 모두 완료된 상태면 아무 작업도 하지 않음
+    else {
+      return;
+    }
+
+    // --- 확인(예)을 눌렀을 때만 아래 GPS 위치 확인 및 서버 통신 실행 ---
     attendanceBtn.disabled = true;
 
     if (buttonText) {
@@ -225,7 +241,7 @@ attendanceBtn?.addEventListener("click", async () => {
     }
   } catch (error) {
     alert(error.message);
-    console.error(error);
+    console.error("출퇴근 처리 에러:", error);
   } finally {
     updateAttendanceUI();
 
@@ -235,15 +251,22 @@ attendanceBtn?.addEventListener("click", async () => {
   }
 });
 
+// 🔥 핵심: 메인 홈 화면 전용 올바른 초기화 함수
 async function init() {
-  currentEmployee = await checkAccess();
-
+  // 1. 로그인된 직원 세션 검증 및 정보 가져오기
+  currentEmployee = await getCurrentEmployee();
   if (!currentEmployee) return;
 
-  selectedDate = toDateKey(new Date());
+  // 2. 화면 상단에 직원 이름 자동 표시
+  if (userName) {
+    userName.textContent = currentEmployee.name || "직원";
+  }
 
-  updateMonthTitle();
-  await loadMonthlyAttendance();
+  // 3. 화면 상단에 오늘 날짜 표시
+  setTodayDate();
+
+  // 4. 오늘 출퇴근 기록 불러오기
+  await loadTodayAttendance();
 }
 
 init();
