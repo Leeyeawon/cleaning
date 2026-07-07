@@ -42,25 +42,25 @@
         <section class="stats-grid">
           <article class="stat-card warning">
             <p>오늘 지각</p>
-            <strong>3</strong>
+            <strong id="issueLateCount">0</strong>
             <span>명</span>
           </article>
 
           <article class="stat-card warning">
             <p>오늘 미출근</p>
-            <strong>2</strong>
+            <strong id="issueAbsentCount">0</strong>
             <span>명</span>
           </article>
 
           <article class="stat-card dark">
             <p>위치 오류</p>
-            <strong>1</strong>
+            <strong id="issueLocationCount">0</strong>
             <span>건</span>
           </article>
 
           <article class="stat-card">
             <p>반복 지각</p>
-            <strong>3</strong>
+            <strong id="issueRepeatLateCount">0</strong>
             <span>명</span>
           </article>
         </section>
@@ -188,6 +188,6 @@
 
   <script src="../public/js/common.js"></script>
   <script src="../public/js/pc.js"></script>
-  <script src="../public/js/admin-attendance-issue.js"></script>
+  <script type="module" src="../public/js/admin-attendance-issue.js"></script>
 </body>
 </html>

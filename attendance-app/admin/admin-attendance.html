@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="../public/css/pc.css" />
     <link rel="stylesheet" href="../public/css/admin.css" />
     <link rel="stylesheet" href="../public/css/admin-attendance.css" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body data-admin-page="attendance">
   <div class="admin-layout">
@@ -35,15 +37,16 @@
             <span>⚠️</span>
             <p>이번 달 지각 3회 이상 직원 3명이 있습니다.</p>
           </div>
-          <button type="button">지각 직원 확인</button>
+          <button type="button" onclick="location.href='admin-attendance-issue.html'">
+            지각 직원 확인
+          </button>
         </div>
 
         <section class="attendance-sub-tabs">
           <a href="admin-attendance.html" class="attendance-sub-tab active">오늘 출퇴근 현황</a>
-          <a href="#" class="attendance-sub-tab">지각·미출근 관리</a>
-          <a href="admin-monthly.html" class="attendance-sub-tab">월간 출근부</a>
-          <a href="#" class="attendance-sub-tab">출퇴근 기록 수정</a>
-        </section>
+          <a href="admin-attendance-issue.html" class="attendance-sub-tab">지각·미출근 관리</a>
+          <a href="admin-attendance-monthly.html" class="attendance-sub-tab">월간 출근부</a>
+          <a href="admin-attendance-edit.html" class="attendance-sub-tab">출퇴근 기록 수정</a>        </section>
 
         <section class="stats-grid">
           <article class="stat-card">

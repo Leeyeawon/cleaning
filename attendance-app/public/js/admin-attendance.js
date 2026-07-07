@@ -307,17 +307,11 @@ async function loadMonthlyLateEmployees() {
 
 // 9. 지역, 상태, 이름 검색 필터링 기능
 function filterAttendanceData() {
-// ... 필터링 로직 ...
-  const filteredData = realAttendanceList.filter(...);
-  
-  // 🔥 핵심: 필터링된 결과에 맞춰 상단 박스 숫자도 다시 갱신해야 합니다!
-  updateSummaryStats(filteredData); 
-  
-  renderAttendanceTable(filteredData);
-
   const selectedRegion = regionFilter ? regionFilter.value : "전체 지역";
   const selectedStatus = statusFilter ? statusFilter.value : "전체 상태";
-  const searchKeyword = employeeSearchInput ? employeeSearchInput.value.trim() : "";
+  const searchKeyword = employeeSearchInput
+    ? employeeSearchInput.value.trim()
+    : "";
 
   const filteredData = realAttendanceList.filter((item) => {
     const isRegionMatched =
@@ -332,13 +326,42 @@ function filterAttendanceData() {
     return isRegionMatched && isStatusMatched && isSearchMatched;
   });
 
-  updateSummaryStats(filteredData); 
+  updateSummaryStats(filteredData);
   renderAttendanceTable(filteredData);
 }
 
-// 10. 엑셀 다운로드 (우선 안내 메시지 처리)
+// 10. 엑셀 다운로드 실제 구현
 function handleExcelDownload() {
-  alert("⬇️ 현재 조회된 데이터를 엑셀로 내보냅니다. (SheetJS 라이브러리 추가 시 즉시 다운로드 가능)");
+  if (!realAttendanceList || realAttendanceList.length === 0) {
+    alert("다운로드할 데이터가 없습니다.");
+    return;
+  }
+
+  // 엑셀로 변환할 데이터 가공 (한글 헤더)
+  const excelData = realAttendanceList.map((item, index) => ({
+    "No": index + 1,
+    "직원명": item.name,
+    "부서": item.department,
+    "배정지역": item.region,
+    "출근시간": item.checkIn,
+    "퇴근시간": item.checkOut,
+    "총 근무시간": item.workTime,
+    "출근상태": item.status
+  }));
+
+  // 워크시트 및 워크북 생성
+  const worksheet = XLSX.utils.json_to_sheet(excelData);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "오늘_출퇴근현황");
+
+  // 열 너비 자동 맞춤 설정
+  worksheet["!cols"] = [
+    { wch: 5 },  { wch: 10 }, { wch: 12 }, { wch: 15 }, 
+    { wch: 10 }, { wch: 10 }, { wch: 15 }, { wch: 10 }
+  ];
+
+  // 엑셀 파일 다운로드 실행
+  XLSX.writeFile(workbook, `출퇴근현황_${todayStr}.xlsx`);
 }
 
 // 🔥 페이지 초기화 실행
@@ -365,3 +388,27 @@ async function initAttendancePage() {
 }
 
 initAttendancePage();
+
+// 특정 출퇴근 로그 ID의 시간을 수동으로 변경하는 관리자 전용 함수
+async function adminUpdateAttendanceTime(logId, newCheckIn, newCheckOut, newStatus) {
+  try {
+    const { data, error } = await supabase
+      .from("attendance")
+      .update({
+        check_in_time: newCheckIn,   // ISO string 형식 (예: 2026-07-07T09:00:00Z)
+        check_out_time: newCheckOut, // ISO string 형식
+        status: newStatus            // 'normal', 'late' 등
+      })
+      .eq("id", logId)
+      .select();
+
+    if (error) throw error;
+
+    alert("출퇴근 기록이 성공적으로 수정되었습니다.");
+    // 수정 후 테이블 새로고침
+    initAttendancePage(); 
+  } catch (err) {
+    console.error("출퇴근 수정 실패:", err.message);
+    alert("기록 수정 중 오류가 발생했습니다.");
+  }
+}
