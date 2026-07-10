@@ -1,187 +1,391 @@
-/* 직원 관리 페이지 */
-.admin-main > .employee-page-inner {
+/* =========================================================
+   직원 관리 페이지
+========================================================= */
+
+.employee-page-inner {
   width: 100%;
   max-width: none;
   margin: 0;
+  padding: 24px 20px 32px;
+  box-sizing: border-box;
 }
+
+.header-employee-button {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 13px;
+  background: #1f2937;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 750;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease;
+}
+
+.primary-btn:hover {
+  background: #111827;
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   요약 카드
+========================================================= */
 
 .employee-summary-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
   margin-bottom: 18px;
 }
 
 .employee-summary-card {
-  background: #fff;
-  border: 1px solid #edf0f5;
+  position: relative;
+  min-height: 128px;
+  padding: 22px;
+  overflow: hidden;
+  border: 1px solid #e8ebf1;
   border-radius: 20px;
-  padding: 18px;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+  background: #fff;
+}
+
+.employee-summary-card::after {
+  position: absolute;
+  right: -18px;
+  bottom: -24px;
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  background: #f4f6f9;
+  content: "";
+}
+
+.employee-summary-card:nth-child(2) {
+  background: #f3f8f5;
+}
+
+.employee-summary-card:nth-child(3) {
+  background: #fff8ed;
+}
+
+.employee-summary-card:nth-child(4) {
+  background: #f5f5f7;
 }
 
 .employee-summary-card span {
+  position: relative;
+  z-index: 1;
   display: block;
-  color: #7b8190;
+  margin-bottom: 16px;
+  color: #788294;
   font-size: 13px;
-  margin-bottom: 8px;
+  font-weight: 700;
 }
 
 .employee-summary-card strong {
-  font-size: 30px;
+  position: relative;
+  z-index: 1;
+  color: #172033;
+  font-size: 34px;
   line-height: 1;
-  color: #151923;
+  letter-spacing: -0.05em;
 }
 
 .employee-summary-card small {
+  position: relative;
+  z-index: 1;
   margin-left: 4px;
-  color: #7b8190;
+  color: #8992a1;
+  font-size: 13px;
+  font-weight: 700;
 }
+
+/* =========================================================
+   필터
+========================================================= */
 
 .employee-filter-card {
   display: grid;
-  grid-template-columns: 1.5fr 160px 180px 160px auto;
+  grid-template-columns:
+    minmax(240px, 1.6fr)
+    minmax(140px, 0.7fr)
+    minmax(160px, 0.8fr)
+    minmax(150px, 0.8fr)
+    auto;
   gap: 10px;
   align-items: center;
-  background: #fff;
-  border: 1px solid #edf0f5;
-  border-radius: 20px;
   padding: 16px;
   margin-bottom: 18px;
-}
-
-.employee-filter-card input,
-.employee-filter-card select {
-  height: 42px;
-  border: 1px solid #dde3ee;
-  border-radius: 12px;
-  padding: 0 12px;
+  border: 1px solid #e8ebf1;
+  border-radius: 18px;
   background: #fff;
-  color: #151923;
-  outline: none;
 }
 
-.employee-filter-card input:focus,
+.employee-filter-card input[type="search"],
+.employee-filter-card select {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid #dde2ea;
+  border-radius: 12px;
+  outline: none;
+  background: #fafbfc;
+  color: #293247;
+  font-size: 13px;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.employee-filter-card input[type="search"]:focus,
 .employee-filter-card select:focus {
-  border-color: #4f7cff;
+  border-color: #8e99aa;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgb(31 41 55 / 7%);
 }
 
 .check-filter {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 7px;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid #dde2ea;
+  border-radius: 12px;
+  background: #fafbfc;
+  color: #596477;
   font-size: 13px;
-  color: #555b66;
+  font-weight: 700;
   white-space: nowrap;
+  cursor: pointer;
 }
 
+.check-filter input {
+  width: 16px;
+  height: 16px;
+  margin: 0 7px 0 0;
+  accent-color: #1f2937;
+}
+
+/* =========================================================
+   직원 목록 카드
+========================================================= */
+
 .employee-list-card {
+  overflow: hidden;
+  border: 1px solid #e8ebf1;
+  border-radius: 20px;
   background: #fff;
-  border: 1px solid #edf0f5;
-  border-radius: 22px;
-  padding: 18px;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
 }
 
 .section-title-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
+  min-height: 70px;
+  padding: 0 22px;
+  border-bottom: 1px solid #edf0f4;
 }
 
 .section-title-row h2 {
-  font-size: 18px;
   margin: 0;
+  color: #20283a;
+  font-size: 17px;
+  letter-spacing: -0.025em;
 }
 
 .section-title-row span {
-  font-size: 13px;
-  color: #7b8190;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #f1f3f6;
+  color: #687386;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .table-scroll {
+  width: 100%;
   overflow-x: auto;
 }
 
 .employee-table {
   width: 100%;
-  min-width: 860px;
+  min-width: 980px;
   border-collapse: collapse;
 }
 
 .employee-table th {
-  text-align: left;
+  height: 48px;
+  padding: 0 16px;
+  border-bottom: 1px solid #eceff3;
+  background: #fafbfc;
+  color: #7a8494;
   font-size: 12px;
-  color: #7b8190;
-  font-weight: 700;
-  padding: 13px 12px;
-  border-bottom: 1px solid #edf0f5;
-  background: #fafbfe;
+  font-weight: 800;
+  text-align: left;
+  white-space: nowrap;
 }
 
 .employee-table td {
-  padding: 14px 12px;
-  border-bottom: 1px solid #f0f2f6;
+  height: 72px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f2f5;
+  color: #444e61;
+  font-size: 13px;
+  vertical-align: middle;
+}
+
+.employee-table tbody tr {
+  transition: background 0.16s ease;
+}
+
+.employee-table tbody tr:hover {
+  background: #fafbfc;
+}
+
+.employee-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.employee-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.employee-avatar {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 13px;
+  background: #eef1f5;
+  color: #344054;
   font-size: 14px;
-  color: #303542;
+  font-weight: 850;
 }
 
-.employee-table tr:hover td {
-  background: #fafcff;
-}
-
-.employee-name-cell strong {
+.employee-name-text strong {
+  display: block;
+  margin-bottom: 3px;
+  color: #222b3d;
   font-size: 14px;
-  color: #151923;
 }
 
-.region-pill {
+.employee-name-text span {
+  color: #949cab;
+  font-size: 11px;
+}
+
+/* =========================================================
+   클릭 가능한 소속 / 근무지
+========================================================= */
+
+.assignment-button {
   display: inline-flex;
   align-items: center;
-  min-height: 28px;
-  padding: 0 10px;
-  border-radius: 999px;
-  background: #eef4ff;
-  color: #2f6fed;
+  gap: 7px;
+  max-width: 190px;
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid #e0e4ea;
+  border-radius: 10px;
+  background: #f8f9fb;
+  color: #485367;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 750;
+  cursor: pointer;
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease,
+    transform 0.16s ease;
 }
 
-.region-pill.empty {
-  background: #f4f5f7;
-  color: #8a909c;
+.assignment-button:hover {
+  border-color: #b9c0cc;
+  background: #fff;
+  transform: translateY(-1px);
 }
 
-.status-badge {
+.assignment-button::after {
+  color: #9aa2af;
+  font-size: 15px;
+  content: "›";
+}
+
+.assignment-button.unassigned {
+  border-style: dashed;
+  color: #a0681c;
+  background: #fff9ef;
+}
+
+.assignment-button .assignment-dot {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #8994a7;
+}
+
+.assignment-button.unassigned .assignment-dot {
+  background: #d69a3c;
+}
+
+.assignment-button .assignment-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   상태
+========================================================= */
+
+.employee-status {
   display: inline-flex;
   align-items: center;
-  min-height: 28px;
+  justify-content: center;
+  min-width: 62px;
+  min-height: 30px;
   padding: 0 10px;
   border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 800;
 }
 
-.status-badge.normal {
-  background: #eaf8ef;
-  color: #218b4f;
+.employee-status.normal {
+  background: #eaf5ee;
+  color: #39704c;
 }
 
-.status-badge.late {
-  background: #fff5de;
-  color: #b77900;
+.employee-status.late {
+  background: #fff2da;
+  color: #9a671c;
 }
 
-.status-badge.location {
-  background: #eef1f6;
-  color: #636b78;
+.employee-status.location {
+  background: #f0f1f4;
+  color: #646d7c;
 }
 
-.status-badge.absent {
-  background: #ffecec;
-  color: #d23b3b;
+.employee-status.absent {
+  background: #fbecec;
+  color: #a34b4b;
 }
+
+/* =========================================================
+   관리 버튼
+========================================================= */
 
 .employee-action-group {
   display: flex;
@@ -189,99 +393,115 @@
   gap: 7px;
 }
 
-.table-action-btn {
+.employee-detail-link,
+.employee-disable-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 32px;
+  min-height: 34px;
   padding: 0 11px;
   border-radius: 10px;
-  border: 1px solid #dde3ee;
-  background: #fff;
-  color: #3f4654;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 750;
   text-decoration: none;
   cursor: pointer;
 }
 
-.table-action-btn:hover {
-  background: #f6f8fc;
+.employee-detail-link {
+  border: 1px solid #dfe3e9;
+  background: #fff;
+  color: #3f4a5d;
 }
 
-.table-action-btn.danger {
-  color: #d23b3b;
+.employee-detail-link:hover {
+  border-color: #aeb6c2;
+}
+
+.employee-disable-btn {
+  border: 0;
+  background: #f6eeee;
+  color: #9d4d4d;
+}
+
+.employee-disable-btn:hover {
+  background: #f2e3e3;
 }
 
 .empty-table {
+  height: 180px !important;
+  color: #949cab !important;
   text-align: center;
-  padding: 36px !important;
-  color: #8a909c !important;
 }
 
-/* modal */
+/* =========================================================
+   직원 등록 모달
+========================================================= */
 
-.employee-modal {
+.employee-modal,
+.quick-assign-modal {
   position: fixed;
+  z-index: 1000;
   inset: 0;
-  z-index: 100;
   display: none;
   align-items: center;
   justify-content: center;
-  padding: 24px;
-  background: rgba(15, 23, 42, 0.42);
+  padding: 22px;
+  background: rgb(18 24 36 / 48%);
+  backdrop-filter: blur(4px);
 }
 
-.employee-modal.open {
+.employee-modal.open,
+.quick-assign-modal.open {
   display: flex;
 }
 
 .employee-modal-panel {
-  width: min(620px, 100%);
+  width: min(680px, 100%);
+  max-height: calc(100vh - 44px);
+  overflow-y: auto;
+  border-radius: 22px;
   background: #fff;
-  border-radius: 24px;
-  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24);
-  overflow: hidden;
+  box-shadow: 0 24px 80px rgb(20 28 45 / 22%);
 }
 
 .employee-modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 22px;
-  border-bottom: 1px solid #edf0f5;
+  padding: 22px 24px;
+  border-bottom: 1px solid #eceff3;
 }
 
 .employee-modal-header h2 {
   margin: 0;
-  font-size: 18px;
+  color: #20283a;
+  font-size: 19px;
 }
 
 .employee-modal-header button {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border: 0;
-  border-radius: 12px;
-  background: #f4f5f7;
-  cursor: pointer;
+  border-radius: 11px;
+  background: #f3f5f7;
+  color: #687386;
   font-size: 22px;
-  line-height: 1;
+  cursor: pointer;
 }
 
 .employee-form {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  padding: 22px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding: 24px;
 }
 
 .employee-form label {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  font-size: 13px;
-  font-weight: 700;
-  color: #3f4654;
+  display: grid;
+  gap: 8px;
+  color: #515c70;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .employee-form label.full {
@@ -291,142 +511,348 @@
 .employee-form input,
 .employee-form select,
 .employee-form textarea {
-  border: 1px solid #dde3ee;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #dfe3e9;
   border-radius: 12px;
-  padding: 11px 12px;
   outline: none;
-  font-size: 14px;
-  resize: none;
+  background: #fafbfc;
+  color: #293247;
+  font: inherit;
+}
+
+.employee-form input,
+.employee-form select {
+  height: 44px;
+  padding: 0 13px;
+}
+
+.employee-form textarea {
+  min-height: 100px;
+  padding: 12px 13px;
+  resize: vertical;
 }
 
 .employee-form input:focus,
 .employee-form select:focus,
 .employee-form textarea:focus {
-  border-color: #4f7cff;
+  border-color: #929dad;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgb(31 41 55 / 6%);
 }
 
 .employee-form-actions {
-  grid-column: 1 / -1;
   display: flex;
+  grid-column: 1 / -1;
   justify-content: flex-end;
-  gap: 10px;
-  margin-top: 4px;
-}
-
-.primary-btn {
-  height: 42px;
-  padding: 0 16px;
-  border: 0;
-  border-radius: 13px;
-  background: #2f6fed;
-  color: #fff;
-  font-weight: 800;
-  cursor: pointer;
+  gap: 9px;
+  padding-top: 4px;
 }
 
 .ghost-btn {
-  height: 42px;
-  padding: 0 16px;
-  border: 1px solid #dde3ee;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid #dfe3e9;
   border-radius: 13px;
   background: #fff;
-  color: #3f4654;
+  color: #596477;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+/* =========================================================
+   빠른 배정 팝업
+========================================================= */
+
+.quick-assign-panel {
+  width: min(420px, 100%);
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 60%);
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 26px 80px rgb(19 27 43 / 28%);
+  animation: quickAssignOpen 0.18s ease;
+}
+
+@keyframes quickAssignOpen {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.quick-assign-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 22px 22px 18px;
+  border-bottom: 1px solid #edf0f4;
+}
+
+.quick-assign-label {
+  margin: 0 0 7px;
+  color: #9aa2af;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.14em;
+}
+
+.quick-assign-header h2 {
+  margin: 0;
+  color: #20283a;
+  font-size: 19px;
+  letter-spacing: -0.025em;
+}
+
+.quick-assign-employee {
+  margin: 7px 0 0;
+  color: #7b8596;
+  font-size: 13px;
+}
+
+.quick-assign-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 35px;
+  height: 35px;
+  border: 0;
+  border-radius: 11px;
+  background: #f3f5f7;
+  color: #697386;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.quick-assign-option-list {
+  display: grid;
+  gap: 8px;
+  max-height: 330px;
+  padding: 18px 22px;
+  overflow-y: auto;
+}
+
+.quick-assign-option {
+  position: relative;
+}
+
+.quick-assign-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.quick-assign-option label {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid #e2e6ec;
+  border-radius: 13px;
+  background: #fafbfc;
+  color: #495468;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.quick-assign-option label::before {
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  border: 2px solid #c4cad3;
+  border-radius: 50%;
+  background: #fff;
+  content: "";
+}
+
+.quick-assign-option input:checked + label {
+  border-color: #747f91;
+  background: #f2f4f7;
+  color: #222b3d;
+  box-shadow: 0 0 0 3px rgb(31 41 55 / 5%);
+}
+
+.quick-assign-option input:checked + label::before {
+  border: 5px solid #263244;
+}
+
+.quick-assign-option.is-unassigned label {
+  color: #9b681f;
+  background: #fffaf1;
+}
+
+.quick-assign-empty {
+  padding: 24px 10px;
+  color: #959dab;
+  font-size: 13px;
+  text-align: center;
+}
+
+.quick-assign-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  padding: 16px 22px 20px;
+  border-top: 1px solid #edf0f4;
+}
+
+.quick-assign-cancel,
+.quick-assign-save {
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 12px;
+  font-size: 13px;
   font-weight: 800;
   cursor: pointer;
 }
 
-@media (max-width: 1100px) {
+.quick-assign-cancel {
+  border: 1px solid #dfe3e9;
+  background: #fff;
+  color: #657084;
+}
+
+.quick-assign-save {
+  border: 0;
+  background: #202a3a;
+  color: #fff;
+}
+
+.quick-assign-save:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+/* =========================================================
+   반응형
+========================================================= */
+
+@media (max-width: 1180px) {
   .employee-summary-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .employee-filter-card {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .check-filter {
-    min-height: 42px;
+  .employee-filter-card input[type="search"] {
+    grid-column: 1 / -1;
   }
 }
 
-.employee-page-inner {
-  width: 100%;
+@media (max-width: 760px) {
+  .employee-page-inner {
+    padding: 18px;
+  }
+
+  .admin-page-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-page-header .primary-btn {
+    width: 100%;
+  }
+
+  .employee-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .employee-filter-card {
+    grid-template-columns: 1fr;
+  }
+
+  .employee-filter-card input[type="search"] {
+    grid-column: auto;
+  }
+
+  .employee-form {
+    grid-template-columns: 1fr;
+    padding: 18px;
+  }
+
+  .employee-form label.full,
+  .employee-form-actions {
+    grid-column: auto;
+  }
+
+  .employee-form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .employee-form-actions button {
+    width: 100%;
+  }
 }
 
-.admin-page-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 22px;
-}
-
-.admin-page-header > div {
-  min-width: 0;
-}
-
-.admin-page-header .primary-btn {
-  flex-shrink: 0;
-}
-
-.employee-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-  margin-bottom: 18px;
-}
-
-.employee-filter-card {
-  display: grid;
-  grid-template-columns: minmax(220px, 1fr) 140px 160px 140px auto;
-  gap: 10px;
+.employee-assignment-button {
+  display: inline-flex;
   align-items: center;
-  margin-bottom: 18px;
-}
-
-.employee-list-card,
-.employee-filter-card,
-.employee-summary-card {
-  box-sizing: border-box;
-}
-
-.table-scroll {
+  gap: 8px;
   width: 100%;
-  max-width: 100%;
-  overflow-x: auto;
+  max-width: 180px;
+  min-height: 38px;
+  padding: 0 11px;
+  border: 1px solid #e1e5eb;
+  border-radius: 11px;
+  background: #f8f9fb;
+  color: #465166;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease,
+    transform 0.16s ease;
 }
 
-.employee-table {
-  width: 100%;
-  min-width: 820px;
-  table-layout: auto;
+.employee-assignment-button:hover {
+  border-color: #aeb6c2;
+  background: #fff;
+  transform: translateY(-1px);
 }
 
-.employee-table th,
-.employee-table td {
+.employee-assignment-button.is-unassigned {
+  border-style: dashed;
+  background: #fff9ef;
+  color: #9b681e;
+}
+
+.assignment-indicator {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #748094;
+}
+
+.employee-assignment-button.is-unassigned
+  .assignment-indicator {
+  background: #d49a3f;
+}
+
+.assignment-value {
+  flex: 1;
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.employee-table th:first-child,
-.employee-table td:first-child {
-  white-space: normal;
-}
-
-@media (max-width: 1200px) {
-  .employee-summary-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .employee-filter-card {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-.employee-page-inner {
-  width: 100%;
-}
-
-.admin-main {
-  padding: 32px 40px;
-  box-sizing: border-box;
+.assignment-arrow {
+  color: #9aa2af;
+  font-size: 17px;
 }
