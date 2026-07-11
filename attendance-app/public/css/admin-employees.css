@@ -25,23 +25,6 @@
     0 8px 24px rgba(15, 23, 42, 0.04);
 }
 
-.employee-filter-card {
-  display: grid;
-  grid-template-columns:
-    minmax(220px, 1fr)
-    160px
-    180px
-    160px
-    auto;
-  gap: 10px;
-  align-items: center;
-  padding: 16px;
-  margin-bottom: 18px;
-  border: 1px solid #edf0f5;
-  border-radius: 20px;
-  background: #fff;
-}
-
 /* =========================================================
    필터
 ========================================================= */
@@ -701,4 +684,96 @@
 .quick-assign-save:disabled {
   cursor: wait;
   opacity: 0.6;
+}
+
+/* =========================================================
+   직원 관리 반응형
+========================================================= */
+
+.main {
+  min-width: 0;
+}
+
+.employee-page-inner {
+  min-width: 0;
+}
+
+/* 일반 노트북·축소된 창 */
+@media (max-width: 1400px) {
+  .employee-page-inner {
+    padding: 22px 24px 36px;
+  }
+
+  .employee-filter-card {
+    grid-template-columns:
+      minmax(220px, 1.4fr)
+      minmax(135px, 0.8fr)
+      minmax(150px, 0.9fr);
+  }
+
+  .employee-filter-card
+    #employeeTeamFilter {
+    grid-column: 1 / 2;
+  }
+
+  .check-filter {
+    justify-self: stretch;
+  }
+}
+
+/* 작은 노트북·화면 분할 */
+@media (max-width: 1100px) {
+  .employee-page-inner {
+    padding: 18px;
+  }
+
+  .employee-summary-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .employee-filter-card {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .employee-filter-card
+    #employeeSearchInput {
+    grid-column: 1 / -1;
+  }
+
+  .employee-filter-card
+    #employeeTeamFilter {
+    grid-column: auto;
+  }
+
+  .check-filter {
+    width: 100%;
+  }
+}
+
+/* 매우 좁은 창 */
+@media (max-width: 780px) {
+  .employee-page-inner {
+    padding: 14px;
+  }
+
+  .employee-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .employee-filter-card {
+    grid-template-columns: 1fr;
+  }
+
+  .employee-filter-card
+    #employeeSearchInput {
+    grid-column: auto;
+  }
+
+  .employee-filter-card input,
+  .employee-filter-card select,
+  .check-filter {
+    min-width: 0;
+  }
 }

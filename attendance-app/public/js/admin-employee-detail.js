@@ -45,6 +45,22 @@ const memoHistoryList = document.getElementById("memoHistoryList");
 const printTitle = document.getElementById("printTitle");
 const printSubtitle = document.getElementById("printSubtitle");
 
+const editEmployeeBtn = document.getElementById("editEmployeeBtn");
+const btnEditRegion = document.getElementById("btnEditRegion");
+const employeeEditModal = document.getElementById("employeeEditModal");
+const employeeEditForm = document.getElementById("employeeEditForm");
+const employeeEditCloseBtn = document.getElementById("employeeEditCloseBtn");
+const employeeEditCancelBtn = document.getElementById("employeeEditCancelBtn");
+const editEmployeeName = document.getElementById("editEmployeeName");
+const editEmployeePhone = document.getElementById("editEmployeePhone");
+const editEmployeeCode = document.getElementById("editEmployeeCode");
+const editEmployeeDepartment = document.getElementById("editEmployeeDepartment");
+const regionEditModal = document.getElementById("regionEditModal");
+const regionEditList = document.getElementById("regionEditList");
+const regionEditCloseBtn = document.getElementById("regionEditCloseBtn");
+const regionEditCancelBtn = document.getElementById("regionEditCancelBtn");
+const regionEditSaveBtn = document.getElementById("regionEditSaveBtn");
+
 let currentEmployeeData = null;
 let viewMode = "monthly"; 
 let selectedYear = new Date().getFullYear();
@@ -78,57 +94,212 @@ function getKoreanDayOfWeek(dateString) {
 
 async function fetchEmployeeProfile() {
   if (!targetUserId) {
-    alert("⚠️ 직원 ID가 없습니다. 목록으로 이동합니다.");
-    location.href = "admin-employees.html";
+    alert(
+      "직원 ID가 없습니다. 직원 목록으로 이동합니다."
+    );
+
+    location.href =
+      "admin-employees.html";
+
     return null;
   }
 
   try {
-    const { data: user, error } = await supabase
-      .from("users")
-      .select("*")
-      .eq("id", targetUserId)
-      .single();
+    const { data, error } =
+      await supabase.rpc(
+        "admin_get_employees"
+      );
 
-    if (error || !user) {
-      alert("해당 직원 정보를 찾을 수 없습니다.");
-      location.href = "admin-employees.html";
+    if (error) {
+      throw error;
+    }
+
+    const employeeList =
+      Array.isArray(data) ? data : [];
+
+    const employee =
+      employeeList.find(
+        (item) =>
+          String(item.id) ===
+          String(targetUserId)
+      );
+
+    if (!employee) {
+      alert(
+        "해당 직원 정보를 찾을 수 없습니다."
+      );
+
+      location.href =
+        "admin-employees.html";
+
       return null;
     }
 
-    const { data: wpUser } = await supabase
-      .from("workplace_users")
-      .select("workplaces ( name )")
-      .eq("user_id", targetUserId)
-      .limit(1)
-      .maybeSingle();
+    return {
+      ...employee,
 
-    return { ...user, workplaceName: wpUser?.workplaces?.name || "미배정" };
-  } catch (err) {
-    console.error("프로필 조회 에러:", err);
+      workplaceIds:
+        Array.isArray(
+          employee.workplaceIds
+        )
+          ? employee.workplaceIds.map(
+              String
+            )
+          : [],
+
+      workplaceNames:
+        Array.isArray(
+          employee.workplaceNames
+        )
+          ? employee.workplaceNames
+          : [],
+    };
+  } catch (error) {
+    console.error(
+      "직원 상세 정보 조회 실패:",
+      error
+    );
+
+    alert(
+      `직원 정보를 불러오지 못했습니다.\n${
+        error.message ||
+        "관리자 권한을 확인해 주세요."
+      }`
+    );
+
     return null;
   }
 }
 
-function renderProfileUI(emp) {
-  if (!emp) return;
-
-  if (employeeDetailTitle) employeeDetailTitle.textContent = `${emp.name} · 근태 상세`;
-  if (detailName) detailName.textContent = emp.name || "이름 없음";
-  if (detailInfo) detailInfo.textContent = `${emp.department || '부서없음'} · ${emp.position || '직급없음'} [${emp.status === 'active' ? '재직' : emp.status === 'pending' ? '승인대기' : '비활성'}]`;
-  
-  if (detailPhone) detailPhone.textContent = emp.phone || "—";
-  if (detailLoginId) detailLoginId.textContent = emp.email || emp.employee_code || "—";
-  if (detailJoinDate) detailJoinDate.textContent = emp.created_at ? emp.created_at.split("T")[0] : "—";
-  if (detailStatus) detailStatus.textContent = emp.status === "active" ? "재직(활성)" : emp.status;
-
-  if (detailRegionList) {
-    detailRegionList.innerHTML = `
-      <div style="padding:10px; background:#f8fafc; border-radius:8px; font-weight:bold; color:#1e293b;">
-        📍 ${emp.workplaceName}
-      </div>
-    `;
+function getEmployeeStatusText(status) {
+  if (status === "active") {
+    return "재직(활성)";
   }
+
+  if (status === "pending") {
+    return "승인 대기";
+  }
+
+  if (status === "inactive") {
+    return "비활성";
+  }
+
+  if (status === "resigned") {
+    return "퇴사";
+  }
+
+  if (status === "deleted") {
+    return "삭제 처리";
+  }
+
+  return status || "상태 미지정";
+}
+
+function renderEmployeeWorkplaces(
+  workplaceNames
+) {
+  if (!detailRegionList) return;
+
+  detailRegionList.replaceChildren();
+
+  if (!workplaceNames.length) {
+    const emptyChip =
+      document.createElement("span");
+
+    emptyChip.className =
+      "employee-region-chip empty";
+
+    emptyChip.textContent =
+      "배정된 근무지역 없음";
+
+    detailRegionList.appendChild(
+      emptyChip
+    );
+
+    return;
+  }
+
+  workplaceNames.forEach(
+    (workplaceName) => {
+      const workplaceChip =
+        document.createElement("span");
+
+      workplaceChip.className =
+        "employee-region-chip";
+
+      workplaceChip.textContent =
+        `📍 ${workplaceName}`;
+
+      detailRegionList.appendChild(
+        workplaceChip
+      );
+    }
+  );
+}
+
+function renderProfileUI(employee) {
+  if (!employee) return;
+
+  const employeeName =
+    employee.name || "이름 없음";
+
+  const department =
+    employee.department || "소속 미배정";
+
+  const position =
+    employee.position || "직급 미지정";
+
+  const workplaceNames =
+    Array.isArray(employee.workplaceNames)
+      ? employee.workplaceNames
+      : [];
+
+  if (employeeDetailTitle) {
+    employeeDetailTitle.textContent =
+      `${employeeName} · 근태 상세`;
+  }
+
+  if (detailName) {
+    detailName.textContent =
+      employeeName;
+  }
+
+  if (detailInfo) {
+    detailInfo.textContent =
+      `${department} · ${position} · ${getEmployeeStatusText(
+        employee.status
+      )}`;
+  }
+
+  if (detailPhone) {
+    detailPhone.textContent =
+      employee.phone || "—";
+  }
+
+  if (detailLoginId) {
+    detailLoginId.textContent =
+      employee.employee_code || "—";
+  }
+
+  if (detailJoinDate) {
+    detailJoinDate.textContent =
+      employee.created_at
+        ? employee.created_at.split("T")[0]
+        : "—";
+  }
+
+  if (detailStatus) {
+    detailStatus.textContent =
+      getEmployeeStatusText(
+        employee.status
+      );
+  }
+
+  renderEmployeeWorkplaces(
+    workplaceNames
+  );
+
+  updateAccountStatusButton();
 }
 
 async function fetchAndRenderAttendance() {
@@ -305,21 +476,72 @@ async function handleSaveMemo() {
 }
 
 async function handleDeleteAccount() {
-  if (!confirm(`⚠️ 정말로 '${currentEmployeeData.name}' 직원의 계정을 삭제하시겠습니까?\n\n삭제 후에는 복구가 불가능하며 모든 출입 권한이 사라집니다.`)) {
+  if (!currentEmployeeData) return;
+
+  const typedText = prompt(
+    `${currentEmployeeData.name} 직원과 관련된 모든 데이터를 영구 삭제합니다.\n\n계속하려면 '삭제'라고 입력하세요.`
+  );
+
+  if (typedText === null) {
     return;
   }
 
-  const { error } = await supabase
-    .from("users")
-    .update({ status: "deleted" })
-    .eq("id", targetUserId);
+  if (typedText.trim() !== "삭제") {
+    alert(
+      "'삭제'를 정확히 입력해야 합니다."
+    );
 
-  if (error) {
-    alert("계정 삭제 처리 중 오류가 발생했습니다.");
-    console.error(error);
-  } else {
-    alert("🗑️ 계정이 삭제되었습니다. 직원 목록으로 이동합니다.");
-    location.href = "admin-employees.html";
+    return;
+  }
+
+  const finalConfirmed = confirm(
+    "출퇴근 기록, 요청, 근무지 배정, 로그인 세션을 모두 삭제합니다.\n이 작업은 복구할 수 없습니다.\n\n정말 삭제하시겠습니까?"
+  );
+
+  if (!finalConfirmed) {
+    return;
+  }
+
+  btnDeleteAccount.disabled = true;
+  btnDeleteAccount.textContent =
+    "삭제 중...";
+
+  try {
+    const { error } =
+      await supabase.rpc(
+        "admin_delete_employee_permanently",
+        {
+          p_user_id: targetUserId,
+          p_confirmation: "삭제",
+        }
+      );
+
+    if (error) {
+      throw error;
+    }
+
+    alert(
+      "직원과 관련 데이터가 모두 삭제되었습니다."
+    );
+
+    location.replace(
+      "admin-employees.html"
+    );
+  } catch (error) {
+    console.error(
+      "직원 영구 삭제 실패:",
+      error
+    );
+
+    alert(
+      `직원 삭제에 실패했습니다.\n${
+        error.message || ""
+      }`
+    );
+
+    btnDeleteAccount.disabled = false;
+    btnDeleteAccount.textContent =
+      "계정 삭제";
   }
 }
 
@@ -334,95 +556,512 @@ function handlePrintTableOnly() {
   if (printTitle) {
     printTitle.textContent = `[${periodText}] ${currentEmployeeData.name} 근무표 (출근부)`;
   }
+
   if (printSubtitle) {
     const todayKo = new Date().toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" });
-    printSubtitle.textContent = `출력일자: ${todayKo} | 소속: ${currentEmployeeData.department || '부서없음'} | 배정: ${currentEmployeeData.workplaceName || '미배정'}`;
+    const workplaceText =
+      Array.isArray(
+        currentEmployeeData.workplaceNames
+      ) &&
+      currentEmployeeData.workplaceNames.length
+        ? currentEmployeeData
+            .workplaceNames
+            .join(", ")
+        : "미배정";
+
+    printSubtitle.textContent =
+      `출력일자: ${todayKo} | ` +
+      `소속: ${
+        currentEmployeeData.department ||
+        "부서 없음"
+      } | ` +
+      `배정: ${workplaceText}`;
   }
 
   window.print();
 }
 
-function setupEventListeners() {
-  viewTabBtns.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      viewTabBtns.forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      viewMode = btn.dataset.mode;
+function openEmployeeEditModal() {
+  if (
+    !employeeEditModal ||
+    !currentEmployeeData
+  ) {
+    return;
+  }
 
-      if (viewMode === "custom") {
-        timeNavigator.style.display = "none";
-        customDateFilter.style.display = "flex";
-      } else {
-        timeNavigator.style.display = "flex";
-        customDateFilter.style.display = "none";
-        fetchAndRenderAttendance();
-      }
-    });
-  });
+  editEmployeeName.value =
+    currentEmployeeData.name || "";
 
-  prevTimeBtn?.addEventListener("click", () => {
-    if (viewMode === "monthly") {
-      selectedMonth--;
-      if (selectedMonth < 0) { selectedMonth = 11; selectedYear--; }
-    } else if (viewMode === "yearly") {
-      selectedYear--;
+  editEmployeePhone.value =
+    currentEmployeeData.phone || "";
+
+  editEmployeeCode.value =
+    currentEmployeeData.employee_code || "";
+
+  editEmployeeDepartment.value =
+    currentEmployeeData.department || "";
+
+  employeeEditModal.classList.add(
+    "open"
+  );
+
+  employeeEditModal.setAttribute(
+    "aria-hidden",
+    "false"
+  );
+}
+
+function closeEmployeeEditModal() {
+  employeeEditModal?.classList.remove(
+    "open"
+  );
+
+  employeeEditModal?.setAttribute(
+    "aria-hidden",
+    "true"
+  );
+}
+
+async function saveEmployeeProfile(
+  event
+) {
+  event.preventDefault();
+
+  const name =
+    editEmployeeName.value.trim();
+
+  const phone =
+    editEmployeePhone.value.trim();
+
+  const employeeCode =
+    editEmployeeCode.value.trim();
+
+  const department =
+    editEmployeeDepartment.value;
+
+  if (
+    !name ||
+    !phone ||
+    !employeeCode
+  ) {
+    alert(
+      "직원명, 연락처, 로그인 ID를 모두 입력해 주세요."
+    );
+
+    return;
+  }
+
+  const saveButton =
+    employeeEditForm.querySelector(
+      'button[type="submit"]'
+    );
+
+  saveButton.disabled = true;
+  saveButton.textContent =
+    "저장 중...";
+
+  try {
+    const { data, error } =
+      await supabase.rpc(
+        "admin_update_employee_profile",
+        {
+          p_user_id: targetUserId,
+          p_name: name,
+          p_phone: phone,
+          p_employee_code:
+            employeeCode,
+          p_department:
+            department || "",
+        }
+      );
+
+    if (error) {
+      throw error;
     }
-    fetchAndRenderAttendance();
-  });
 
-  nextTimeBtn?.addEventListener("click", () => {
-    if (viewMode === "monthly") {
-      selectedMonth++;
-      if (selectedMonth > 11) { selectedMonth = 0; selectedYear++; }
-    } else if (viewMode === "yearly") {
-      selectedYear++;
+    currentEmployeeData = {
+      ...currentEmployeeData,
+      ...data,
+    };
+
+    renderProfileUI(
+      currentEmployeeData
+    );
+
+    closeEmployeeEditModal();
+
+    alert(
+      "직원 정보가 수정되었습니다."
+    );
+  } catch (error) {
+    console.error(
+      "직원 정보 수정 실패:",
+      error
+    );
+
+    alert(
+      `직원 정보 수정에 실패했습니다.\n${
+        error.message || ""
+      }`
+    );
+  } finally {
+    saveButton.disabled = false;
+    saveButton.textContent =
+      "수정 저장";
+  }
+}
+
+async function openRegionEditModal() {
+  if (
+    !regionEditModal ||
+    !currentEmployeeData
+  ) {
+    return;
+  }
+
+  regionEditList.innerHTML =
+    "근무지역을 불러오는 중입니다.";
+
+  regionEditModal.classList.add(
+    "open"
+  );
+
+  regionEditModal.setAttribute(
+    "aria-hidden",
+    "false"
+  );
+
+  const { data, error } =
+    await supabase
+      .from("workplaces")
+      .select("id, name")
+      .order("name", {
+        ascending: true,
+      });
+
+  if (error) {
+    regionEditList.textContent =
+      "근무지역을 불러오지 못했습니다.";
+
+    console.error(error);
+    return;
+  }
+
+  const currentIds =
+    Array.isArray(
+      currentEmployeeData.workplaceIds
+    )
+      ? currentEmployeeData
+          .workplaceIds
+          .map(String)
+      : [];
+
+  regionEditList.innerHTML =
+    (data || [])
+      .map(
+        (workplace, index) => {
+          const workplaceId =
+            String(workplace.id);
+
+          return `
+            <div class="detail-region-option">
+              <input
+                id="detailRegion${index}"
+                type="checkbox"
+                name="detailRegion"
+                value="${workplaceId}"
+                ${
+                  currentIds.includes(
+                    workplaceId
+                  )
+                    ? "checked"
+                    : ""
+                }
+              />
+
+              <label for="detailRegion${index}">
+                ${workplace.name}
+              </label>
+            </div>
+          `;
+        }
+      )
+      .join("");
+
+  regionEditModal.dataset.workplaces =
+    JSON.stringify(data || []);
+}
+
+function closeRegionEditModal() {
+  regionEditModal?.classList.remove(
+    "open"
+  );
+
+  regionEditModal?.setAttribute(
+    "aria-hidden",
+    "true"
+  );
+}
+
+async function saveEmployeeRegions() {
+  const selectedIds = [
+    ...regionEditList.querySelectorAll(
+      'input[name="detailRegion"]:checked'
+    ),
+  ].map((input) => input.value);
+
+  regionEditSaveBtn.disabled = true;
+  regionEditSaveBtn.textContent =
+    "저장 중...";
+
+  try {
+    const { error } =
+      await supabase.rpc(
+        "admin_set_user_workplaces",
+        {
+          p_user_id: targetUserId,
+          p_workplace_ids:
+            selectedIds,
+        }
+      );
+
+    if (error) {
+      throw error;
     }
-    fetchAndRenderAttendance();
-  });
 
-  attendanceSearchBtn?.addEventListener("click", fetchAndRenderAttendance);
+    const workplaces = JSON.parse(
+      regionEditModal.dataset
+        .workplaces || "[]"
+    );
 
-  btnViewMonthly?.addEventListener("click", async () => {
-    viewTabBtns.forEach((b) => b.classList.remove("active"));
-    if (viewTabBtns[0]) viewTabBtns[0].classList.add("active");
-    viewMode = "monthly";
-    
-    if (timeNavigator) timeNavigator.style.display = "flex";
-    if (customDateFilter) customDateFilter.style.display = "none";
-    
-    await fetchAndRenderAttendance();
-    handlePrintTableOnly();
-  });
+    currentEmployeeData.workplaceIds =
+      selectedIds;
 
-  btnResetPassword?.addEventListener("click", () => {
-    if (confirm("해당 직원의 비밀번호를 초기화하시겠습니까?")) alert("🔐 임시 비밀번호가 발급되었습니다: 1234");
-  });
+    currentEmployeeData.workplaceNames =
+      workplaces
+        .filter((workplace) =>
+          selectedIds.includes(
+            String(workplace.id)
+          )
+        )
+        .map(
+          (workplace) =>
+            workplace.name
+        );
 
-  btnDeactivate?.addEventListener("click", async () => {
-    if (confirm("계정을 비활성화하시겠습니까?")) {
-      await supabase.from("users").update({ status: "inactive" }).eq("id", targetUserId);
-      alert("🚫 계정이 비활성화되었습니다.");
-      location.reload();
+    renderEmployeeWorkplaces(
+      currentEmployeeData
+        .workplaceNames
+    );
+
+    closeRegionEditModal();
+
+    alert(
+      "배정 지역이 수정되었습니다."
+    );
+  } catch (error) {
+    console.error(
+      "지역 배정 저장 실패:",
+      error
+    );
+
+    alert(
+      `지역 배정에 실패했습니다.\n${
+        error.message || ""
+      }`
+    );
+  } finally {
+    regionEditSaveBtn.disabled =
+      false;
+
+    regionEditSaveBtn.textContent =
+      "지역 배정 저장";
+  }
+}
+
+editEmployeeBtn?.addEventListener(
+  "click",
+  openEmployeeEditModal
+);
+
+employeeEditCloseBtn?.addEventListener(
+  "click",
+  closeEmployeeEditModal
+);
+
+employeeEditCancelBtn?.addEventListener(
+  "click",
+  closeEmployeeEditModal
+);
+
+employeeEditForm?.addEventListener(
+  "submit",
+  saveEmployeeProfile
+);
+
+btnEditRegion?.addEventListener(
+  "click",
+  openRegionEditModal
+);
+
+regionEditCloseBtn?.addEventListener(
+  "click",
+  closeRegionEditModal
+);
+
+regionEditCancelBtn?.addEventListener(
+  "click",
+  closeRegionEditModal
+);
+
+regionEditSaveBtn?.addEventListener(
+  "click",
+  saveEmployeeRegions
+);
+
+btnDeactivate?.addEventListener(
+  "click",
+  toggleEmployeeStatus
+);
+
+btnDeleteAccount?.addEventListener(
+  "click",
+  handleDeleteAccount
+);
+
+function updateAccountStatusButton() {
+  if (
+    !btnDeactivate ||
+    !currentEmployeeData
+  ) {
+    return;
+  }
+
+  const isActive =
+    currentEmployeeData.status ===
+    "active";
+
+  btnDeactivate.textContent =
+    isActive
+      ? "계정 비활성화"
+      : "계정 활성화";
+
+  btnDeactivate.classList.toggle(
+    "is-activate",
+    !isActive
+  );
+}
+
+async function toggleEmployeeStatus() {
+  if (!currentEmployeeData) return;
+
+  const isActive =
+    currentEmployeeData.status ===
+    "active";
+
+  const nextStatus =
+    isActive
+      ? "inactive"
+      : "active";
+
+  const actionText =
+    isActive
+      ? "비활성화"
+      : "활성화";
+
+  const confirmed = confirm(
+    `${currentEmployeeData.name} 직원을 ${actionText}하시겠습니까?`
+  );
+
+  if (!confirmed) return;
+
+  btnDeactivate.disabled = true;
+
+  try {
+    const { data, error } =
+      await supabase.rpc(
+        "admin_set_employee_status",
+        {
+          p_user_id: targetUserId,
+          p_status: nextStatus,
+        }
+      );
+
+    if (error) {
+      throw error;
     }
-  });
 
-  btnDeleteAccount?.addEventListener("click", handleDeleteAccount);
-  saveMemoBtn?.addEventListener("click", handleSaveMemo);
-  btnExcelPrint?.addEventListener("click", handlePrintTableOnly);
+    currentEmployeeData.status =
+      data;
+
+    renderProfileUI(
+      currentEmployeeData
+    );
+
+    updateAccountStatusButton();
+
+    alert(
+      `계정이 ${actionText}되었습니다.`
+    );
+  } catch (error) {
+    console.error(
+      "계정 상태 변경 실패:",
+      error
+    );
+
+    alert(
+      `상태 변경에 실패했습니다.\n${
+        error.message || ""
+      }`
+    );
+  } finally {
+    btnDeactivate.disabled = false;
+  }
 }
 
 async function init() {
-  currentEmployeeData = await fetchEmployeeProfile();
-  renderProfileUI(currentEmployeeData);
+  currentEmployeeData =
+    await fetchEmployeeProfile();
+
+  if (!currentEmployeeData) {
+    return;
+  }
+
+  renderProfileUI(
+    currentEmployeeData
+  );
+
   renderMemoHistory();
   setupEventListeners();
 
-  const todayStr = new Date().toISOString().split("T")[0];
-  const firstDay = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-01`;
-  if (attendanceStartDate) attendanceStartDate.value = firstDay;
-  if (attendanceEndDate) attendanceEndDate.value = todayStr;
+  const today = new Date();
 
-  fetchAndRenderAttendance();
+  const todayStr =
+    `${today.getFullYear()}-` +
+    `${String(
+      today.getMonth() + 1
+    ).padStart(2, "0")}-` +
+    `${String(
+      today.getDate()
+    ).padStart(2, "0")}`;
+
+  const firstDay =
+    `${selectedYear}-` +
+    `${String(
+      selectedMonth + 1
+    ).padStart(2, "0")}-01`;
+
+  if (attendanceStartDate) {
+    attendanceStartDate.value =
+      firstDay;
+  }
+
+  if (attendanceEndDate) {
+    attendanceEndDate.value =
+      todayStr;
+  }
+
+  await fetchAndRenderAttendance();
 }
 
 init();

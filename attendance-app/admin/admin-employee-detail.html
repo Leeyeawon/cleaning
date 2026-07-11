@@ -276,7 +276,6 @@
 
           <div class="employee-detail-actions">
             <button type="button" id="btnViewMonthly" style="background:#2563eb; color:#fff; border-color:#2563eb;">📅 월간 출근부(근무표) 출력</button>
-            <button type="button" id="btnResetPassword">비밀번호 초기화</button>
             <button type="button" id="btnDeactivate">계정 비활성화</button>
             <button type="button" id="btnDeleteAccount" style="color: #dc2626; border-color: #fca5a5; background: #fef2f2;">계정 삭제</button>
           </div>
@@ -387,6 +386,110 @@
         </section>
       </section>
     </main>
+  </div>
+
+    <!-- 직원 정보 수정 모달 -->
+  <div id="employeeEditModal" class="detail-modal" aria-hidden="true">
+    <div class="detail-modal-panel">
+      <header class="detail-modal-header">
+        <h2>직원 정보 수정</h2>
+
+        <button id="employeeEditCloseBtn" type="button">
+          ×
+        </button>
+      </header>
+
+      <form id="employeeEditForm" class="detail-modal-form">
+        <label>
+          직원명
+          <input id="editEmployeeName" type="text" required />
+        </label>
+
+        <label>
+          연락처
+          <input id="editEmployeePhone" type="tel" required/>
+        </label>
+
+        <label>
+          로그인 ID
+          <input id="editEmployeeCode" type="text" required />
+        </label>
+
+        <label>
+          소속
+          <select id="editEmployeeDepartment">
+            <option value="">소속 미배정</option>
+            <option value="현장팀">현장팀</option>
+            <option value="운영팀">운영팀</option>
+            <option value="디자인팀">디자인팀</option>
+          </select>
+        </label>
+
+        <footer class="detail-modal-actions">
+          <button
+            id="employeeEditCancelBtn"
+            type="button"
+            class="detail-modal-cancel"
+          >
+            취소
+          </button>
+
+          <button
+            type="submit"
+            class="detail-modal-save"
+          >
+            수정 저장
+          </button>
+        </footer>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- 배정 지역 수정 모달 -->
+  <div
+    id="regionEditModal"
+    class="detail-modal"
+    aria-hidden="true"
+  >
+    <div class="detail-modal-panel">
+      <header class="detail-modal-header">
+        <div>
+          <h2>배정 지역 수정</h2>
+          <p>여러 근무지를 선택할 수 있습니다.</p>
+        </div>
+
+        <button
+          id="regionEditCloseBtn"
+          type="button"
+        >
+          ×
+        </button>
+      </header>
+
+      <div
+        id="regionEditList"
+        class="detail-region-option-list"
+      ></div>
+
+      <footer class="detail-modal-actions">
+        <button
+          id="regionEditCancelBtn"
+          type="button"
+          class="detail-modal-cancel"
+        >
+          취소
+        </button>
+
+        <button
+          id="regionEditSaveBtn"
+          type="button"
+          class="detail-modal-save"
+        >
+          지역 배정 저장
+        </button>
+      </footer>
+    </div>
   </div>
 
   <script src="../public/js/common.js"></script>

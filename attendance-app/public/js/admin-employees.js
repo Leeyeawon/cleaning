@@ -293,32 +293,13 @@ async function fetchWorkplaces() {
 }
 
 async function fetchEmployees() {
-  const { data, error } = await supabase
-    .from("users")
-    .select(`
-      id,
-      name,
-      phone,
-      employee_code,
-      department,
-      status,
-      memo,
-      created_at,
-      workplace_users (
-        workplace_id,
-        workplaces (
-          id,
-          name
-        )
-      )
-    `)
-    .order("created_at", {
-      ascending: false,
-    });
+  const { data, error } = await supabase.rpc(
+    "admin_get_employees"
+  );
 
   if (error) {
     console.error(
-      "직원 목록 조회 실패:",
+      "관리자 직원 목록 조회 실패:",
       error
     );
 
@@ -339,25 +320,26 @@ async function fetchEmployees() {
     return;
   }
 
-  employees = (data || []).map((employee) => {
-    const assignments =
-      employee.workplace_users || [];
+  const employeeData =
+    Array.isArray(data) ? data : [];
 
-    return {
+  employees = employeeData.map(
+    (employee) => ({
       ...employee,
 
-      workplaceIds: assignments
-        .map((assignment) =>
-          String(assignment.workplace_id)
-        ),
+      workplaceIds: Array.isArray(
+        employee.workplaceIds
+      )
+        ? employee.workplaceIds.map(String)
+        : [],
 
-      workplaceNames: assignments
-        .map((assignment) =>
-          assignment.workplaces?.name
-        )
-        .filter(Boolean),
-    };
-  });
+      workplaceNames: Array.isArray(
+        employee.workplaceNames
+      )
+        ? employee.workplaceNames
+        : [],
+    })
+  );
 }
 
 /* =========================
@@ -732,7 +714,6 @@ function renderEmployeeTable() {
 
                 <span class="assignment-value">
                   ${escapeHtml(workplaceText)}
-                  )}
                 </span>
 
                 <span class="assignment-arrow">›</span>
@@ -1205,53 +1186,63 @@ async function createEmployee(event) {
       'button[type="submit"]'
     );
 
-  submitButton.disabled = true;
-  submitButton.textContent =
-    "저장 중...";
+  const selectedInitialWorkplaceId =
+    employeeWorkplaceInput.value || null;
 
   const newEmployee = {
     name,
     phone,
     employee_code: employeeCode,
+
     department:
       employeeDepartmentInput.value ||
       null,
+
     status:
       employeeStatusInput.value,
+
     memo:
       employeeMemoInput.value.trim() ||
       null,
   };
 
-  const {
-    data: createdEmployee,
-    error: createError,
-  } = await supabase
-    .from("users")
-    .insert(newEmployee)
-    .select("id")
-    .single();
+  submitButton.disabled = true;
+  submitButton.textContent =
+    "저장 중...";
 
-  if (createError) {
-    throw createError;
-  }
+  try {
+    const {
+      data: createdEmployee,
+      error: createError,
+    } = await supabase
+      .from("users")
+      .insert(newEmployee)
+      .select("id")
+      .single();
 
-  if (selectedInitialWorkplaceId) {
-    const { error: assignmentError } =
-      await supabase.rpc(
+    if (createError) {
+      throw createError;
+    }
+
+    if (selectedInitialWorkplaceId) {
+      const {
+        error: assignmentError,
+      } = await supabase.rpc(
         "admin_set_user_workplaces",
         {
-          p_user_id: createdEmployee.id,
+          p_user_id:
+            createdEmployee.id,
+
           p_workplace_ids: [
             selectedInitialWorkplaceId,
           ],
         }
       );
 
-    if (assignmentError) {
-      throw assignmentError;
+      if (assignmentError) {
+        throw assignmentError;
+      }
     }
-  }
 
     alert("직원이 등록되었습니다.");
 
@@ -1270,12 +1261,13 @@ async function createEmployee(event) {
     alert(
       `직원 등록에 실패했습니다.\n${
         error.message ||
-        "Supabase users 컬럼을 확인해 주세요."
+        "Supabase users 컬럼과 권한을 확인해 주세요."
       }`
     );
   } finally {
     submitButton.disabled = false;
-    submitButton.textContent = "저장";
+    submitButton.textContent =
+      "저장";
   }
 }
 
