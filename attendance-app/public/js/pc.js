@@ -1,3 +1,37 @@
+import {
+  requireAdmin,
+  logoutAdmin,
+} from "./adminAuth.js";
+
+const currentAdmin = await requireAdmin();
+
+if (!currentAdmin) {
+  throw new Error("ADMIN_AUTH_REQUIRED");
+}
+
+function escapeAdminHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function getAdminRoleText(role) {
+  if (role === "owner") {
+    return "최고 관리자";
+  }
+
+  return "관리자";
+}
+
+const adminDisplayName =
+  currentAdmin.name || "관리자";
+
+const adminInitial =
+  adminDisplayName.trim().slice(0, 1) || "관";
+
 /* 관리자용 공통 좌측 사이드바 */
 
 const adminSidebar = document.getElementById("adminSidebar");
@@ -20,7 +54,9 @@ if (adminSidebar) {
 
         <div>
           <h1>근태관리 Admin</h1>
-          <p>최고 관리자</p>
+          <p>${escapeAdminHtml(
+            getAdminRoleText(currentAdmin.role)
+          )}</p>
         </div>
       </div>
 
@@ -84,18 +120,45 @@ if (adminSidebar) {
       </nav>
 
       <div class="admin-sidebar-user">
-        <div class="admin-user-avatar">김</div>
-
-        <div class="admin-user-info">
-          <strong>김관리자</strong>
-          <p>admin@company.com</p>
+        <div class="admin-user-avatar">
+          ${escapeAdminHtml(adminInitial)}
         </div>
 
-        <button class="admin-logout-btn" type="button">↗</button>
+        <div class="admin-user-info">
+          <strong> ${escapeAdminHtml(adminDisplayName)} </strong>
+          <p> ${escapeAdminHtml(currentAdmin.email)} </p>
+        </div>
+
+        <button
+          id="adminLogoutBtn"
+          class="admin-logout-btn"
+          type="button"
+          aria-label="관리자 로그아웃"
+        >
+          ↗
+        </button>
       </div>
     </aside>
   `;
 }
+
+const adminLogoutBtn =
+  document.getElementById("adminLogoutBtn");
+
+adminLogoutBtn?.addEventListener(
+  "click",
+  async () => {
+    const confirmed = confirm(
+      "관리자 계정에서 로그아웃하시겠습니까?"
+    );
+
+    if (!confirmed) return;
+
+    adminLogoutBtn.disabled = true;
+
+    await logoutAdmin();
+  }
+);
 
 /* 사이드바 하위 메뉴 열기 / 닫기 */
 

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>관리자 로그인 | 근태관리</title>
+
+  <link
+    rel="stylesheet"
+    href="../public/css/common.css"
+  />
+
+  <link
+    rel="stylesheet"
+    href="../public/css/admin-login.css"
+  />
+</head>
+
+<body class="admin-login-page">
+  <main class="admin-login-main">
+    <section class="admin-login-card">
+      <div class="admin-login-logo">
+        A
+      </div>
+
+      <div class="admin-login-title">
+        <p>ATTENDANCE ADMIN</p>
+        <h1>관리자 로그인</h1>
+
+        <span>
+          등록된 관리자 계정으로 로그인해 주세요.
+        </span>
+      </div>
+
+      <form
+        id="adminLoginForm"
+        class="admin-login-form"
+      >
+        <label>
+          이메일
+
+          <input
+            id="adminEmailInput"
+            type="email"
+            autocomplete="username"
+            placeholder="admin@example.com"
+            required
+          />
+        </label>
+
+        <label>
+          비밀번호
+
+          <input
+            id="adminPasswordInput"
+            type="password"
+            autocomplete="current-password"
+            placeholder="비밀번호 입력"
+            required
+          />
+        </label>
+
+        <p
+          id="adminLoginMessage"
+          class="admin-login-message"
+          aria-live="polite"
+        ></p>
+
+        <button
+          id="adminLoginButton"
+          type="submit"
+        >
+          관리자 로그인
+        </button>
+      </form>
+
+      <p class="admin-login-guide">
+        관리자 계정은 Supabase에 등록된 계정만
+        사용할 수 있습니다.
+      </p>
+    </section>
+  </main>
+
+  <script type="module" src="../public/js/admin-login.js"></script>
+</body>
+</html>
