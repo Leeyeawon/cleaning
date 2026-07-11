@@ -1,6 +1,7 @@
-/* =========================
-  설정 페이지
-========================= */
+/* 로그아웃 */
+import { logoutAdmin } from "./adminAuth.js";
+
+/* 설정 페이지 */
 
 const settingsNavItems = document.querySelectorAll(".settings-nav-item");
 const settingsSections = document.querySelectorAll(".settings-section");
@@ -137,8 +138,17 @@ function initSettingsPage() {
   }
 
   if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-      alert("Supabase Auth 연결 후 로그아웃 기능을 적용하면 됩니다.");
+    logoutBtn.addEventListener("click", async () => {
+      const confirmed = confirm(
+        "관리자 계정에서 로그아웃하시겠습니까?"
+      );
+
+      if (!confirmed) return;
+
+      logoutBtn.disabled = true;
+      logoutBtn.textContent = "로그아웃 중...";
+
+      await logoutAdmin();
     });
   }
 }

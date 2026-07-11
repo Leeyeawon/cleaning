@@ -238,20 +238,33 @@ function formatPhone(phone) {
   return phone;
 }
 
-function getWorkplaceName(workplaceId) {
-  if (!workplaceId) {
-    return "미배정";
+function getEmployeeWorkplaceIds(employee) {
+  return Array.isArray(employee?.workplaceIds)
+    ? employee.workplaceIds
+    : [];
+}
+
+function getEmployeeWorkplaceNames(employee) {
+  return Array.isArray(employee?.workplaceNames)
+    ? employee.workplaceNames
+    : [];
+}
+
+function getEmployeeWorkplaceText(employee) {
+  const names =
+    getEmployeeWorkplaceNames(employee);
+
+  if (!names.length) {
+    return "근무지 미배정";
   }
 
-  const workplace = workplaces.find(
-    (item) =>
-      String(item.id) ===
-      String(workplaceId)
-  );
+  return names.join(", ");
+}
 
-  return workplace
-    ? workplace.name
-    : "미배정";
+function isWorkplaceUnassigned(employee) {
+  return (
+    getEmployeeWorkplaceIds(employee).length === 0
+  );
 }
 
 /* =========================
@@ -289,9 +302,15 @@ async function fetchEmployees() {
       employee_code,
       department,
       status,
-      workplace_id,
       memo,
-      created_at
+      created_at,
+      workplace_users (
+        workplace_id,
+        workplaces (
+          id,
+          name
+        )
+      )
     `)
     .order("created_at", {
       ascending: false,
@@ -320,7 +339,25 @@ async function fetchEmployees() {
     return;
   }
 
-  employees = data || [];
+  employees = (data || []).map((employee) => {
+    const assignments =
+      employee.workplace_users || [];
+
+    return {
+      ...employee,
+
+      workplaceIds: assignments
+        .map((assignment) =>
+          String(assignment.workplace_id)
+        ),
+
+      workplaceNames: assignments
+        .map((assignment) =>
+          assignment.workplaces?.name
+        )
+        .filter(Boolean),
+    };
+  });
 }
 
 /* =========================
@@ -443,7 +480,7 @@ function updateSummary() {
   const unassigned = employees.filter(
     (employee) =>
       !employee.department ||
-      !employee.workplace_id
+      isWorkplaceUnassigned(employee)
   ).length;
 
   const inactive = employees.filter(
@@ -507,10 +544,8 @@ function filterEmployees() {
     const employeeStatus =
       normalizeStatus(employee.status);
 
-    const workplaceId =
-      employee.workplace_id
-        ? String(employee.workplace_id)
-        : "";
+    const workplaceIds =
+      getEmployeeWorkplaceIds(employee);
 
     const department =
       employee.department || "";
@@ -540,12 +575,12 @@ function filterEmployees() {
     const regionMatched =
       selectedRegion === "all" ||
       (
-        selectedRegion ===
-          "unassigned" &&
-        !workplaceId
+        selectedRegion === "unassigned" &&
+        workplaceIds.length === 0
       ) ||
-      workplaceId ===
-        String(selectedRegion);
+      workplaceIds.includes(
+        String(selectedRegion)
+      );
 
     const departmentMatched =
       selectedTeam === "all" ||
@@ -559,7 +594,7 @@ function filterEmployees() {
     const unassignedMatched =
       !unassignedOnly ||
       !department ||
-      !workplaceId;
+      workplaceIds.length === 0;
 
     return (
       keywordMatched &&
@@ -610,10 +645,8 @@ function renderEmployeeTable() {
           employee.department ||
           "소속 미배정";
 
-        const workplaceName =
-          getWorkplaceName(
-            employee.workplace_id
-          );
+        const workplaceText =
+          getEmployeeWorkplaceText(employee);
 
         const statusLabel =
           getStatusLabel(employee.status);
@@ -625,7 +658,7 @@ function renderEmployeeTable() {
           !employee.department;
 
         const workplaceUnassigned =
-          !employee.workplace_id;
+          isWorkplaceUnassigned(employee);
 
         return `
           <tr>
@@ -690,7 +723,7 @@ function renderEmployeeTable() {
               <button
                 type="button"
                 class="employee-assignment-button ${
-                  !employee.workplace_id ? "is-unassigned" : ""
+                  workplaceUnassigned ? "is-unassigned" : ""
                 }"
                 data-assignment-type="workplace"
                 data-employee-id="${escapeHtml(employee.id)}"
@@ -698,8 +731,7 @@ function renderEmployeeTable() {
                 <span class="assignment-indicator"></span>
 
                 <span class="assignment-value">
-                  ${escapeHtml(
-                    getWorkplaceName(employee.workplace_id)
+                  ${escapeHtml(workplaceText)}
                   )}
                 </span>
 
@@ -908,10 +940,8 @@ function renderDepartmentAssignOptions(
 function renderWorkplaceAssignOptions(
   employee
 ) {
-  const currentWorkplaceId =
-    employee.workplace_id
-      ? String(employee.workplace_id)
-      : "";
+  const currentWorkplaceIds =
+    getEmployeeWorkplaceIds(employee);
 
   if (!workplaces.length) {
     quickAssignOptionList.innerHTML = `
@@ -924,48 +954,40 @@ function renderWorkplaceAssignOptions(
   }
 
   quickAssignOptionList.innerHTML = `
-    <div class="quick-assign-option is-unassigned">
-      <input
-        id="assignWorkplaceUnassigned"
-        type="radio"
-        name="quickAssignOption"
-        value=""
-        ${
-          !currentWorkplaceId
-            ? "checked"
-            : ""
-        }
-      />
-
-      <label for="assignWorkplaceUnassigned">
-        근무지 미배정
-      </label>
-    </div>
+    <p class="quick-assign-guide">
+      여러 근무지를 동시에 선택할 수 있습니다.
+      모두 해제하면 미배정 상태가 됩니다.
+    </p>
 
     ${workplaces
       .map(
-        (workplace, index) => `
-          <div class="quick-assign-option">
-            <input
-              id="assignWorkplace${index}"
-              type="radio"
-              name="quickAssignOption"
-              value="${escapeHtml(
-                workplace.id
-              )}"
-              ${
-                currentWorkplaceId ===
-                String(workplace.id)
-                  ? "checked"
-                  : ""
-              }
-            />
+        (workplace, index) => {
+          const workplaceId =
+            String(workplace.id);
 
-            <label for="assignWorkplace${index}">
-              ${escapeHtml(workplace.name)}
-            </label>
-          </div>
-        `
+          const isChecked =
+            currentWorkplaceIds.includes(
+              workplaceId
+            );
+
+          return `
+            <div class="quick-assign-option">
+              <input
+                id="assignWorkplace${index}"
+                type="checkbox"
+                name="quickAssignWorkplace"
+                value="${escapeHtml(
+                  workplaceId
+                )}"
+                ${isChecked ? "checked" : ""}
+              />
+
+              <label for="assignWorkplace${index}">
+                ${escapeHtml(workplace.name)}
+              </label>
+            </div>
+          `;
+        }
       )
       .join("")}
   `;
@@ -1006,16 +1028,6 @@ async function saveQuickAssignmentSafely() {
     return;
   }
 
-  const selectedOption =
-    quickAssignOptionList.querySelector(
-      'input[name="quickAssignOption"]:checked'
-    );
-
-  if (!selectedOption) {
-    alert("배정할 항목을 선택해 주세요.");
-    return;
-  }
-
   const employee = employees.find(
     (item) =>
       String(item.id) ===
@@ -1027,49 +1039,74 @@ async function saveQuickAssignmentSafely() {
     return;
   }
 
-  const assignmentType =
-    quickAssignType;
-
-  const employeeId =
-    quickAssignEmployeeId;
-
-  const selectedValue =
-    selectedOption.value || null;
-
-  const updateData =
-    assignmentType === "department"
-      ? {
-          department:
-            selectedValue,
-        }
-      : {
-          workplace_id:
-            selectedValue,
-        };
-
   quickAssignSaveBtn.disabled = true;
   quickAssignSaveBtn.textContent =
     "저장 중...";
 
   try {
-    const { error } = await supabase
-      .from("users")
-      .update(updateData)
-      .eq("id", employeeId);
+    if (quickAssignType === "department") {
+      const selectedOption =
+        quickAssignOptionList.querySelector(
+          'input[name="quickAssignOption"]:checked'
+        );
 
-    if (error) {
-      throw error;
-    }
+      if (!selectedOption) {
+        alert("배정할 소속을 선택해 주세요.");
+        return;
+      }
 
-    if (
-      assignmentType ===
-      "department"
-    ) {
-      employee.department =
-        selectedValue;
+      const department =
+        selectedOption.value || null;
+
+      const { error } = await supabase
+        .from("users")
+        .update({
+          department,
+        })
+        .eq("id", employee.id);
+
+      if (error) {
+        throw error;
+      }
+
+      employee.department = department;
     } else {
-      employee.workplace_id =
-        selectedValue;
+      const selectedWorkplaces = [
+        ...quickAssignOptionList.querySelectorAll(
+          'input[name="quickAssignWorkplace"]:checked'
+        ),
+      ];
+
+      const workplaceIds =
+        selectedWorkplaces.map(
+          (input) => input.value
+        );
+
+      const { error } = await supabase.rpc(
+        "admin_set_user_workplaces",
+        {
+          p_user_id: employee.id,
+          p_workplace_ids: workplaceIds,
+        }
+      );
+
+      if (error) {
+        throw error;
+      }
+
+      employee.workplaceIds =
+        workplaceIds.map(String);
+
+      employee.workplaceNames =
+        workplaces
+          .filter((workplace) =>
+            employee.workplaceIds.includes(
+              String(workplace.id)
+            )
+          )
+          .map((workplace) =>
+            workplace.name
+          );
     }
 
     closeQuickAssignModal();
@@ -1079,7 +1116,7 @@ async function saveQuickAssignmentSafely() {
 
     alert(
       `${employee.name || "직원"}님의 ${
-        assignmentType === "department"
+        quickAssignType === "department"
           ? "소속"
           : "근무지"
       } 배정이 완료되었습니다.`
@@ -1181,22 +1218,40 @@ async function createEmployee(event) {
       null,
     status:
       employeeStatusInput.value,
-    workplace_id:
-      employeeWorkplaceInput.value ||
-      null,
     memo:
       employeeMemoInput.value.trim() ||
       null,
   };
 
-  try {
-    const { error } = await supabase
-      .from("users")
-      .insert(newEmployee);
+  const {
+    data: createdEmployee,
+    error: createError,
+  } = await supabase
+    .from("users")
+    .insert(newEmployee)
+    .select("id")
+    .single();
 
-    if (error) {
-      throw error;
+  if (createError) {
+    throw createError;
+  }
+
+  if (selectedInitialWorkplaceId) {
+    const { error: assignmentError } =
+      await supabase.rpc(
+        "admin_set_user_workplaces",
+        {
+          p_user_id: createdEmployee.id,
+          p_workplace_ids: [
+            selectedInitialWorkplaceId,
+          ],
+        }
+      );
+
+    if (assignmentError) {
+      throw assignmentError;
     }
+  }
 
     alert("직원이 등록되었습니다.");
 
