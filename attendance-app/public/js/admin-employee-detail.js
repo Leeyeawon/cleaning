@@ -59,6 +59,8 @@ const regionEditCloseBtn = document.getElementById("regionEditCloseBtn");
 const regionEditCancelBtn = document.getElementById("regionEditCancelBtn");
 const regionEditSaveBtn = document.getElementById("regionEditSaveBtn");
 
+const dailyNoteType = document.getElementById("dailyNoteType");
+
 let currentEmployeeData = null;
 let viewMode = "monthly"; 
 let selectedYear = new Date().getFullYear();
@@ -393,7 +395,8 @@ async function fetchAndRenderAttendance() {
         .from("employee_daily_notes")
         .select(`
           note_date,
-          content
+          content,
+          day_type
         `)
         .eq("user_id", targetUserId)
         .gte("note_date", startDate)
@@ -418,7 +421,14 @@ async function fetchAndRenderAttendance() {
       (noteResult.data || []).map(
         (note) => [
           note.note_date,
-          note.content,
+          {
+            content:
+              note.content || "",
+
+            dayType:
+              note.day_type ||
+              "normal",
+          },
         ]
       )
     );
@@ -464,7 +474,9 @@ function updateSummaryStats(list) {
   if (statWorkHours) statWorkHours.textContent = Math.floor(totalMinutes / 60);
 }
 
-function renderAttendanceTable(records) {
+function renderAttendanceTable(
+  records
+) {
   if (!detailRecordTableBody) {
     return;
   }
@@ -518,10 +530,7 @@ function renderAttendanceTable(records) {
   if (!displayRows.length) {
     detailRecordTableBody.innerHTML = `
       <tr>
-        <td
-          colspan="5"
-          class="empty-row"
-        >
+        <td colspan="5">
           조회된 기록이 없습니다.
         </td>
       </tr>
@@ -537,6 +546,16 @@ function renderAttendanceTable(records) {
           new Date(
             `${dateKey}T00:00:00`
           );
+
+        const noteData =
+          dailyNotes.get(dateKey) || {
+            content: "",
+            dayType: "normal",
+          };
+
+        const isAnnualLeave =
+          noteData.dayType ===
+          "annual_leave";
 
         const dayText =
           String(
@@ -558,14 +577,18 @@ function renderAttendanceTable(records) {
             : "";
 
         const workTime =
-          checkIn || checkOut
-            ? `${checkIn || "—"} - ${
-                checkOut || "—"
-              }`
-            : "";
+          isAnnualLeave
+            ? "연차"
+            : checkIn || checkOut
+              ? `${
+                  checkIn || "—"
+                } - ${
+                  checkOut || "—"
+                }`
+              : "";
 
         const workMinutes =
-          record
+          record && !isAnnualLeave
             ? calcWorkMinutes(
                 record.check_in_time,
                 record.check_out_time
@@ -579,12 +602,12 @@ function renderAttendanceTable(records) {
               )
             : "";
 
-        const note =
-          dailyNotes.get(dateKey) ||
-          "";
-
         return `
-          <tr>
+          <tr class="${
+            isAnnualLeave
+              ? "annual-leave-row"
+              : ""
+          }">
             <td>
               <strong>
                 ${
@@ -600,7 +623,17 @@ function renderAttendanceTable(records) {
             </td>
 
             <td>
-              ${escapeHtml(workTime)}
+              ${
+                isAnnualLeave
+                  ? `
+                    <strong class="annual-leave-text">
+                      연차
+                    </strong>
+                  `
+                  : escapeHtml(
+                      workTime
+                    )
+              }
             </td>
 
             <td>
@@ -610,7 +643,9 @@ function renderAttendanceTable(records) {
             </td>
 
             <td class="daily-note-cell">
-              ${escapeHtml(note)}
+              ${escapeHtml(
+                noteData.content
+              )}
             </td>
           </tr>
         `;
@@ -756,12 +791,49 @@ function handlePrintTableOnly() {
     return;
   }
 
+  const daysInMonth =
+    new Date(
+      selectedYear,
+      selectedMonth + 1,
+      0
+    ).getDate();
+
+  /*
+    A4 인쇄 가능 높이 중
+    표 본문에 약 238mm 사용
+  */
+  const rowHeight =
+    Math.min(
+      8.5,
+      238 / daysInMonth
+    );
+
+  document.documentElement
+    .style.setProperty(
+      "--print-row-height",
+      `${rowHeight}mm`
+    );
+
+  const department =
+    currentEmployeeData
+      .department ||
+    "소속 미지정";
+
+  const employeeName =
+    currentEmployeeData.name ||
+    "이름 없음";
+
   if (printTitle) {
     printTitle.textContent =
       `${selectedYear}년 ${
         selectedMonth + 1
-      }월 ` +
-      `${currentEmployeeData.name} 출근부`;
+      }월 출근부`;
+  }
+
+  if (printSubtitle) {
+    printSubtitle.textContent =
+      `소속: ${department} | ` +
+      `성명: ${employeeName}`;
   }
 
   window.print();
@@ -1430,7 +1502,8 @@ function setupEventListeners() {
 function syncDailyNoteEditor() {
   if (
     !dailyNoteDate ||
-    !dailyNoteInput
+    !dailyNoteInput ||
+    !dailyNoteType
   ) {
     return;
   }
@@ -1458,10 +1531,17 @@ function syncDailyNoteEditor() {
           );
   }
 
-  dailyNoteInput.value =
+  const noteData =
     dailyNotes.get(
       dailyNoteDate.value
-    ) || "";
+    );
+
+  dailyNoteInput.value =
+    noteData?.content || "";
+
+  dailyNoteType.value =
+    noteData?.dayType ||
+    "normal";
 }
 
 async function saveDailyNote() {
@@ -1471,14 +1551,24 @@ async function saveDailyNote() {
   const content =
     dailyNoteInput.value.trim();
 
+  const dayType =
+    dailyNoteType.value ||
+    "normal";
+
   if (!noteDate) {
-    alert("날짜를 선택해 주세요.");
+    alert(
+      "날짜를 선택해 주세요."
+    );
+
     return;
   }
 
-  if (!content) {
+  if (
+    dayType === "normal" &&
+    !content
+  ) {
     alert(
-      "기타사항을 입력해 주세요. 내용을 지우려면 내용 삭제 버튼을 사용하세요."
+      "기타사항을 입력하거나 연차를 선택해 주세요."
     );
 
     return;
@@ -1496,11 +1586,21 @@ async function saveDailyNote() {
         )
         .upsert(
           {
-            user_id: targetUserId,
-            note_date: noteDate,
-            content,
+            user_id:
+              targetUserId,
+
+            note_date:
+              noteDate,
+
+            day_type:
+              dayType,
+
+            content:
+              content,
+
             updated_at:
-              new Date().toISOString(),
+              new Date()
+                .toISOString(),
           },
           {
             onConflict:
@@ -1514,7 +1614,10 @@ async function saveDailyNote() {
 
     dailyNotes.set(
       noteDate,
-      content
+      {
+        content,
+        dayType,
+      }
     );
 
     renderAttendanceTable(
@@ -1522,7 +1625,9 @@ async function saveDailyNote() {
     );
 
     alert(
-      "기타사항이 저장되었습니다."
+      dayType === "annual_leave"
+        ? "연차가 등록되었습니다."
+        : "기타사항이 저장되었습니다."
     );
   } catch (error) {
     console.error(
@@ -1531,7 +1636,7 @@ async function saveDailyNote() {
     );
 
     alert(
-      `기타사항 저장에 실패했습니다.\n${
+      `저장에 실패했습니다.\n${
         error.message || ""
       }`
     );
@@ -1541,8 +1646,11 @@ async function saveDailyNote() {
 
     saveDailyNoteBtn.textContent =
       "기타사항 저장";
+
+    dailyNoteType.value = "normal";
   }
 }
+
 
 async function deleteDailyNote() {
   const noteDate =

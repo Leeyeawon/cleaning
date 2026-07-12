@@ -19,7 +19,20 @@ const statPendingRequests = document.getElementById("statPendingRequests");
 const statPendingUsers = document.getElementById("statPendingUsers");
 
 // 오늘 날짜 문자열 (YYYY-MM-DD)
-const todayStr = new Date().toISOString().split("T")[0];
+function getLocalDateKey(date = new Date()
+) {
+  return (
+    `${date.getFullYear()}-` +
+    `${String(
+      date.getMonth() + 1
+    ).padStart(2, "0")}-` +
+    `${String(
+      date.getDate()
+    ).padStart(2, "0")}`
+  );
+}
+
+const todayStr = getLocalDateKey();
 
 // 1. 상단 안내 문구 날짜 설정
 function setDashboardDate() {

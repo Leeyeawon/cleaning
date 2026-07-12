@@ -2542,11 +2542,34 @@ body[data-admin-page] .content {
 }
 
 /* 날짜별 기타사항 */
+.daily-note-editor input,
+.daily-note-editor select,
+.daily-note-editor textarea {
+  width: 100%;
+  box-sizing: border-box;
+
+  border: 1px solid #dbe1e8;
+  border-radius: 10px;
+
+  background: #fafafa;
+  font: inherit;
+  outline: none;
+}
+
+.daily-note-editor input,
+.daily-note-editor select {
+  height: 44px;
+  padding: 0 12px;
+}
 
 .daily-note-editor {
   display: grid;
+
   grid-template-columns:
-    180px minmax(0, 1fr);
+    160px
+    160px
+    minmax(0, 1fr);
+
   gap: 16px;
 
   padding: 20px;
@@ -2618,7 +2641,7 @@ body[data-admin-page] .content {
   justify-content: flex-end;
 }
 
-@media (max-width: 800px) {
+@media (max-width: 900px) {
   .daily-note-editor {
     grid-template-columns: 1fr;
   }
