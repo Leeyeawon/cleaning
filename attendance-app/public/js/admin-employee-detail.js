@@ -33,16 +33,14 @@ const attendanceSearchBtn = document.getElementById("attendanceSearchBtn");
 const detailRecordTableBody = document.getElementById("detailRecordTableBody");
 
 const btnViewMonthly = document.getElementById("btnViewMonthly");
-const btnResetPassword = document.getElementById("btnResetPassword");
 const btnDeactivate = document.getElementById("btnDeactivate");
 const btnDeleteAccount = document.getElementById("btnDeleteAccount");
 const btnExcelPrint = document.getElementById("btnExcelPrint");
 
-const newMemoInput = document.getElementById("newMemoInput");
-const saveMemoBtn = document.getElementById("saveMemoBtn");
-const memoHistoryList = document.getElementById("memoHistoryList");
-
-const printTitle = document.getElementById("printTitle");
+const dailyNoteDate = document.getElementById("dailyNoteDate");
+const dailyNoteInput = document.getElementById("dailyNoteInput");
+const saveDailyNoteBtn = document.getElementById("saveDailyNoteBtn");
+const deleteDailyNoteBtn = document.getElementById("deleteDailyNoteBtn");
 const printSubtitle = document.getElementById("printSubtitle");
 
 const editEmployeeBtn = document.getElementById("editEmployeeBtn");
@@ -65,6 +63,8 @@ let currentEmployeeData = null;
 let viewMode = "monthly"; 
 let selectedYear = new Date().getFullYear();
 let selectedMonth = new Date().getMonth(); 
+let currentAttendanceRecords = [];
+let dailyNotes = new Map();
 
 function formatTimeOnly(timeString) {
   if (!timeString) return "00:00";
@@ -90,6 +90,29 @@ function getKoreanDayOfWeek(dateString) {
   const days = ["일", "월", "화", "수", "목", "금", "토"];
   const date = new Date(`${dateString}T00:00:00`);
   return days[date.getDay()] || "-";
+}
+
+function toLocalDateKey(
+  year,
+  monthIndex,
+  day
+) {
+  return (
+    `${year}-` +
+    `${String(
+      monthIndex + 1
+    ).padStart(2, "0")}-` +
+    `${String(day).padStart(2, "0")}`
+  );
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 async function fetchEmployeeProfile() {
@@ -307,38 +330,119 @@ async function fetchAndRenderAttendance() {
   let endDate = "";
 
   if (viewMode === "monthly") {
-    startDate = new Date(selectedYear, selectedMonth, 1).toISOString().split("T")[0];
-    endDate = new Date(selectedYear, selectedMonth + 1, 0).toISOString().split("T")[0];
-    currentTimeDisplay.textContent = `${selectedYear}년 ${selectedMonth + 1}월`;
+    const lastDay =
+      new Date(
+        selectedYear,
+        selectedMonth + 1,
+        0
+      ).getDate();
+
+    startDate = toLocalDateKey(
+      selectedYear,
+      selectedMonth,
+      1
+    );
+
+    endDate = toLocalDateKey(
+      selectedYear,
+      selectedMonth,
+      lastDay
+    );
+
+    currentTimeDisplay.textContent =
+      `${selectedYear}년 ${
+        selectedMonth + 1
+      }월`;
   } else if (viewMode === "yearly") {
-    startDate = `${selectedYear}-01-01`;
-    endDate = `${selectedYear}-12-31`;
-    currentTimeDisplay.textContent = `${selectedYear}년 연간 근무표`;
-  } else if (viewMode === "custom") {
-    startDate = attendanceStartDate.value;
-    endDate = attendanceEndDate.value;
-    if (!startDate || !endDate) return;
+    startDate =
+      `${selectedYear}-01-01`;
+
+    endDate =
+      `${selectedYear}-12-31`;
+
+    currentTimeDisplay.textContent =
+      `${selectedYear}년 연간 근무표`;
+  } else {
+    startDate =
+      attendanceStartDate.value;
+
+    endDate =
+      attendanceEndDate.value;
+
+    if (!startDate || !endDate) {
+      return;
+    }
   }
 
   try {
-    const { data, error } = await supabase
-      .from("attendance")
-      .select("*")
-      .eq("user_id", targetUserId)
-      .gte("work_date", startDate)
-      .lte("work_date", endDate)
-      .order("work_date", { ascending: true });
+    const [
+      attendanceResult,
+      noteResult,
+    ] = await Promise.all([
+      supabase
+        .from("attendance")
+        .select("*")
+        .eq("user_id", targetUserId)
+        .gte("work_date", startDate)
+        .lte("work_date", endDate)
+        .order("work_date", {
+          ascending: true,
+        }),
 
-    if (error) {
-      console.error("근태 조회 에러:", error);
-      return;
+      supabase
+        .from("employee_daily_notes")
+        .select(`
+          note_date,
+          content
+        `)
+        .eq("user_id", targetUserId)
+        .gte("note_date", startDate)
+        .lte("note_date", endDate)
+        .order("note_date", {
+          ascending: true,
+        }),
+    ]);
+
+    if (attendanceResult.error) {
+      throw attendanceResult.error;
     }
 
-    const list = data || [];
-    updateSummaryStats(list);
-    renderAttendanceTable(list);
-  } catch (err) {
-    console.error("통신 오류:", err);
+    if (noteResult.error) {
+      throw noteResult.error;
+    }
+
+    currentAttendanceRecords =
+      attendanceResult.data || [];
+
+    dailyNotes = new Map(
+      (noteResult.data || []).map(
+        (note) => [
+          note.note_date,
+          note.content,
+        ]
+      )
+    );
+
+    updateSummaryStats(
+      currentAttendanceRecords
+    );
+
+    renderAttendanceTable(
+      currentAttendanceRecords
+    );
+
+    syncDailyNoteEditor();
+  } catch (error) {
+    console.error(
+      "출근부 조회 실패:",
+      error
+    );
+
+    alert(
+      `출근부를 불러오지 못했습니다.\n${
+        error.message || ""
+      }`
+    );
   }
 }
 
@@ -360,56 +464,158 @@ function updateSummaryStats(list) {
   if (statWorkHours) statWorkHours.textContent = Math.floor(totalMinutes / 60);
 }
 
-function renderAttendanceTable(list) {
-  if (!detailRecordTableBody) return;
-
-  if (list.length === 0) {
-    detailRecordTableBody.innerHTML = `
-      <tr>
-        <td colspan="6" class="empty-row" style="text-align:center; padding:30px; color:#888;">
-          해당 기간에 조회된 출근 기록이 없습니다.
-        </td>
-      </tr>
-    `;
+function renderAttendanceTable(records) {
+  if (!detailRecordTableBody) {
     return;
   }
 
-  detailRecordTableBody.innerHTML = list
-    .map((item) => {
-      const dateStr = item.work_date; 
-      const dayOfWeek = getKoreanDayOfWeek(dateStr); 
-      
-      const inTime = formatTimeOnly(item.check_in_time);
-      const outTime = formatTimeOnly(item.check_out_time);
-      const workTimeRange = item.check_in_time ? `${inTime} - ${outTime}` : "—"; 
+  let displayRows = [];
 
-      const mins = calcWorkMinutes(item.check_in_time, item.check_out_time);
-      const totalHoursText = formatMinutesToHoursText(mins); 
+  if (viewMode === "monthly") {
+    const recordMap = new Map(
+      records.map((record) => [
+        record.work_date,
+        record,
+      ])
+    );
 
-      let statusText = "정상";
-      let statusColor = "#168a4a";
-      if (item.status === "late" || item.status === "지각") { statusText = "지각"; statusColor = "#dc2626"; }
-      else if (item.status === "absent" || item.status === "미출근") { statusText = "미출근"; statusColor = "#6b7280"; }
-      else if (item.status === "location_error" || item.status === "위치오류") { statusText = "위치오류"; statusColor = "#d97706"; }
+    const lastDay =
+      new Date(
+        selectedYear,
+        selectedMonth + 1,
+        0
+      ).getDate();
 
-      const memoText = item.memo || "—"; 
+    for (
+      let day = 1;
+      day <= lastDay;
+      day += 1
+    ) {
+      const dateKey =
+        toLocalDateKey(
+          selectedYear,
+          selectedMonth,
+          day
+        );
 
-      return `
-        <tr>
-          <td><strong>${dateStr}</strong></td>
-          <td>${dayOfWeek}</td>
-          <td>${workTimeRange}</td>
-          <td>${totalHoursText}</td>
-          <td>
-            <span style="color:${statusColor}; font-weight:bold; background:#f3f4f6; padding:3px 8px; border-radius:6px; font-size:12px;">
-              ${statusText}
-            </span>
-          </td>
-          <td style="color:#4b5563; font-size:13px; text-align:left;">${memoText}</td>
-        </tr>
-      `;
-    })
-    .join("");
+      displayRows.push({
+        dateKey,
+        record:
+          recordMap.get(dateKey) ||
+          null,
+      });
+    }
+  } else {
+    displayRows = records.map(
+      (record) => ({
+        dateKey:
+          record.work_date,
+        record,
+      })
+    );
+  }
+
+  if (!displayRows.length) {
+    detailRecordTableBody.innerHTML = `
+      <tr>
+        <td
+          colspan="5"
+          class="empty-row"
+        >
+          조회된 기록이 없습니다.
+        </td>
+      </tr>
+    `;
+
+    return;
+  }
+
+  detailRecordTableBody.innerHTML =
+    displayRows
+      .map(({ dateKey, record }) => {
+        const date =
+          new Date(
+            `${dateKey}T00:00:00`
+          );
+
+        const dayText =
+          String(
+            date.getDate()
+          ).padStart(2, "0");
+
+        const checkIn =
+          record?.check_in_time
+            ? formatTimeOnly(
+                record.check_in_time
+              )
+            : "";
+
+        const checkOut =
+          record?.check_out_time
+            ? formatTimeOnly(
+                record.check_out_time
+              )
+            : "";
+
+        const workTime =
+          checkIn || checkOut
+            ? `${checkIn || "—"} - ${
+                checkOut || "—"
+              }`
+            : "";
+
+        const workMinutes =
+          record
+            ? calcWorkMinutes(
+                record.check_in_time,
+                record.check_out_time
+              )
+            : 0;
+
+        const workTimeText =
+          workMinutes > 0
+            ? formatMinutesToHoursText(
+                workMinutes
+              )
+            : "";
+
+        const note =
+          dailyNotes.get(dateKey) ||
+          "";
+
+        return `
+          <tr>
+            <td>
+              <strong>
+                ${
+                  selectedMonth + 1
+                }.${dayText}
+              </strong>
+            </td>
+
+            <td>
+              ${getKoreanDayOfWeek(
+                dateKey
+              )}
+            </td>
+
+            <td>
+              ${escapeHtml(workTime)}
+            </td>
+
+            <td>
+              ${escapeHtml(
+                workTimeText
+              )}
+            </td>
+
+            <td class="daily-note-cell">
+              ${escapeHtml(note)}
+            </td>
+          </tr>
+        `;
+      })
+      .join("");
 }
 
 function renderMemoHistory() {
@@ -546,36 +752,16 @@ async function handleDeleteAccount() {
 }
 
 function handlePrintTableOnly() {
-  if (!currentEmployeeData) return;
-
-  let periodText = currentTimeDisplay ? currentTimeDisplay.textContent : "근무표";
-  if (viewMode === "custom") {
-    periodText = `${attendanceStartDate?.value} ~ ${attendanceEndDate?.value}`;
+  if (!currentEmployeeData) {
+    return;
   }
 
   if (printTitle) {
-    printTitle.textContent = `[${periodText}] ${currentEmployeeData.name} 근무표 (출근부)`;
-  }
-
-  if (printSubtitle) {
-    const todayKo = new Date().toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" });
-    const workplaceText =
-      Array.isArray(
-        currentEmployeeData.workplaceNames
-      ) &&
-      currentEmployeeData.workplaceNames.length
-        ? currentEmployeeData
-            .workplaceNames
-            .join(", ")
-        : "미배정";
-
-    printSubtitle.textContent =
-      `출력일자: ${todayKo} | ` +
-      `소속: ${
-        currentEmployeeData.department ||
-        "부서 없음"
-      } | ` +
-      `배정: ${workplaceText}`;
+    printTitle.textContent =
+      `${selectedYear}년 ${
+        selectedMonth + 1
+      }월 ` +
+      `${currentEmployeeData.name} 출근부`;
   }
 
   window.print();
@@ -1019,6 +1205,386 @@ async function toggleEmployeeStatus() {
   }
 }
 
+function setupEventListeners() {
+  /* 월간·연간·직접 기간 탭 */
+
+  viewTabBtns.forEach((button) => {
+    button.addEventListener(
+      "click",
+      async () => {
+        viewTabBtns.forEach(
+          (item) =>
+            item.classList.remove(
+              "active"
+            )
+        );
+
+        button.classList.add(
+          "active"
+        );
+
+        viewMode =
+          button.dataset.mode;
+
+        if (viewMode === "custom") {
+          if (timeNavigator) {
+            timeNavigator.style.display =
+              "none";
+          }
+
+          if (customDateFilter) {
+            customDateFilter.style.display =
+              "flex";
+          }
+
+          return;
+        }
+
+        if (timeNavigator) {
+          timeNavigator.style.display =
+            "flex";
+        }
+
+        if (customDateFilter) {
+          customDateFilter.style.display =
+            "none";
+        }
+
+        await fetchAndRenderAttendance();
+      }
+    );
+  });
+
+
+  /* 이전 기간 */
+
+  prevTimeBtn?.addEventListener(
+    "click",
+    async () => {
+      if (viewMode === "monthly") {
+        selectedMonth -= 1;
+
+        if (selectedMonth < 0) {
+          selectedMonth = 11;
+          selectedYear -= 1;
+        }
+      } else if (
+        viewMode === "yearly"
+      ) {
+        selectedYear -= 1;
+      }
+
+      await fetchAndRenderAttendance();
+    }
+  );
+
+
+  /* 다음 기간 */
+
+  nextTimeBtn?.addEventListener(
+    "click",
+    async () => {
+      if (viewMode === "monthly") {
+        selectedMonth += 1;
+
+        if (selectedMonth > 11) {
+          selectedMonth = 0;
+          selectedYear += 1;
+        }
+      } else if (
+        viewMode === "yearly"
+      ) {
+        selectedYear += 1;
+      }
+
+      await fetchAndRenderAttendance();
+    }
+  );
+
+
+  /* 직접 기간 조회 */
+
+  attendanceSearchBtn?.addEventListener(
+    "click",
+    async () => {
+      await fetchAndRenderAttendance();
+    }
+  );
+
+
+  /* 상단 월간 출근부 출력 */
+
+  btnViewMonthly?.addEventListener(
+    "click",
+    async () => {
+      viewMode = "monthly";
+
+      viewTabBtns.forEach(
+        (button) => {
+          button.classList.toggle(
+            "active",
+            button.dataset.mode ===
+              "monthly"
+          );
+        }
+      );
+
+      if (timeNavigator) {
+        timeNavigator.style.display =
+          "flex";
+      }
+
+      if (customDateFilter) {
+        customDateFilter.style.display =
+          "none";
+      }
+
+      await fetchAndRenderAttendance();
+
+      handlePrintTableOnly();
+    }
+  );
+
+
+  /* 현재 표시된 출근부 출력 */
+
+  btnExcelPrint?.addEventListener(
+    "click",
+    handlePrintTableOnly
+  );
+
+
+  /* 관리자 메모 저장 */
+
+  dailyNoteDate?.addEventListener(
+    "change",
+    syncDailyNoteEditor
+  );
+
+  saveDailyNoteBtn?.addEventListener(
+    "click",
+    saveDailyNote
+  );
+
+  deleteDailyNoteBtn?.addEventListener(
+    "click",
+    deleteDailyNote
+  );
+
+  /* 모달 바깥 클릭 닫기 */
+
+  employeeEditModal?.addEventListener(
+    "click",
+    (event) => {
+      if (
+        event.target ===
+        employeeEditModal
+      ) {
+        closeEmployeeEditModal();
+      }
+    }
+  );
+
+  regionEditModal?.addEventListener(
+    "click",
+    (event) => {
+      if (
+        event.target ===
+        regionEditModal
+      ) {
+        closeRegionEditModal();
+      }
+    }
+  );
+
+
+  /* ESC로 모달 닫기 */
+
+  document.addEventListener(
+    "keydown",
+    (event) => {
+      if (event.key !== "Escape") {
+        return;
+      }
+
+      if (
+        employeeEditModal
+          ?.classList
+          .contains("open")
+      ) {
+        closeEmployeeEditModal();
+        return;
+      }
+
+      if (
+        regionEditModal
+          ?.classList
+          .contains("open")
+      ) {
+        closeRegionEditModal();
+      }
+    }
+  );
+}
+
+function syncDailyNoteEditor() {
+  if (
+    !dailyNoteDate ||
+    !dailyNoteInput
+  ) {
+    return;
+  }
+
+  if (!dailyNoteDate.value) {
+    const today = new Date();
+
+    const isCurrentMonth =
+      today.getFullYear() ===
+        selectedYear &&
+      today.getMonth() ===
+        selectedMonth;
+
+    dailyNoteDate.value =
+      isCurrentMonth
+        ? toLocalDateKey(
+            selectedYear,
+            selectedMonth,
+            today.getDate()
+          )
+        : toLocalDateKey(
+            selectedYear,
+            selectedMonth,
+            1
+          );
+  }
+
+  dailyNoteInput.value =
+    dailyNotes.get(
+      dailyNoteDate.value
+    ) || "";
+}
+
+async function saveDailyNote() {
+  const noteDate =
+    dailyNoteDate.value;
+
+  const content =
+    dailyNoteInput.value.trim();
+
+  if (!noteDate) {
+    alert("날짜를 선택해 주세요.");
+    return;
+  }
+
+  if (!content) {
+    alert(
+      "기타사항을 입력해 주세요. 내용을 지우려면 내용 삭제 버튼을 사용하세요."
+    );
+
+    return;
+  }
+
+  saveDailyNoteBtn.disabled = true;
+  saveDailyNoteBtn.textContent =
+    "저장 중...";
+
+  try {
+    const { error } =
+      await supabase
+        .from(
+          "employee_daily_notes"
+        )
+        .upsert(
+          {
+            user_id: targetUserId,
+            note_date: noteDate,
+            content,
+            updated_at:
+              new Date().toISOString(),
+          },
+          {
+            onConflict:
+              "user_id,note_date",
+          }
+        );
+
+    if (error) {
+      throw error;
+    }
+
+    dailyNotes.set(
+      noteDate,
+      content
+    );
+
+    renderAttendanceTable(
+      currentAttendanceRecords
+    );
+
+    alert(
+      "기타사항이 저장되었습니다."
+    );
+  } catch (error) {
+    console.error(
+      "기타사항 저장 실패:",
+      error
+    );
+
+    alert(
+      `기타사항 저장에 실패했습니다.\n${
+        error.message || ""
+      }`
+    );
+  } finally {
+    saveDailyNoteBtn.disabled =
+      false;
+
+    saveDailyNoteBtn.textContent =
+      "기타사항 저장";
+  }
+}
+
+async function deleteDailyNote() {
+  const noteDate =
+    dailyNoteDate.value;
+
+  if (!noteDate) {
+    return;
+  }
+
+  const confirmed = confirm(
+    `${noteDate} 기타사항을 삭제하시겠습니까?`
+  );
+
+  if (!confirmed) return;
+
+  const { error } = await supabase
+    .from("employee_daily_notes")
+    .delete()
+    .eq("user_id", targetUserId)
+    .eq("note_date", noteDate);
+
+  if (error) {
+    alert(
+      "기타사항을 삭제하지 못했습니다."
+    );
+
+    console.error(error);
+    return;
+  }
+
+  dailyNotes.delete(noteDate);
+  dailyNoteInput.value = "";
+
+  renderAttendanceTable(
+    currentAttendanceRecords
+  );
+
+  alert(
+    "기타사항이 삭제되었습니다."
+  );
+}
+
 async function init() {
   currentEmployeeData =
     await fetchEmployeeProfile();
@@ -1031,7 +1597,6 @@ async function init() {
     currentEmployeeData
   );
 
-  renderMemoHistory();
   setupEventListeners();
 
   const today = new Date();

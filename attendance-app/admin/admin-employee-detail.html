@@ -166,80 +166,202 @@
     /* =========================================
        🖨️ 인쇄/PDF 출력 전용 스타일 (@media print)
     ========================================= */
-    @media print {
-      #adminSidebar,
-      .top-header,
-      .employee-detail-hero,
-      .employee-summary-grid,
-      .employee-detail-grid,
-      .view-mode-tabs,
-      .time-navigator,
-      .employee-attendance-filter,
-      .memo-editor-box,
-      .panel-header button,
-      button {
-        display: none !important;
-      }
+    @page {
+      size: A4 portrait;
+      margin: 5mm 7mm;
+    }
 
-      body, html, .admin-layout, .main, .content {
+    @media print {
+      html,
+      body {
         width: 100% !important;
         height: auto !important;
+
         margin: 0 !important;
         padding: 0 !important;
+
         background: #ffffff !important;
         overflow: visible !important;
       }
 
+      body * {
+        visibility: hidden !important;
+      }
+
+      .employee-attendance-panel,
+      .employee-attendance-panel * {
+        visibility: visible !important;
+      }
+
+      .employee-attendance-panel {
+        position: absolute !important;
+        inset: 0 auto auto 0 !important;
+
+        width: 100% !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+
+        overflow: visible !important;
+      }
+
+      .attendance-print-actions,
+      .view-mode-tabs,
+      .time-navigator,
+      .employee-attendance-filter,
+      .employee-note-editor-panel,
+      .panel-header {
+        display: none !important;
+      }
+
       .print-only-header {
         display: block !important;
-        margin-bottom: 20px;
-        padding-bottom: 12px;
-        border-bottom: 2px solid #111827;
+
+        height: 12mm !important;
+
+        margin: 0 0 2mm !important;
+        padding: 0 0 2mm !important;
+
+        border-bottom:
+          1px solid #111827 !important;
+
         text-align: center;
       }
-      .print-only-header h1 { font-size: 24px; color: #000; margin-bottom: 6px; font-weight: bold; }
-      .print-only-header p { font-size: 14px; color: #444; margin: 0; }
 
-      .panel {
-        border: none !important;
-        box-shadow: none !important;
-        padding: 0 !important;
-        margin-bottom: 30px !important;
+      .print-only-header h1 {
+        margin: 0 !important;
+
+        color: #000000 !important;
+        font-size: 14pt !important;
+        font-weight: 700 !important;
+        line-height: 10mm !important;
       }
-      
-      .panel-header h3 {
-        font-size: 16px !important;
-        color: #000 !important;
-        margin-bottom: 10px;
-        border-left: 4px solid #000;
-        padding-left: 8px;
+
+      .attendance-table-wrap {
+        width: 100% !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+
+        overflow: visible !important;
       }
 
       .attendance-table {
         width: 100% !important;
-        border-collapse: collapse !important;
-        font-size: 11pt !important;
+
+        margin: 0 !important;
+
+        border-collapse:
+          collapse !important;
+
+        table-layout:
+          fixed !important;
+
+        font-size: 7pt !important;
+        line-height: 1 !important;
+
+        break-inside: avoid !important;
+        page-break-inside:
+          avoid !important;
       }
-      .attendance-table th, .attendance-table td {
-        border: 1px solid #999 !important;
-        padding: 8px 6px !important;
-        color: #000 !important;
+
+      .attendance-table thead {
+        display:
+          table-header-group !important;
+      }
+
+      .attendance-table th {
+        height: 5.5mm !important;
+        min-height: 0 !important;
+
+        padding:
+          0.4mm 1mm !important;
+
+        border:
+          1px solid #777777 !important;
+
+        background:
+          #eeeeee !important;
+
+        color: #000000 !important;
+
+        font-size: 7pt !important;
+        font-weight: 700 !important;
+        line-height: 1 !important;
+
+        -webkit-print-color-adjust:
+          exact;
+
+        print-color-adjust:
+          exact;
+      }
+
+      .attendance-table tbody tr {
+        height: 5.3mm !important;
+        min-height: 0 !important;
+
+        break-inside: avoid !important;
+        page-break-inside:
+          avoid !important;
+      }
+
+      .attendance-table td {
+        height: 5.3mm !important;
+        min-height: 0 !important;
+        max-height: 5.3mm !important;
+
+        padding:
+          0.3mm 1mm !important;
+
+        border:
+          1px solid #777777 !important;
+
+        color: #000000 !important;
+
+        font-size: 7pt !important;
+        line-height: 1 !important;
+        vertical-align: middle !important;
+      }
+
+      .attendance-table th:nth-child(1),
+      .attendance-table td:nth-child(1) {
+        width: 13%;
         text-align: center;
       }
-      .attendance-table th {
-        background-color: #f0f0f0 !important;
-        font-weight: bold;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-      tr { page-break-inside: avoid; page-break-after: auto; }
 
-      .memo-item {
-        border: 1px solid #ccc !important;
-        border-left: 4px solid #000 !important;
-        background: #fff !important;
-        page-break-inside: avoid;
-        margin-bottom: 8px !important;
+      .attendance-table th:nth-child(2),
+      .attendance-table td:nth-child(2) {
+        width: 7%;
+        text-align: center;
+      }
+
+      .attendance-table th:nth-child(3),
+      .attendance-table td:nth-child(3) {
+        width: 22%;
+        text-align: center;
+      }
+
+      .attendance-table th:nth-child(4),
+      .attendance-table td:nth-child(4) {
+        width: 16%;
+        text-align: center;
+      }
+
+      .attendance-table th:nth-child(5),
+      .attendance-table td:nth-child(5) {
+        width: 42%;
+        text-align: left;
+      }
+
+      .daily-note-cell {
+        overflow: hidden !important;
+
+        white-space: nowrap !important;
+        text-overflow: ellipsis !important;
       }
     }
   </style>
@@ -326,11 +448,10 @@
           </article>
         </section>
 
-        <section class="panel">
-          <div class="panel-header">
-            <h3>개인 출근부 및 근무표</h3>
+        <section class="panel employee-attendance-panel">
+          <div class="panel-header attendance-print-actions">
             <button type="button" id="btnExcelPrint" style="background:#111827; color:#fff; padding:6px 14px; border-radius:6px; font-weight:bold; border:none; cursor:pointer;">
-              🖨️ 근무표만 깔끔하게 출력/PDF 저장
+              🖨️ 근무표 출력/PDF 저장
             </button>
           </div>
 
@@ -366,7 +487,6 @@
                   <th>근무시간</th>
                   <th>시간합계</th>
                   <th>기타사항</th>
-                  <th>비고</th>
                 </tr>
               </thead>
               <tbody id="detailRecordTableBody"></tbody>
@@ -374,14 +494,47 @@
           </div>
         </section>
 
-        <section class="panel">
-          <div class="panel-header"><h3>관리자 메모 (날짜별 기록)</h3></div>
-          <div class="memo-editor-box">
-            <textarea id="newMemoInput" placeholder="직원에 대한 특이사항, 면담 내용, 출퇴근 수정 사유 등을 입력하세요."></textarea>
-            <button type="button" class="memo-save-btn" id="saveMemoBtn">메모 작성 및 저장</button>
+        <section class="panel employee-note-editor-panel">
+          <div class="panel-header">
+            <h3>날짜별 기타사항 작성</h3>
           </div>
-          <div class="memo-history-list" id="memoHistoryList">
-            <p style="color: #64748b; font-size: 13px; margin: 0;">등록된 메모가 없습니다.</p>
+
+          <div class="daily-note-editor">
+            <label>
+              작성 날짜
+
+              <input
+                id="dailyNoteDate"
+                type="date"
+              />
+            </label>
+
+            <label class="daily-note-content">
+              기타사항
+
+              <textarea
+                id="dailyNoteInput"
+                placeholder="선택한 날짜의 기타사항을 입력하세요."
+              ></textarea>
+            </label>
+
+            <div class="daily-note-actions">
+              <button
+                id="deleteDailyNoteBtn"
+                type="button"
+                class="daily-note-delete"
+              >
+                내용 삭제
+              </button>
+
+              <button
+                id="saveDailyNoteBtn"
+                type="button"
+                class="daily-note-save"
+              >
+                기타사항 저장
+              </button>
+            </div>
           </div>
         </section>
       </section>

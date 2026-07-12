@@ -2540,3 +2540,91 @@ body[data-admin-page] .content {
     grid-template-columns: 1fr;
   }
 }
+
+/* 날짜별 기타사항 */
+
+.daily-note-editor {
+  display: grid;
+  grid-template-columns:
+    180px minmax(0, 1fr);
+  gap: 16px;
+
+  padding: 20px;
+}
+
+.daily-note-editor label {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+
+  color: #475569;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.daily-note-editor input,
+.daily-note-editor textarea {
+  width: 100%;
+  box-sizing: border-box;
+
+  border: 1px solid #dbe1e8;
+  border-radius: 10px;
+
+  background: #fafafa;
+  font: inherit;
+  outline: none;
+}
+
+.daily-note-editor input {
+  height: 44px;
+  padding: 0 12px;
+}
+
+.daily-note-editor textarea {
+  min-height: 90px;
+  padding: 12px;
+  resize: vertical;
+}
+
+.daily-note-actions {
+  display: flex;
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.daily-note-actions button {
+  min-height: 40px;
+  padding: 0 15px;
+
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.daily-note-delete {
+  border: 1px solid #fecaca;
+  background: #fff;
+  color: #b91c1c;
+}
+
+.daily-note-save {
+  border: 0;
+  background: #1f2937;
+  color: #fff;
+}
+
+.attendance-print-actions {
+  justify-content: flex-end;
+}
+
+@media (max-width: 800px) {
+  .daily-note-editor {
+    grid-template-columns: 1fr;
+  }
+
+  .daily-note-content,
+  .daily-note-actions {
+    grid-column: auto;
+  }
+}
