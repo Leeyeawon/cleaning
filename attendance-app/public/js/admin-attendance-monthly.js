@@ -278,6 +278,10 @@ function getStatusClass(statusType) {
     return "location";
   }
 
+  if (statusType === "annual_leave") {
+    return "annual-leave";
+  }
+
   return "normal";
 }
 
@@ -350,84 +354,255 @@ function renderEmployeeOptions() {
 
 async function fetchMonthlyAttendance() {
   const selectedMonth =
-    monthFilter?.value || getCurrentMonth();
+    monthFilter?.value ||
+    getCurrentMonth();
 
-  const { startDate, endDate } =
-    getMonthRange(selectedMonth);
+  const {
+    startDate,
+    endDate,
+  } = getMonthRange(selectedMonth);
 
-  const { data, error } = await supabase
-    .from("attendance")
-    .select(`
-      id,
-      user_id,
-      work_date,
-      check_in_time,
-      check_out_time,
-      status,
-      users (
+  const [
+    attendanceResult,
+    leaveResult,
+  ] = await Promise.all([
+    supabase
+      .from("attendance")
+      .select(`
         id,
-        name,
-        department
-      ),
-      workplaces (
-        id,
-        name
-      )
-    `)
-    .gte("work_date", startDate)
-    .lt("work_date", endDate)
-    .order("work_date", {
-      ascending: false,
-    })
-    .order("check_in_time", {
-      ascending: true,
-    });
+        user_id,
+        work_date,
+        check_in_time,
+        check_out_time,
+        status,
+        users (
+          id,
+          name,
+          department
+        ),
+        workplaces (
+          id,
+          name
+        )
+      `)
+      .gte("work_date", startDate)
+      .lt("work_date", endDate)
+      .order("work_date", {
+        ascending: false,
+      })
+      .order("check_in_time", {
+        ascending: true,
+      }),
 
-  if (error) {
-    throw error;
+    supabase
+      .from("employee_daily_notes")
+      .select(`
+        id,
+        user_id,
+        note_date,
+        content,
+        day_type,
+        users (
+          id,
+          name,
+          department
+        )
+      `)
+      .eq("day_type", "annual_leave")
+      .gte("note_date", startDate)
+      .lt("note_date", endDate)
+      .order("note_date", {
+        ascending: false,
+      }),
+  ]);
+
+  if (attendanceResult.error) {
+    throw attendanceResult.error;
   }
 
-  monthlyRecords = (data || []).map((record) => {
-    const status = normalizeStatus(
-      record.status,
-      record.check_in_time,
-      record.check_out_time
+  if (leaveResult.error) {
+    throw leaveResult.error;
+  }
+
+  const regionByUser = new Map();
+
+  const attendanceRecords =
+    (attendanceResult.data || []).map(
+      (record) => {
+        const status =
+          normalizeStatus(
+            record.status,
+            record.check_in_time,
+            record.check_out_time
+          );
+
+        const workMinutes =
+          calculateWorkMinutes(
+            record.check_in_time,
+            record.check_out_time
+          );
+
+        const region =
+          record.workplaces?.name ||
+          "미배정";
+
+        if (
+          region !== "미배정" &&
+          !regionByUser.has(
+            String(record.user_id)
+          )
+        ) {
+          regionByUser.set(
+            String(record.user_id),
+            region
+          );
+        }
+
+        return {
+          id: record.id,
+          userId: record.user_id,
+
+          date: record.work_date,
+          displayDate:
+            formatDate(record.work_date),
+
+          name:
+            record.users?.name ||
+            "이름 없음",
+
+          department:
+            record.users?.department ||
+            "부서 없음",
+
+          region,
+
+          checkIn:
+            formatTime(
+              record.check_in_time
+            ),
+
+          checkOut:
+            formatTime(
+              record.check_out_time
+            ),
+
+          rawCheckIn:
+            record.check_in_time,
+
+          rawCheckOut:
+            record.check_out_time,
+
+          workMinutes,
+
+          workTimeText:
+            formatWorkMinutes(
+              workMinutes
+            ),
+
+          status: status.text,
+          statusType: status.type,
+
+          memo:
+            getRecordMemo(record),
+
+          isAnnualLeave: false,
+        };
+      }
     );
 
-    const workMinutes = calculateWorkMinutes(
-      record.check_in_time,
-      record.check_out_time
-    );
+  const recordMap = new Map();
 
-    return {
-      id: record.id,
-      userId: record.user_id,
+  attendanceRecords.forEach(
+    (record) => {
+      const key =
+        `${record.userId}_${record.date}`;
 
-      date: record.work_date,
-      displayDate: formatDate(record.work_date),
+      recordMap.set(key, record);
+    }
+  );
 
-      name: record.users?.name || "이름 없음",
-      department:
-        record.users?.department || "부서 없음",
+  (leaveResult.data || []).forEach(
+    (leave) => {
+      const key =
+        `${leave.user_id}_${leave.note_date}`;
 
-      region:
-        record.workplaces?.name || "미배정",
+      const existingRecord =
+        recordMap.get(key);
 
-      checkIn: formatTime(record.check_in_time),
-      checkOut: formatTime(record.check_out_time),
+      const employee =
+        employeeList.find(
+          (item) =>
+            String(item.id) ===
+            String(leave.user_id)
+        );
 
-      rawCheckIn: record.check_in_time,
-      rawCheckOut: record.check_out_time,
+      recordMap.set(key, {
+        id:
+          `leave-${leave.user_id}-${leave.note_date}`,
 
-      workMinutes,
-      workTimeText: formatWorkMinutes(workMinutes),
+        userId:
+          leave.user_id,
 
-      status: status.text,
-      statusType: status.type,
+        date:
+          leave.note_date,
 
-      memo: getRecordMemo(record),
-    };
-  });
+        displayDate:
+          formatDate(
+            leave.note_date
+          ),
+
+        name:
+          leave.users?.name ||
+          employee?.name ||
+          "이름 없음",
+
+        department:
+          leave.users?.department ||
+          employee?.department ||
+          "부서 없음",
+
+        region:
+          existingRecord?.region ||
+          regionByUser.get(
+            String(leave.user_id)
+          ) ||
+          "미배정",
+
+        checkIn: "—",
+        checkOut: "—",
+
+        rawCheckIn: null,
+        rawCheckOut: null,
+
+        workMinutes: 0,
+        workTimeText: "—",
+
+        status: "연차",
+        statusType: "annual_leave",
+
+        memo:
+          leave.content || "-",
+
+        isAnnualLeave: true,
+      });
+    }
+  );
+
+  monthlyRecords =
+    Array.from(
+      recordMap.values()
+    ).sort((a, b) => {
+      if (a.date !== b.date) {
+        return b.date.localeCompare(
+          a.date
+        );
+      }
+
+      return a.name.localeCompare(
+        b.name,
+        "ko"
+      );
+    });
 }
 
 /* =========================

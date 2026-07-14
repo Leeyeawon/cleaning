@@ -65,93 +65,292 @@ function calcWorkTime(checkIn, checkOut) {
 
 // 4. 상태별 CSS 클래스 반환
 function getStatusClass(statusType) {
-  if (statusType === "late" || statusType === "지각") return "late";
-  if (statusType === "absent" || statusType === "미출근") return "absent";
-  if (statusType === "location_error" || statusType === "위치오류") return "location";
+  if (
+    statusType === "late" ||
+    statusType === "지각"
+  ) {
+    return "late";
+  }
+
+  if (
+    statusType === "absent" ||
+    statusType === "미출근"
+  ) {
+    return "absent";
+  }
+
+  if (
+    statusType === "location_error" ||
+    statusType === "위치오류"
+  ) {
+    return "location";
+  }
+
+  if (
+    statusType === "annual_leave"
+  ) {
+    return "annual-leave";
+  }
+
   return "normal";
 }
 
 // 5. 🔥 Supabase에서 오늘 출퇴근 데이터 및 전체 직원 조회
 async function fetchTodayAttendance() {
   try {
-    // ① 전체 활성 직원 목록 조회 (미출근자 계산용)
-    const { data: allUsers, error: userError } = await supabase
-      .from("users")
-      .select("id, name, department")
-      .eq("status", "active");
+    const [
+      userResult,
+      attendanceResult,
+      leaveResult,
+    ] = await Promise.all([
+      supabase
+        .from("users")
+        .select(
+          "id, name, department"
+        )
+        .eq("status", "active"),
 
-    // ② 오늘 찍힌 출근 기록 (직원정보, 근무지정보 조인)
-    const { data: attData, error: attError } = await supabase
-      .from("attendance")
-      .select(`
-        id, user_id, check_in_time, check_out_time, status,
-        users ( name, department ),
-        workplaces ( name )
-      `)
-      .eq("work_date", todayStr);
+      supabase
+        .from("attendance")
+        .select(`
+          id,
+          user_id,
+          check_in_time,
+          check_out_time,
+          status,
+          users (
+            name,
+            department
+          ),
+          workplaces (
+            name
+          )
+        `)
+        .eq("work_date", todayStr),
 
-    if (userError || attError) {
-      console.error("데이터 불러오기 실패:", userError || attError);
-      return [];
+      supabase
+        .from("employee_daily_notes")
+        .select(
+          "user_id, note_date, content, day_type"
+        )
+        .eq("note_date", todayStr)
+        .eq(
+          "day_type",
+          "annual_leave"
+        ),
+    ]);
+
+    if (userResult.error) {
+      throw userResult.error;
     }
 
-    // ③ 출근한 직원들의 ID 목록
-    const checkedInUserIds = new Set((attData || []).map((item) => item.user_id));
+    if (attendanceResult.error) {
+      throw attendanceResult.error;
+    }
 
-    // ④ 실제 출근 기록 변환
-    const formattedAtt = (attData || []).map((item) => {
-      let statusText = "근무중";
-      let statusType = "normal";
+    if (leaveResult.error) {
+      throw leaveResult.error;
+    }
 
-      if (item.status === "late" || item.status === "지각") {
-        statusText = "지각";
-        statusType = "late";
-      } else if (item.status === "location_error" || item.status === "위치오류") {
-        statusText = "위치오류";
-        statusType = "location";
-      } else if (item.check_out_time) {
-        statusText = "퇴근완료";
-        statusType = "normal";
-      }
+    const allUsers =
+      userResult.data || [];
 
-      return {
-        id: item.id,
-        user_id: item.user_id,
-        name: item.users?.name || "이름 없음",
-        department: item.users?.department || "부서 없음",
-        region: item.workplaces?.name || "미배정",
-        checkIn: formatTime(item.check_in_time),
-        checkOut: formatTime(item.check_out_time),
-        workTime: calcWorkTime(item.check_in_time, item.check_out_time),
-        status: statusText,
-        statusType: statusType,
-        rawCheckIn: item.check_in_time,
-        rawCheckOut: item.check_out_time
-      };
-    });
+    const attendanceData =
+      attendanceResult.data || [];
 
-    // ⑤ 아직 출근 안 한 직원들(미출근)을 리스트에 추가
-    const absentUsers = (allUsers || [])
-      .filter((u) => !checkedInUserIds.has(u.id))
-      .map((u) => ({
-        id: `absent-${u.id}`,
-        user_id: u.id,
-        name: u.name || "이름 없음",
-        department: u.department || "부서 없음",
-        region: "미출근",
-        checkIn: "—",
-        checkOut: "—",
-        workTime: "—",
-        status: "미출근",
-        statusType: "absent",
-        rawCheckIn: null,
-        rawCheckOut: null
-      }));
+    const annualLeaveUserIds =
+      new Set(
+        (leaveResult.data || []).map(
+          (leave) =>
+            String(leave.user_id)
+        )
+      );
 
-    // 출근자 + 미출근자 합쳐서 반환
-    return [...formattedAtt, ...absentUsers];
-  } catch (err) {
-    console.error("출퇴근 조회 에러:", err);
+    const checkedInUserIds =
+      new Set(
+        attendanceData.map(
+          (attendance) =>
+            String(
+              attendance.user_id
+            )
+        )
+      );
+
+    const formattedAttendance =
+      attendanceData
+        .filter(
+          (item) =>
+            !annualLeaveUserIds.has(
+              String(item.user_id)
+            )
+        )
+        .map((item) => {
+          let statusText =
+            "근무중";
+
+          let statusType =
+            "normal";
+
+          if (
+            item.status === "late" ||
+            item.status === "지각"
+          ) {
+            statusText = "지각";
+            statusType = "late";
+          } else if (
+            item.status ===
+              "location_error" ||
+            item.status ===
+              "위치오류"
+          ) {
+            statusText =
+              "위치오류";
+
+            statusType =
+              "location";
+          } else if (
+            item.check_out_time
+          ) {
+            statusText =
+              "퇴근완료";
+          }
+
+          return {
+            id: item.id,
+            user_id:
+              item.user_id,
+
+            name:
+              item.users?.name ||
+              "이름 없음",
+
+            department:
+              item.users?.department ||
+              "부서 없음",
+
+            region:
+              item.workplaces?.name ||
+              "미배정",
+
+            checkIn:
+              formatTime(
+                item.check_in_time
+              ),
+
+            checkOut:
+              formatTime(
+                item.check_out_time
+              ),
+
+            workTime:
+              calcWorkTime(
+                item.check_in_time,
+                item.check_out_time
+              ),
+
+            status:
+              statusText,
+
+            statusType,
+
+            rawCheckIn:
+              item.check_in_time,
+
+            rawCheckOut:
+              item.check_out_time,
+          };
+        });
+
+    const annualLeaveUsers =
+      allUsers
+        .filter((user) =>
+          annualLeaveUserIds.has(
+            String(user.id)
+          )
+        )
+        .map((user) => ({
+          id:
+            `leave-${user.id}`,
+
+          user_id:
+            user.id,
+
+          name:
+            user.name ||
+            "이름 없음",
+
+          department:
+            user.department ||
+            "부서 없음",
+
+          region: "연차",
+
+          checkIn: "—",
+          checkOut: "—",
+          workTime: "—",
+
+          status: "연차",
+          statusType:
+            "annual_leave",
+
+          rawCheckIn: null,
+          rawCheckOut: null,
+        }));
+
+    const absentUsers =
+      allUsers
+        .filter((user) => {
+          const userId =
+            String(user.id);
+
+          return (
+            !checkedInUserIds.has(
+              userId
+            ) &&
+            !annualLeaveUserIds.has(
+              userId
+            )
+          );
+        })
+        .map((user) => ({
+          id:
+            `absent-${user.id}`,
+
+          user_id:
+            user.id,
+
+          name:
+            user.name ||
+            "이름 없음",
+
+          department:
+            user.department ||
+            "부서 없음",
+
+          region: "미출근",
+
+          checkIn: "—",
+          checkOut: "—",
+          workTime: "—",
+
+          status: "미출근",
+          statusType: "absent",
+
+          rawCheckIn: null,
+          rawCheckOut: null,
+        }));
+
+    return [
+      ...formattedAttendance,
+      ...annualLeaveUsers,
+      ...absentUsers,
+    ];
+  } catch (error) {
+    console.error(
+      "출퇴근 조회 오류:",
+      error
+    );
+
     return [];
   }
 }
@@ -166,24 +365,73 @@ function updateSummaryStats(data) {
   let totalLocation = 0;
 
   data.forEach((item) => {
-    if (item.statusType === "absent") {
-      totalAbsent++;
-    } else {
-      totalCheckIn++; // 출근 기록이 있으면 무조건 출근완료 카운트 증가
-      if (item.rawCheckOut) totalDone++;
-      else totalWorking++;
+    if (
+      item.statusType ===
+      "annual_leave"
+    ) {
+      return;
+    }
 
-      if (item.statusType === "late") totalLate++;
-      if (item.statusType === "location") totalLocation++;
+    if (
+      item.statusType ===
+      "absent"
+    ) {
+      totalAbsent += 1;
+      return;
+    }
+
+    totalCheckIn += 1;
+
+    if (item.rawCheckOut) {
+      totalDone += 1;
+    } else {
+      totalWorking += 1;
+    }
+
+    if (
+      item.statusType ===
+      "late"
+    ) {
+      totalLate += 1;
+    }
+
+    if (
+      item.statusType ===
+      "location"
+    ) {
+      totalLocation += 1;
     }
   });
 
-  if (statCheckIn) statCheckIn.textContent = totalCheckIn;
-  if (statDone) statDone.textContent = totalDone;
-  if (statWorking) statWorking.textContent = totalWorking;
-  if (statLate) statLate.textContent = totalLate;
-  if (statAbsent) statAbsent.textContent = totalAbsent;
-  if (statLocation) statLocation.textContent = totalLocation;
+  if (statCheckIn) {
+    statCheckIn.textContent =
+      totalCheckIn;
+  }
+
+  if (statDone) {
+    statDone.textContent =
+      totalDone;
+  }
+
+  if (statWorking) {
+    statWorking.textContent =
+      totalWorking;
+  }
+
+  if (statLate) {
+    statLate.textContent =
+      totalLate;
+  }
+
+  if (statAbsent) {
+    statAbsent.textContent =
+      totalAbsent;
+  }
+
+  if (statLocation) {
+    statLocation.textContent =
+      totalLocation;
+  }
 }
 
 // 7. 출퇴근 테이블 화면 렌더링

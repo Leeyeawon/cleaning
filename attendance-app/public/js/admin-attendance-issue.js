@@ -98,82 +98,232 @@ function updateStats() {
 }
 
 async function fetchIssueData() {
-  const { data: allUsers, error: userError } = await supabase
-    .from("users")
-    .select("id, name, department, status")
-    .eq("status", "active");
+  const [
+    userResult,
+    attendanceResult,
+    leaveResult,
+  ] = await Promise.all([
+    supabase
+      .from("users")
+      .select(
+        "id, name, department, status"
+      )
+      .eq("status", "active"),
 
-  const { data: attendanceData, error: attendanceError } = await supabase
-    .from("attendance")
-    .select(`
-      id,
-      user_id,
-      work_date,
-      check_in_time,
-      check_out_time,
-      status,
-      users ( name, department ),
-      workplaces ( name )
-    `)
-    .eq("work_date", todayStr);
+    supabase
+      .from("attendance")
+      .select(`
+        id,
+        user_id,
+        work_date,
+        check_in_time,
+        check_out_time,
+        status,
+        users (
+          name,
+          department
+        ),
+        workplaces (
+          name
+        )
+      `)
+      .eq("work_date", todayStr),
 
-  if (userError || attendanceError) {
-    console.error("지각·미출근 데이터 조회 실패:", userError || attendanceError);
+    supabase
+      .from("employee_daily_notes")
+      .select(
+        "user_id, note_date, day_type"
+      )
+      .eq("note_date", todayStr)
+      .eq(
+        "day_type",
+        "annual_leave"
+      ),
+  ]);
+
+  if (
+    userResult.error ||
+    attendanceResult.error ||
+    leaveResult.error
+  ) {
+    console.error(
+      "지각·미출근 데이터 조회 실패:",
+      userResult.error ||
+      attendanceResult.error ||
+      leaveResult.error
+    );
+
     lateEmployees = [];
     absentEmployees = [];
     locationErrors = [];
+
     return;
   }
 
-  const checkedInUserIds = new Set(
-    (attendanceData || []).map((item) => item.user_id)
-  );
+  const allUsers =
+    userResult.data || [];
 
-  lateEmployees = (attendanceData || [])
-    .filter((item) => item.status === "late" || item.status === "지각")
-    .map((item) => {
-      const lateMinutes = getMinutesLate(item.check_in_time);
+  const attendanceData =
+    attendanceResult.data || [];
 
-      return {
-        attendanceId: item.id,
-        userId: item.user_id,
-        name: item.users?.name || "이름 없음",
-        department: item.users?.department || "부서 없음",
-        region: item.workplaces?.name || "미배정",
-        scheduledTime: WORK_START_TIME,
-        actualTime: formatTime(item.check_in_time),
-        lateMinutes: `${lateMinutes}분`,
-        monthlyLateCount: 1,
-        reason: "미확인",
-        memo: "",
-      };
-    });
+  const annualLeaveUserIds =
+    new Set(
+      (leaveResult.data || []).map(
+        (leave) =>
+          String(leave.user_id)
+      )
+    );
 
-  absentEmployees = (allUsers || [])
-    .filter((user) => !checkedInUserIds.has(user.id))
-    .map((user) => ({
-      userId: user.id,
-      name: user.name || "이름 없음",
-      department: user.department || "부서 없음",
-      region: "미출근",
-      scheduledTime: WORK_START_TIME,
-      phone: "—",
-      status: "미확인",
-    }));
+  const checkedInUserIds =
+    new Set(
+      attendanceData.map(
+        (attendance) =>
+          String(
+            attendance.user_id
+          )
+      )
+    );
 
-  locationErrors = (attendanceData || [])
-    .filter(
-      (item) => item.status === "location_error" || item.status === "위치오류"
-    )
-    .map((item) => ({
-      attendanceId: item.id,
-      userId: item.user_id,
-      name: item.users?.name || "이름 없음",
-      region: item.workplaces?.name || "미배정",
-      time: formatTime(item.check_in_time),
-      distance: "확인 필요",
-      status: "확인 필요",
-    }));
+  lateEmployees =
+    attendanceData
+      .filter((item) => {
+        const isLate =
+          item.status === "late" ||
+          item.status === "지각";
+
+        const isAnnualLeave =
+          annualLeaveUserIds.has(
+            String(item.user_id)
+          );
+
+        return (
+          isLate &&
+          !isAnnualLeave
+        );
+      })
+      .map((item) => {
+        const lateMinutes =
+          getMinutesLate(
+            item.check_in_time
+          );
+
+        return {
+          attendanceId:
+            item.id,
+
+          userId:
+            item.user_id,
+
+          name:
+            item.users?.name ||
+            "이름 없음",
+
+          department:
+            item.users?.department ||
+            "부서 없음",
+
+          region:
+            item.workplaces?.name ||
+            "미배정",
+
+          scheduledTime:
+            WORK_START_TIME,
+
+          actualTime:
+            formatTime(
+              item.check_in_time
+            ),
+
+          lateMinutes:
+            `${lateMinutes}분`,
+
+          monthlyLateCount: 1,
+          reason: "미확인",
+          memo: "",
+        };
+      });
+
+  absentEmployees =
+    allUsers
+      .filter((user) => {
+        const userId =
+          String(user.id);
+
+        return (
+          !checkedInUserIds.has(
+            userId
+          ) &&
+          !annualLeaveUserIds.has(
+            userId
+          )
+        );
+      })
+      .map((user) => ({
+        userId:
+          user.id,
+
+        name:
+          user.name ||
+          "이름 없음",
+
+        department:
+          user.department ||
+          "부서 없음",
+
+        region: "미출근",
+
+        scheduledTime:
+          WORK_START_TIME,
+
+        phone: "—",
+        status: "미확인",
+      }));
+
+  locationErrors =
+    attendanceData
+      .filter((item) => {
+        const isLocationError =
+          item.status ===
+            "location_error" ||
+          item.status ===
+            "위치오류";
+
+        const isAnnualLeave =
+          annualLeaveUserIds.has(
+            String(item.user_id)
+          );
+
+        return (
+          isLocationError &&
+          !isAnnualLeave
+        );
+      })
+      .map((item) => ({
+        attendanceId:
+          item.id,
+
+        userId:
+          item.user_id,
+
+        name:
+          item.users?.name ||
+          "이름 없음",
+
+        region:
+          item.workplaces?.name ||
+          "미배정",
+
+        time:
+          formatTime(
+            item.check_in_time
+          ),
+
+        distance:
+          "확인 필요",
+
+        status:
+          "확인 필요",
+      }));
 
   await applyMonthlyLateCount();
 }

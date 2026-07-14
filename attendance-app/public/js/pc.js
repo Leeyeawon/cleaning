@@ -104,6 +104,10 @@ if (adminSidebar) {
           <p>요청사항 관리</p>
         </a>
 
+        <a href="admin-checklists.html" class="admin-menu-item ${ currentAdminPage === "checklists" ? "active" : "" }" > <span></span>
+          <p>청소 점검표</p>
+        </a>
+
         <a href="admin-employees.html" class="admin-menu-item ${currentAdminPage === "employees" ? "active" : ""}">
           <span></span>
           <p>직원 관리</p>
@@ -285,3 +289,4 @@ function createAdminNotification() {
 }
 
 createAdminNotification();
+

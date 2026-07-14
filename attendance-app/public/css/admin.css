@@ -2651,3 +2651,37 @@ body[data-admin-page] .content {
     grid-column: auto;
   }
 }
+
+.notice-table-panel {
+  min-width: 0;
+}
+
+.notice-table-panel
+.attendance-table-wrap {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.notice-table {
+  width: max-content;
+  min-width: 900px;
+}
+
+.notice-delete-btn {
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.notice-delete-btn:hover {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.notice-modal-footer
+.save-btn:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}

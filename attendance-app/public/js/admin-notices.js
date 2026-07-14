@@ -1,310 +1,972 @@
-/* =========================
-  공지사항 페이지
-========================= */
+import supabase from "./supabase.js";
+import { requireAdmin } from "./adminAuth.js";
 
-const notices = [
-  {
-    id: "notice001",
-    title: "서면 B구역 출근 기준 위치 변경 안내",
-    category: "근무안내",
-    target: "서면 B구역",
-    status: "게시중",
-    important: true,
-    createdAt: "2026.06.30",
-    views: 42,
-    content:
-      "서면 B구역 출근 기준 위치가 건물 정문 기준으로 변경되었습니다.\n\n출근 시 지정 반경 안에서만 출근 처리가 가능하니, 반드시 정문 근처에서 출근을 진행해 주세요.",
-  },
-  {
-    id: "notice002",
-    title: "7월 근무 일정 확인 요청",
-    category: "전체공지",
-    target: "전체 직원",
-    status: "게시중",
-    important: false,
-    createdAt: "2026.06.29",
-    views: 87,
-    content:
-      "7월 근무 일정이 등록되었습니다.\n\n직원 앱에서 본인 근무 일정과 배정 지역을 확인해 주세요. 일정에 이상이 있을 경우 관리자에게 문의 바랍니다.",
-  },
-  {
-    id: "notice003",
-    title: "청소 비품 추가 지급 안내",
-    category: "비품안내",
-    target: "현장팀",
-    status: "예약",
-    important: false,
-    createdAt: "2026.07.01",
-    views: 0,
-    content:
-      "현장팀 비품 추가 지급이 예정되어 있습니다.\n\n지급 품목은 장갑, 봉투, 소독 티슈이며 상세 지급 일정은 추후 안내됩니다.",
-  },
-  {
-    id: "notice004",
-    title: "태풍 예보로 인한 긴급 근무 안내",
-    category: "긴급공지",
-    target: "전체 직원",
-    status: "임시저장",
-    important: true,
-    createdAt: "2026.06.28",
-    views: 0,
-    content:
-      "태풍 예보로 인해 일부 근무지역 운영 시간이 변경될 수 있습니다.\n\n확정 내용은 관리자 확인 후 재공지 예정입니다.",
-  },
-];
+let notices = [];
+let selectedNoticeId = null;
+let editingNoticeId = null;
 
-let selectedNoticeIndex = null;
-let editingNoticeIndex = null;
+const noticeTableBody =
+  document.getElementById(
+    "noticeTableBody"
+  );
 
-const noticeTableBody = document.getElementById("noticeTableBody");
-const noticeSearchInput = document.getElementById("noticeSearchInput");
-const noticeCategoryFilter = document.getElementById("noticeCategoryFilter");
-const noticeStatusFilter = document.getElementById("noticeStatusFilter");
-const noticeTargetFilter = document.getElementById("noticeTargetFilter");
+const noticeSearchInput =
+  document.getElementById(
+    "noticeSearchInput"
+  );
 
-const noticePreviewEmpty = document.getElementById("noticePreviewEmpty");
-const noticePreviewContent = document.getElementById("noticePreviewContent");
-const previewCategory = document.getElementById("previewCategory");
-const previewTitle = document.getElementById("previewTitle");
-const previewMeta = document.getElementById("previewMeta");
-const previewBody = document.getElementById("previewBody");
+const noticeCategoryFilter =
+  document.getElementById(
+    "noticeCategoryFilter"
+  );
 
-const addNoticeBtn = document.getElementById("addNoticeBtn");
-const noticeModal = document.getElementById("noticeModal");
-const noticeModalTitle = document.getElementById("noticeModalTitle");
-const noticeModalCloseBtn = document.getElementById("noticeModalCloseBtn");
-const noticeModalCancelBtn = document.getElementById("noticeModalCancelBtn");
-const noticeSaveBtn = document.getElementById("noticeSaveBtn");
+const noticeStatusFilter =
+  document.getElementById(
+    "noticeStatusFilter"
+  );
 
-const noticeTitleInput = document.getElementById("noticeTitleInput");
-const noticeCategoryInput = document.getElementById("noticeCategoryInput");
-const noticeStatusInput = document.getElementById("noticeStatusInput");
-const noticeTargetInput = document.getElementById("noticeTargetInput");
-const noticeImportantInput = document.getElementById("noticeImportantInput");
-const noticeContentInput = document.getElementById("noticeContentInput");
+const noticeTargetFilter =
+  document.getElementById(
+    "noticeTargetFilter"
+  );
+
+const noticePreviewEmpty =
+  document.getElementById(
+    "noticePreviewEmpty"
+  );
+
+const noticePreviewContent =
+  document.getElementById(
+    "noticePreviewContent"
+  );
+
+const previewCategory =
+  document.getElementById(
+    "previewCategory"
+  );
+
+const previewTitle =
+  document.getElementById(
+    "previewTitle"
+  );
+
+const previewMeta =
+  document.getElementById(
+    "previewMeta"
+  );
+
+const previewBody =
+  document.getElementById(
+    "previewBody"
+  );
+
+const addNoticeBtn =
+  document.getElementById(
+    "addNoticeBtn"
+  );
+
+const noticeModal =
+  document.getElementById(
+    "noticeModal"
+  );
+
+const noticeModalTitle =
+  document.getElementById(
+    "noticeModalTitle"
+  );
+
+const noticeModalCloseBtn =
+  document.getElementById(
+    "noticeModalCloseBtn"
+  );
+
+const noticeModalCancelBtn =
+  document.getElementById(
+    "noticeModalCancelBtn"
+  );
+
+const noticeSaveBtn =
+  document.getElementById(
+    "noticeSaveBtn"
+  );
+
+const noticeTitleInput =
+  document.getElementById(
+    "noticeTitleInput"
+  );
+
+const noticeCategoryInput =
+  document.getElementById(
+    "noticeCategoryInput"
+  );
+
+const noticeStatusInput =
+  document.getElementById(
+    "noticeStatusInput"
+  );
+
+const noticeTargetInput =
+  document.getElementById(
+    "noticeTargetInput"
+  );
+
+const noticeImportantInput =
+  document.getElementById(
+    "noticeImportantInput"
+  );
+
+const noticeContentInput =
+  document.getElementById(
+    "noticeContentInput"
+  );
+
+const totalNoticeCount =
+  document.getElementById(
+    "totalNoticeCount"
+  );
+
+const importantNoticeCount =
+  document.getElementById(
+    "importantNoticeCount"
+  );
+
+const publishedNoticeCount =
+  document.getElementById(
+    "publishedNoticeCount"
+  );
+
+const draftNoticeCount =
+  document.getElementById(
+    "draftNoticeCount"
+  );
+
+const scheduledNoticeCount =
+  document.getElementById(
+    "scheduledNoticeCount"
+  );
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function formatDate(value) {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+
+  return date.toLocaleDateString(
+    "ko-KR"
+  );
+}
 
 function getStatusClass(status) {
-  if (status === "게시중") return "normal";
-  if (status === "예약") return "late";
-  if (status === "임시저장") return "location";
+  if (status === "게시중") {
+    return "normal";
+  }
+
+  if (status === "예약") {
+    return "late";
+  }
+
+  if (status === "임시저장") {
+    return "location";
+  }
+
   return "absent";
 }
 
-function filterNotices() {
-  const keyword = noticeSearchInput ? noticeSearchInput.value.trim() : "";
-  const selectedCategory = noticeCategoryFilter ? noticeCategoryFilter.value : "all";
-  const selectedStatus = noticeStatusFilter ? noticeStatusFilter.value : "all";
-  const selectedTarget = noticeTargetFilter ? noticeTargetFilter.value : "all";
+function updateSummary() {
+  if (totalNoticeCount) {
+    totalNoticeCount.textContent =
+      notices.length;
+  }
 
-  return notices.filter((notice) => {
-    const titleMatched = keyword === "" || notice.title.includes(keyword);
-    const categoryMatched =
-      selectedCategory === "all" || notice.category === selectedCategory;
-    const statusMatched =
-      selectedStatus === "all" || notice.status === selectedStatus;
-    const targetMatched =
-      selectedTarget === "all" || notice.target === selectedTarget;
+  if (importantNoticeCount) {
+    importantNoticeCount.textContent =
+      notices.filter(
+        (notice) =>
+          notice.important
+      ).length;
+  }
 
-    return titleMatched && categoryMatched && statusMatched && targetMatched;
-  });
+  if (publishedNoticeCount) {
+    publishedNoticeCount.textContent =
+      notices.filter(
+        (notice) =>
+          notice.status === "게시중"
+      ).length;
+  }
+
+  if (draftNoticeCount) {
+    draftNoticeCount.textContent =
+      notices.filter(
+        (notice) =>
+          notice.status ===
+          "임시저장"
+      ).length;
+  }
+
+  if (scheduledNoticeCount) {
+    scheduledNoticeCount.textContent =
+      notices.filter(
+        (notice) =>
+          notice.status === "예약"
+      ).length;
+  }
 }
 
-function renderNoticeTable() {
-  if (!noticeTableBody) return;
+async function loadTargetOptions() {
+  const [
+    workplaceResult,
+    employeeResult,
+  ] = await Promise.all([
+    supabase
+      .from("workplaces")
+      .select("name")
+      .order("name", {
+        ascending: true,
+      }),
 
-  const filteredNotices = filterNotices();
+    supabase
+      .from("users")
+      .select("department")
+      .not(
+        "department",
+        "is",
+        null
+      ),
+  ]);
 
-  if (filteredNotices.length === 0) {
+  if (workplaceResult.error) {
+    console.error(
+      "근무지역 조회 실패:",
+      workplaceResult.error
+    );
+  }
+
+  if (employeeResult.error) {
+    console.error(
+      "소속 조회 실패:",
+      employeeResult.error
+    );
+  }
+
+  const targets = [
+    "전체 직원",
+
+    ...new Set(
+      (employeeResult.data || [])
+        .map(
+          (employee) =>
+            employee.department
+        )
+        .filter(Boolean)
+    ),
+
+    ...new Set(
+      (workplaceResult.data || [])
+        .map(
+          (workplace) =>
+            workplace.name
+        )
+        .filter(Boolean)
+    ),
+  ];
+
+  const uniqueTargets = [
+    ...new Set(targets),
+  ];
+
+  const filterValue =
+    noticeTargetFilter.value;
+
+  const inputValue =
+    noticeTargetInput.value;
+
+  noticeTargetFilter.innerHTML = `
+    <option value="all">
+      전체 대상
+    </option>
+
+    ${uniqueTargets
+      .map(
+        (target) => `
+          <option value="${escapeHtml(target)}">
+            ${escapeHtml(target)}
+          </option>
+        `
+      )
+      .join("")}
+  `;
+
+  noticeTargetInput.innerHTML =
+    uniqueTargets
+      .map(
+        (target) => `
+          <option value="${escapeHtml(target)}">
+            ${escapeHtml(target)}
+          </option>
+        `
+      )
+      .join("");
+
+  if (
+    uniqueTargets.includes(
+      filterValue
+    )
+  ) {
+    noticeTargetFilter.value =
+      filterValue;
+  }
+
+  if (
+    uniqueTargets.includes(
+      inputValue
+    )
+  ) {
+    noticeTargetInput.value =
+      inputValue;
+  }
+}
+
+async function loadNotices() {
+  noticeTableBody.innerHTML = `
+    <tr>
+      <td colspan="7" class="empty-row">
+        공지사항을 불러오는 중입니다.
+      </td>
+    </tr>
+  `;
+
+  const { data, error } =
+    await supabase
+      .from("notices")
+      .select(`
+        id,
+        title,
+        content,
+        category,
+        target,
+        status,
+        important,
+        views,
+        published_at,
+        created_at,
+        updated_at
+      `)
+      .order("important", {
+        ascending: false,
+      })
+      .order("created_at", {
+        ascending: false,
+      });
+
+  if (error) {
+    console.error(
+      "공지사항 조회 실패:",
+      error
+    );
+
     noticeTableBody.innerHTML = `
       <tr>
-        <td colspan="7" class="empty-row">조회된 공지사항이 없습니다.</td>
+        <td colspan="7" class="empty-row">
+          공지사항을 불러오지 못했습니다.
+        </td>
       </tr>
     `;
+
     return;
   }
 
-  noticeTableBody.innerHTML = filteredNotices
-    .map((notice) => {
-      const originalIndex = notices.indexOf(notice);
+  notices = data || [];
 
-      return `
+  updateSummary();
+  renderNoticeTable();
+
+  if (selectedNoticeId) {
+    const selectedNotice =
+      notices.find(
+        (notice) =>
+          String(notice.id) ===
+          String(selectedNoticeId)
+      );
+
+    if (selectedNotice) {
+      renderNoticePreview(
+        selectedNotice
+      );
+    } else {
+      clearNoticePreview();
+    }
+  }
+}
+
+function filterNotices() {
+  const keyword =
+    noticeSearchInput.value
+      .trim()
+      .toLowerCase();
+
+  const selectedCategory =
+    noticeCategoryFilter.value;
+
+  const selectedStatus =
+    noticeStatusFilter.value;
+
+  const selectedTarget =
+    noticeTargetFilter.value;
+
+  return notices.filter(
+    (notice) => {
+      const titleMatched =
+        !keyword ||
+        notice.title
+          .toLowerCase()
+          .includes(keyword);
+
+      const categoryMatched =
+        selectedCategory === "all" ||
+        notice.category ===
+          selectedCategory;
+
+      const statusMatched =
+        selectedStatus === "all" ||
+        notice.status ===
+          selectedStatus;
+
+      const targetMatched =
+        selectedTarget === "all" ||
+        notice.target ===
+          selectedTarget;
+
+      return (
+        titleMatched &&
+        categoryMatched &&
+        statusMatched &&
+        targetMatched
+      );
+    }
+  );
+}
+
+function renderNoticeTable() {
+  const filteredNotices =
+    filterNotices();
+
+  if (!filteredNotices.length) {
+    noticeTableBody.innerHTML = `
+      <tr>
+        <td colspan="7" class="empty-row">
+          조회된 공지사항이 없습니다.
+        </td>
+      </tr>
+    `;
+
+    return;
+  }
+
+  noticeTableBody.innerHTML =
+    filteredNotices
+      .map((notice) => `
         <tr>
           <td>
             <div class="notice-title-cell">
               ${
                 notice.important
-                  ? `<span class="notice-important-badge">중요</span>`
+                  ? `
+                    <span class="notice-important-badge">
+                      중요
+                    </span>
+                  `
                   : ""
               }
-              <strong>${notice.title}</strong>
+
+              <strong>
+                ${escapeHtml(notice.title)}
+              </strong>
             </div>
           </td>
+
           <td>
-            <span class="notice-category-chip">${notice.category}</span>
-          </td>
-          <td>
-            <span class="notice-target-text">${notice.target}</span>
-          </td>
-          <td>
-            <span class="status ${getStatusClass(notice.status)}">
-              ${notice.status}
+            <span class="notice-category-chip">
+              ${escapeHtml(notice.category)}
             </span>
           </td>
-          <td>${notice.createdAt}</td>
-          <td>${notice.views}</td>
+
+          <td>
+            <span class="notice-target-text">
+              ${escapeHtml(notice.target)}
+            </span>
+          </td>
+
+          <td>
+            <span class="status ${getStatusClass(
+              notice.status
+            )}">
+              ${escapeHtml(notice.status)}
+            </span>
+          </td>
+
+          <td>
+            ${formatDate(notice.created_at)}
+          </td>
+
+          <td>
+            ${Number(notice.views) || 0}
+          </td>
+
           <td>
             <div class="notice-action-group">
-              <button class="table-action-btn" type="button" onclick="selectNotice(${originalIndex})">
+              <button
+                class="table-action-btn"
+                type="button"
+                data-notice-view="${escapeHtml(notice.id)}"
+              >
                 보기
               </button>
-              <button class="table-action-btn" type="button" onclick="openEditNoticeModal(${originalIndex})">
+
+              <button
+                class="table-action-btn"
+                type="button"
+                data-notice-edit="${escapeHtml(notice.id)}"
+              >
                 수정
+              </button>
+
+              <button
+                class="table-action-btn notice-delete-btn"
+                type="button"
+                data-notice-delete="${escapeHtml(notice.id)}"
+              >
+                삭제
               </button>
             </div>
           </td>
         </tr>
-      `;
-    })
-    .join("");
+      `)
+      .join("");
+
+  noticeTableBody
+    .querySelectorAll(
+      "[data-notice-view]"
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        () => {
+          selectNotice(
+            button.dataset.noticeView
+          );
+        }
+      );
+    });
+
+  noticeTableBody
+    .querySelectorAll(
+      "[data-notice-edit]"
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        () => {
+          openEditNoticeModal(
+            button.dataset.noticeEdit
+          );
+        }
+      );
+    });
+
+  noticeTableBody
+    .querySelectorAll(
+      "[data-notice-delete]"
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        () => {
+          deleteNotice(
+            button.dataset.noticeDelete
+          );
+        }
+      );
+    });
 }
 
-function selectNotice(index) {
-  selectedNoticeIndex = index;
-  const notice = notices[index];
+function selectNotice(noticeId) {
+  const notice =
+    notices.find(
+      (item) =>
+        String(item.id) ===
+        String(noticeId)
+    );
 
-  noticePreviewEmpty.style.display = "none";
-  noticePreviewContent.classList.add("active");
+  if (!notice) {
+    return;
+  }
 
-  previewCategory.textContent = notice.category;
-  previewTitle.textContent = notice.title;
-  previewMeta.textContent = `${notice.target} · ${notice.createdAt} · 조회 ${notice.views}`;
-  previewBody.textContent = notice.content;
+  selectedNoticeId =
+    notice.id;
+
+  renderNoticePreview(notice);
+}
+
+function renderNoticePreview(notice) {
+  noticePreviewEmpty.style.display =
+    "none";
+
+  noticePreviewContent.classList.add(
+    "active"
+  );
+
+  previewCategory.textContent =
+    notice.category;
+
+  previewTitle.textContent =
+    notice.title;
+
+  previewMeta.textContent =
+    `${notice.target} · ` +
+    `${formatDate(notice.created_at)} · ` +
+    `조회 ${Number(notice.views) || 0}`;
+
+  previewBody.textContent =
+    notice.content;
+}
+
+function clearNoticePreview() {
+  selectedNoticeId = null;
+
+  noticePreviewEmpty.style.display =
+    "block";
+
+  noticePreviewContent.classList.remove(
+    "active"
+  );
 }
 
 function openAddNoticeModal() {
-  editingNoticeIndex = null;
-  noticeModalTitle.textContent = "공지 작성";
+  editingNoticeId = null;
+
+  noticeModalTitle.textContent =
+    "공지 작성";
 
   noticeTitleInput.value = "";
-  noticeCategoryInput.value = "전체공지";
-  noticeStatusInput.value = "게시중";
-  noticeTargetInput.value = "전체 직원";
-  noticeImportantInput.value = "false";
+  noticeCategoryInput.value =
+    "전체공지";
+  noticeStatusInput.value =
+    "게시중";
+  noticeTargetInput.value =
+    "전체 직원";
+  noticeImportantInput.value =
+    "false";
   noticeContentInput.value = "";
 
   noticeModal.classList.add("open");
+
+  noticeTitleInput.focus();
 }
 
-function openEditNoticeModal(index) {
-  editingNoticeIndex = index;
-  const notice = notices[index];
+function openEditNoticeModal(noticeId) {
+  const notice =
+    notices.find(
+      (item) =>
+        String(item.id) ===
+        String(noticeId)
+    );
 
-  noticeModalTitle.textContent = "공지 수정";
+  if (!notice) {
+    return;
+  }
 
-  noticeTitleInput.value = notice.title;
-  noticeCategoryInput.value = notice.category;
-  noticeStatusInput.value = notice.status;
-  noticeTargetInput.value = notice.target;
-  noticeImportantInput.value = notice.important ? "true" : "false";
-  noticeContentInput.value = notice.content;
+  editingNoticeId =
+    notice.id;
+
+  noticeModalTitle.textContent =
+    "공지 수정";
+
+  noticeTitleInput.value =
+    notice.title;
+
+  noticeCategoryInput.value =
+    notice.category;
+
+  noticeStatusInput.value =
+    notice.status;
+
+  noticeTargetInput.value =
+    notice.target;
+
+  noticeImportantInput.value =
+    notice.important
+      ? "true"
+      : "false";
+
+  noticeContentInput.value =
+    notice.content;
 
   noticeModal.classList.add("open");
 }
 
 function closeNoticeModal() {
-  editingNoticeIndex = null;
-  noticeModal.classList.remove("open");
+  editingNoticeId = null;
+
+  noticeModal.classList.remove(
+    "open"
+  );
 }
 
-function saveNotice() {
-  const title = noticeTitleInput.value.trim();
-  const content = noticeContentInput.value.trim();
+async function saveNotice() {
+  const title =
+    noticeTitleInput.value.trim();
+
+  const content =
+    noticeContentInput.value.trim();
 
   if (!title || !content) {
-    alert("공지 제목과 내용을 입력해 주세요.");
+    alert(
+      "공지 제목과 내용을 입력해 주세요."
+    );
+
     return;
   }
 
+  noticeSaveBtn.disabled = true;
+  noticeSaveBtn.textContent =
+    "저장 중...";
+
+  const existingNotice =
+    notices.find(
+      (notice) =>
+        String(notice.id) ===
+        String(editingNoticeId)
+    );
+
+  const status =
+    noticeStatusInput.value;
+
   const noticeData = {
-    id:
-      editingNoticeIndex === null
-        ? `notice${Date.now()}`
-        : notices[editingNoticeIndex].id,
     title,
-    category: noticeCategoryInput.value,
-    target: noticeTargetInput.value,
-    status: noticeStatusInput.value,
-    important: noticeImportantInput.value === "true",
-    createdAt:
-      editingNoticeIndex === null
-        ? getTodayText()
-        : notices[editingNoticeIndex].createdAt,
-    views: editingNoticeIndex === null ? 0 : notices[editingNoticeIndex].views,
     content,
+
+    category:
+      noticeCategoryInput.value,
+
+    target:
+      noticeTargetInput.value,
+
+    status,
+
+    important:
+      noticeImportantInput.value ===
+      "true",
+
+    updated_at:
+      new Date().toISOString(),
+
+    published_at:
+      status === "게시중"
+        ? existingNotice
+            ?.published_at ||
+          new Date().toISOString()
+        : existingNotice
+            ?.published_at ||
+          null,
   };
 
-  if (editingNoticeIndex === null) {
-    notices.unshift(noticeData);
+  let result;
+
+  if (editingNoticeId) {
+    result = await supabase
+      .from("notices")
+      .update(noticeData)
+      .eq(
+        "id",
+        editingNoticeId
+      );
   } else {
-    notices[editingNoticeIndex] = noticeData;
+    result = await supabase
+      .from("notices")
+      .insert(noticeData);
   }
 
-  renderNoticeTable();
+  if (result.error) {
+    console.error(
+      "공지 저장 실패:",
+      result.error
+    );
+
+    alert(
+      `공지사항을 저장하지 못했습니다.\n${
+        result.error.message || ""
+      }`
+    );
+
+    noticeSaveBtn.disabled = false;
+    noticeSaveBtn.textContent =
+      "저장";
+
+    return;
+  }
+
+  alert(
+    editingNoticeId
+      ? "공지사항이 수정되었습니다."
+      : "공지사항이 등록되었습니다."
+  );
+
+  noticeSaveBtn.disabled = false;
+  noticeSaveBtn.textContent =
+    "저장";
+
   closeNoticeModal();
+  await loadNotices();
 }
 
-function getTodayText() {
-  const today = new Date();
+async function deleteNotice(noticeId) {
+  const notice =
+    notices.find(
+      (item) =>
+        String(item.id) ===
+        String(noticeId)
+    );
 
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
+  if (!notice) {
+    return;
+  }
 
-  return `${year}.${month}.${day}`;
+  const confirmed = confirm(
+    `"${notice.title}" 공지를 삭제하시겠습니까?\n삭제한 공지는 앱에서도 사라집니다.`
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  const { error } =
+    await supabase
+      .from("notices")
+      .delete()
+      .eq("id", noticeId);
+
+  if (error) {
+    console.error(
+      "공지 삭제 실패:",
+      error
+    );
+
+    alert(
+      `공지사항을 삭제하지 못했습니다.\n${
+        error.message || ""
+      }`
+    );
+
+    return;
+  }
+
+  if (
+    String(selectedNoticeId) ===
+    String(noticeId)
+  ) {
+    clearNoticePreview();
+  }
+
+  alert(
+    "공지사항이 삭제되었습니다."
+  );
+
+  await loadNotices();
 }
 
-function initNoticePage() {
-  renderNoticeTable();
+function bindEvents() {
+  noticeSearchInput.addEventListener(
+    "input",
+    renderNoticeTable
+  );
 
-  if (noticeSearchInput) {
-    noticeSearchInput.addEventListener("input", renderNoticeTable);
-  }
+  noticeCategoryFilter.addEventListener(
+    "change",
+    renderNoticeTable
+  );
 
-  if (noticeCategoryFilter) {
-    noticeCategoryFilter.addEventListener("change", renderNoticeTable);
-  }
+  noticeStatusFilter.addEventListener(
+    "change",
+    renderNoticeTable
+  );
 
-  if (noticeStatusFilter) {
-    noticeStatusFilter.addEventListener("change", renderNoticeTable);
-  }
+  noticeTargetFilter.addEventListener(
+    "change",
+    renderNoticeTable
+  );
 
-  if (noticeTargetFilter) {
-    noticeTargetFilter.addEventListener("change", renderNoticeTable);
-  }
+  addNoticeBtn.addEventListener(
+    "click",
+    openAddNoticeModal
+  );
 
-  if (addNoticeBtn) {
-    addNoticeBtn.addEventListener("click", openAddNoticeModal);
-  }
+  noticeModalCloseBtn.addEventListener(
+    "click",
+    closeNoticeModal
+  );
 
-  if (noticeModalCloseBtn) {
-    noticeModalCloseBtn.addEventListener("click", closeNoticeModal);
-  }
+  noticeModalCancelBtn.addEventListener(
+    "click",
+    closeNoticeModal
+  );
 
-  if (noticeModalCancelBtn) {
-    noticeModalCancelBtn.addEventListener("click", closeNoticeModal);
-  }
+  noticeSaveBtn.addEventListener(
+    "click",
+    saveNotice
+  );
 
-  if (noticeSaveBtn) {
-    noticeSaveBtn.addEventListener("click", saveNotice);
-  }
-
-  if (noticeModal) {
-    noticeModal.addEventListener("click", (event) => {
-      if (event.target === noticeModal) {
+  noticeModal.addEventListener(
+    "click",
+    (event) => {
+      if (
+        event.target === noticeModal
+      ) {
         closeNoticeModal();
       }
-    });
+    }
+  );
+
+  document.addEventListener(
+    "keydown",
+    (event) => {
+      if (
+        event.key === "Escape" &&
+        noticeModal.classList.contains(
+          "open"
+        )
+      ) {
+        closeNoticeModal();
+      }
+    }
+  );
+}
+
+async function initNoticePage() {
+  const currentAdmin =
+    await requireAdmin();
+
+  if (!currentAdmin) {
+    return;
   }
+
+  bindEvents();
+
+  await loadTargetOptions();
+  await loadNotices();
 }
 
 initNoticePage();

@@ -299,9 +299,23 @@ async function init() {
           .querySelectorAll(
             'input[type="checkbox"]:checked'
           ),
-      ].map(
-        (input) => input.value
-      );
+      ].map((input) => {
+        const row =
+          input.closest(
+            ".checklist-row"
+          );
+
+        const label =
+          row
+            ?.querySelector("span")
+            ?.textContent
+            .trim() || "항목명 없음";
+
+        return {
+          id: input.value,
+          label,
+        };
+      });
 
       if (checkedItems.length === 0) {
         const confirmed =
