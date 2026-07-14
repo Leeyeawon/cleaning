@@ -92,10 +92,16 @@ if (adminSidebar) {
           </div>
         </div>
 
-        <a href="admin-request.html" class="admin-menu-item ${currentAdminPage === "request" ? "active" : ""}">
+        <a
+          href="admin-requests.html"
+          class="admin-menu-item ${
+            currentAdminPage === "requests"
+              ? "active"
+              : ""
+          }"
+        >
           <span></span>
           <p>요청사항 관리</p>
-          <em>5</em>
         </a>
 
         <a href="admin-employees.html" class="admin-menu-item ${currentAdminPage === "employees" ? "active" : ""}">

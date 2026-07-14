@@ -13,6 +13,9 @@ const workStatus = document.getElementById("workStatus");
 const checkInTime = document.getElementById("checkInTime");
 const checkOutTime = document.getElementById("checkOutTime");
 
+const homeNoticeList = document.getElementById("homeNoticeList");
+const noticeMoreBtn = document.getElementById("noticeMoreBtn");
+
 let currentEmployee = null;
 let todayAttendance = null;
 
@@ -251,6 +254,207 @@ attendanceBtn?.addEventListener("click", async () => {
   }
 });
 
+async function loadHomeNoticeFeed() {
+  const token = getEmployeeSessionToken();
+
+  if (!token || !homeNoticeList) {
+    return;
+  }
+
+  const [
+    notificationResult,
+    workplaceResult,
+    noticeResult,
+  ] = await Promise.all([
+    supabase.rpc(
+      "get_my_notifications",
+      {
+        p_session_token: token,
+      }
+    ),
+
+    supabase.rpc(
+      "get_my_workplaces",
+      {
+        p_session_token: token,
+      }
+    ),
+
+    supabase
+      .from("notices")
+      .select(
+        "id, title, content, target, important, created_at"
+      )
+      .eq("status", "게시중")
+      .order("important", {
+        ascending: false,
+      })
+      .order("created_at", {
+        ascending: false,
+      })
+      .limit(30),
+  ]);
+
+  if (notificationResult.error) {
+    console.error(
+      "개인 알림 조회 실패:",
+      notificationResult.error
+    );
+  }
+
+  if (noticeResult.error) {
+    console.error(
+      "공지사항 조회 실패:",
+      noticeResult.error
+    );
+  }
+
+  const targets = new Set([
+    "전체 직원",
+    currentEmployee?.department,
+    ...(workplaceResult.data || []).map(
+      (workplace) =>
+        workplace.workplace_name
+    ),
+  ].filter(Boolean));
+
+  const personalNotifications =
+    (notificationResult.data || []).map(
+      (notification) => ({
+        id: notification.id,
+        source: "notification",
+        title: notification.title,
+        content: notification.content,
+        createdAt: notification.created_at,
+        unread: !notification.read_at,
+        important: true,
+        type: notification.type,
+      })
+    );
+
+  const publicNotices =
+    (noticeResult.data || [])
+      .filter((notice) =>
+        targets.has(notice.target)
+      )
+      .map((notice) => ({
+        id: notice.id,
+        source: "notice",
+        title: notice.title,
+        content: notice.content,
+        createdAt: notice.created_at,
+        unread: false,
+        important: notice.important,
+        type: "notice",
+      }));
+
+  const feed = [
+    ...personalNotifications,
+    ...publicNotices,
+  ].sort(
+    (a, b) =>
+      new Date(b.createdAt) -
+      new Date(a.createdAt)
+  );
+
+  const latest = feed[0];
+
+  if (!latest) {
+    homeNoticeList.innerHTML = `
+      <article class="notice-item">
+        <div class="notice-icon">🔔</div>
+
+        <div>
+          <p class="notice-text">
+            새로운 공지사항이 없습니다.
+          </p>
+        </div>
+      </article>
+    `;
+
+    return;
+  }
+
+  const isLeaveNotification =
+    latest.type === "annual_leave";
+
+  homeNoticeList.innerHTML = `
+    <button
+      class="notice-item ${
+        latest.unread ? "unread" : ""
+      }"
+      type="button"
+    >
+      <div class="notice-icon">
+        ${
+          isLeaveNotification
+            ? "🌴"
+            : latest.important
+              ? "!"
+              : "🔔"
+        }
+      </div>
+
+      <div class="home-notice-content">
+        <span class="home-notice-kind">
+          ${
+            latest.source === "notification"
+              ? isLeaveNotification
+                ? "연차 알림"
+                : "개인 알림"
+              : "공지"
+          }
+        </span>
+
+        <p class="notice-text"></p>
+
+        <span class="notice-date">
+          ${new Date(
+            latest.createdAt
+          ).toLocaleDateString("ko-KR")}
+        </span>
+      </div>
+    </button>
+  `;
+
+  const noticeButton =
+    homeNoticeList.querySelector(
+      ".notice-item"
+    );
+
+  noticeButton
+    .querySelector(".notice-text")
+    .textContent = latest.title;
+
+  noticeButton.addEventListener(
+    "click",
+    async () => {
+      if (
+        latest.source === "notification" &&
+        latest.unread
+      ) {
+        await supabase.rpc(
+          "mark_my_notification_read",
+          {
+            p_session_token: token,
+            p_notification_id: latest.id,
+          }
+        );
+      }
+
+      if (
+        latest.source === "notification"
+      ) {
+        location.href =
+          `notices.html?notification=${latest.id}`;
+      } else {
+        location.href =
+          `notices.html?notice=${latest.id}`;
+      }
+    }
+  );
+}
+
 // 🔥 핵심: 메인 홈 화면 전용 올바른 초기화 함수
 async function init() {
   // 1. 로그인된 직원 세션 검증 및 정보 가져오기
@@ -267,6 +471,16 @@ async function init() {
 
   // 4. 오늘 출퇴근 기록 불러오기
   await loadTodayAttendance();
+
+  noticeMoreBtn?.addEventListener(
+    "click",
+    () => {
+      location.href = "notices.html";
+    }
+  );
+
+  await loadHomeNoticeFeed();
+
 }
 
 init();

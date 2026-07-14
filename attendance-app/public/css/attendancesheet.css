@@ -301,3 +301,30 @@
     min-height: 100dvh;
   }
 }
+
+.calendar-day.etc {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.detail-badge.etc {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.calendar-day.annual-leave {
+  background: #fef3c7;
+  color: #a16207;
+}
+
+.calendar-day.annual-leave.selected {
+  background: #fbbf24;
+  color: #78350f;
+  box-shadow:
+    inset 0 0 0 2px #d97706;
+}
+
+.detail-badge.annual-leave {
+  background: #fef3c7;
+  color: #a16207;
+}

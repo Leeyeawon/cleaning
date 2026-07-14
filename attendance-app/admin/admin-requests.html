@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>요청사항 관리 | 관리자</title>
+
+  <link
+    rel="stylesheet"
+    href="../public/css/common.css"
+  />
+  <link
+    rel="stylesheet"
+    href="../public/css/pc.css"
+  />
+  <link
+    rel="stylesheet"
+    href="../public/css/admin.css"
+  />
+  <link
+    rel="stylesheet"
+    href="../public/css/admin-workflow.css"
+  />
+</head>
+
+<body data-admin-page="requests">
+  <div class="admin-layout">
+    <div id="adminSidebar"></div>
+
+    <main class="main">
+      <header class="top-header">
+        <div>
+          <h2>요청사항 관리</h2>
+
+          <p>
+            직원이 제출한 요청과 연차 신청을 확인하고
+            처리합니다.
+          </p>
+        </div>
+      </header>
+
+      <section class="content">
+        <section class="workflow-summary">
+          <article>
+            <span>전체 요청</span>
+            <strong id="totalRequestCount">0</strong>
+          </article>
+
+          <article>
+            <span>승인 대기</span>
+            <strong id="pendingRequestCount">0</strong>
+          </article>
+
+          <article>
+            <span>승인 완료</span>
+            <strong id="approvedRequestCount">0</strong>
+          </article>
+
+          <article>
+            <span>반려</span>
+            <strong id="rejectedRequestCount">0</strong>
+          </article>
+        </section>
+
+        <section class="workflow-filter-area">
+        <div class="workflow-filter">
+            <select id="requestTypeFilter">
+            <option value="all">전체 유형</option>
+            <option value="annual_leave">연차 신청</option>
+            <option value="supply_request">비품 요청</option>
+            <option value="general_request">요청 사항</option>
+            <option value="phone_change">연락처 변경</option>
+            <option value="profile_change">정보 변경</option>
+            </select>
+
+            <select id="requestStatusFilter">
+            <option value="pending">승인 대기</option>
+            <option value="all">전체 상태</option>
+            <option value="approved">승인 완료</option>
+            <option value="rejected">반려</option>
+            </select>
+        </div>
+
+        <div class="workflow-type-legend" aria-label="요청 유형 색상 안내" > <span class="workflow-type annual-leave">연차 신청</span>
+            <span class="workflow-type supply">비품 요청</span>
+            <span class="workflow-type general">요청 사항</span>
+            <span class="workflow-type phone_change">연락처 변경</span>
+            <span class="workflow-type profile">정보 변경</span>
+        </div>
+        </section>
+      </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h3>직원 요청 목록</h3>
+            <span id="requestCount">0건</span>
+          </div>
+
+          <div class="attendance-table-wrap">
+            <table class="attendance-table workflow-table">
+              <thead>
+                <tr>
+                  <th>신청일</th>
+                  <th>직원</th>
+                  <th>유형</th>
+                  <th>기간/제목</th>
+                  <th>신청 내용</th>
+                  <th>상태</th>
+                  <th>관리자 메모</th>
+                  <th>처리</th>
+                </tr>
+              </thead>
+
+              <tbody id="requestTableBody">
+                <tr>
+                  <td colspan="8" class="workflow-empty">
+                    요청 목록을 불러오는 중입니다.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script src="../public/js/common.js"></script>
+  <script
+    type="module"
+    src="../public/js/pc.js"
+  ></script>
+  <script
+    type="module"
+    src="../public/js/admin-requests.js"
+  ></script>
+</body>
+</html>

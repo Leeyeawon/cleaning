@@ -101,26 +101,99 @@ function getRecordByDate(dateKey) {
 // 상태별 색상 (정상: 파랑, 지각: 빨강, 기타: 노랑)
 function getRecordStatus(record) {
   if (!record) {
-    return { text: "기록 없음", className: "detail-badge", dayClass: "" };
+    return {
+      text: "기록 없음",
+      className: "detail-badge",
+      dayClass: "",
+    };
   }
+
   const status = record.status;
-  if (["done", "normal", "complete", "completed", "working", "퇴근완료"].includes(status)) {
-    return { text: "정상 출퇴근", className: "detail-badge normal", dayClass: "normal" };
+
+  if (
+    status === "annual_leave" ||
+    status === "연차"
+  ) {
+    return {
+      text: "연차",
+      className:
+        "detail-badge annual-leave",
+      dayClass: "annual-leave",
+    };
   }
-  if (["late", "delay", "지각"].includes(status)) {
-    return { text: "지각", className: "detail-badge late", dayClass: "late" };
+
+  if (
+    [
+      "done",
+      "normal",
+      "complete",
+      "completed",
+      "working",
+      "퇴근완료",
+    ].includes(status)
+  ) {
+    return {
+      text: "정상 출퇴근",
+      className:
+        "detail-badge normal",
+      dayClass: "normal",
+    };
   }
-  return { text: status || "기타", className: "detail-badge etc", dayClass: "etc" };
+
+  if (
+    [
+      "late",
+      "delay",
+      "지각",
+    ].includes(status)
+  ) {
+    return {
+      text: "지각",
+      className:
+        "detail-badge late",
+      dayClass: "late",
+    };
+  }
+
+  return {
+    text: status || "기타",
+    className: "detail-badge etc",
+    dayClass: "etc",
+  };
 }
 
 function renderSummary(records) {
-  const total = records.length;
-  const done = records.filter((item) => 
-    ["done", "normal", "complete", "completed", "working", "퇴근완료"].includes(item.status)
-  ).length;
+  const workRecords =
+    records.filter(
+      (record) =>
+        record.status !==
+        "annual_leave"
+    );
 
-  if (totalWorkDays) totalWorkDays.textContent = `${total}일`;
-  if (doneCount) doneCount.textContent = `${done}일`;
+  const total =
+    workRecords.length;
+
+  const done =
+    workRecords.filter((record) =>
+      [
+        "done",
+        "normal",
+        "complete",
+        "completed",
+        "working",
+        "퇴근완료",
+      ].includes(record.status)
+    ).length;
+
+  if (totalWorkDays) {
+    totalWorkDays.textContent =
+      `${total}일`;
+  }
+
+  if (doneCount) {
+    doneCount.textContent =
+      `${done}일`;
+  }
 }
 
 // 📅 달력 렌더링 함수 (어떤 상황에서도 무조건 실행되도록 보장!)
@@ -170,58 +243,199 @@ function renderCalendar() {
 }
 
 function renderSelectedDateDetail() {
-  const record = getRecordByDate(selectedDate);
-  const status = getRecordStatus(record);
+  const record =
+    getRecordByDate(selectedDate);
 
-  if (selectedDateTitle) selectedDateTitle.textContent = formatDateTitle(selectedDate);
-  if (selectedStatusBadge) {
-    selectedStatusBadge.textContent = status.text;
-    selectedStatusBadge.className = status.className;
+  const status =
+    getRecordStatus(record);
+
+  if (selectedDateTitle) {
+    selectedDateTitle.textContent =
+      formatDateTitle(selectedDate);
   }
 
-  if (!record) {
-    if (detailCheckIn) detailCheckIn.textContent = "--:--";
-    if (detailCheckOut) detailCheckOut.textContent = "--:--";
-    if (detailWorkTime) detailWorkTime.textContent = "-";
+  if (selectedStatusBadge) {
+    selectedStatusBadge.textContent =
+      status.text;
+
+    selectedStatusBadge.className =
+      status.className;
+  }
+
+  if (
+    record?.status ===
+    "annual_leave"
+  ) {
+    if (detailCheckIn) {
+      detailCheckIn.textContent =
+        "--:--";
+    }
+
+    if (detailCheckOut) {
+      detailCheckOut.textContent =
+        "--:--";
+    }
+
+    if (detailWorkTime) {
+      detailWorkTime.textContent =
+        "연차";
+    }
+
     return;
   }
 
-  if (detailCheckIn) detailCheckIn.textContent = formatTime(record.check_in_time);
-  if (detailCheckOut) detailCheckOut.textContent = formatTime(record.check_out_time);
+  if (!record) {
+    if (detailCheckIn) {
+      detailCheckIn.textContent =
+        "--:--";
+    }
+
+    if (detailCheckOut) {
+      detailCheckOut.textContent =
+        "--:--";
+    }
+
+    if (detailWorkTime) {
+      detailWorkTime.textContent =
+        "-";
+    }
+
+    return;
+  }
+
+  if (detailCheckIn) {
+    detailCheckIn.textContent =
+      formatTime(
+        record.check_in_time
+      );
+  }
+
+  if (detailCheckOut) {
+    detailCheckOut.textContent =
+      formatTime(
+        record.check_out_time
+      );
+  }
+
   if (detailWorkTime) {
-    detailWorkTime.textContent = formatWorkTime(record.check_in_time, record.check_out_time);
+    detailWorkTime.textContent =
+      formatWorkTime(
+        record.check_in_time,
+        record.check_out_time
+      );
   }
 }
 
 // Supabase DB 조회 (실패해도 달력은 그리도록 구조 수정!)
 async function loadMonthlyAttendance() {
-  const token = getEmployeeSessionToken();
+  const token =
+    getEmployeeSessionToken();
+
   if (!token) {
-    location.href = "../employee/login.html";
+    location.href =
+      "../employee/login.html";
+
     return;
   }
 
-  const { startDate, endDate } = getMonthRange();
+  const {
+    startDate,
+    endDate,
+  } = getMonthRange();
 
   try {
-    const { data, error } = await supabase.rpc("get_my_monthly_attendance", {
-      p_session_token: token,
-      p_start_date: startDate,
-      p_end_date: endDate,
+    const [
+      attendanceResult,
+      dayNoteResult,
+    ] = await Promise.all([
+      supabase.rpc(
+        "get_my_monthly_attendance",
+        {
+          p_session_token: token,
+          p_start_date: startDate,
+          p_end_date: endDate,
+        }
+      ),
+
+      supabase.rpc(
+        "get_my_monthly_day_notes",
+        {
+          p_session_token: token,
+          p_start_date: startDate,
+          p_end_date: endDate,
+        }
+      ),
+    ]);
+
+    if (attendanceResult.error) {
+      console.error(
+        "출근 기록 조회 실패:",
+        attendanceResult.error
+      );
+    }
+
+    if (dayNoteResult.error) {
+      console.error(
+        "연차 기록 조회 실패:",
+        dayNoteResult.error
+      );
+    }
+
+    const recordMap = new Map();
+
+    (
+      attendanceResult.data || []
+    ).forEach((record) => {
+      recordMap.set(
+        record.work_date,
+        record
+      );
     });
 
-    if (error) {
-      console.warn("⚠️ DB 출근부를 불러오지 못해 빈 달력을 표시합니다:", error.message);
-      monthlyRecords = [];
-    } else {
-      monthlyRecords = data || [];
-    }
-  } catch (err) {
-    console.error("통신 오류:", err);
+    (
+      dayNoteResult.data || []
+    )
+      .filter(
+        (note) =>
+          note.day_type ===
+          "annual_leave"
+      )
+      .forEach((note) => {
+        recordMap.set(
+          note.note_date,
+          {
+            work_date:
+              note.note_date,
+            status:
+              "annual_leave",
+            memo:
+              note.content || "",
+            check_in_time: null,
+            check_out_time: null,
+          }
+        );
+      });
+
+    monthlyRecords =
+      Array.from(
+        recordMap.values()
+      ).sort((a, b) =>
+        a.work_date.localeCompare(
+          b.work_date
+        )
+      );
+  } catch (error) {
+    console.error(
+      "출근부 통신 오류:",
+      error
+    );
+
     monthlyRecords = [];
   } finally {
-    // 🔥 DB 성공/실패 여부와 상관없이 무조건 화면 요약과 달력을 렌더링!
-    renderSummary(monthlyRecords);
+    renderSummary(
+      monthlyRecords
+    );
+
     renderCalendar();
     renderSelectedDateDetail();
   }

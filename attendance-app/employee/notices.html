@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>공지사항</title>
+
+  <link
+    rel="stylesheet"
+    href="../public/css/common.css"
+  />
+  <link
+    rel="stylesheet"
+    href="../public/css/mobile.css"
+  />
+  <link
+    rel="stylesheet"
+    href="../public/css/notices.css"
+  />
+</head>
+
+<body>
+  <div class="phone">
+    <header class="notice-page-header">
+      <button
+        type="button"
+        onclick="history.back()"
+        aria-label="뒤로가기"
+      >
+        ‹
+      </button>
+
+      <div>
+        <p>NOTICE</p>
+        <h1>공지사항</h1>
+      </div>
+    </header>
+
+    <main class="notice-page-main">
+      <div
+        id="employeeNoticeList"
+        class="employee-notice-list"
+      >
+        <p class="notice-page-empty">
+          공지사항을 불러오는 중입니다.
+        </p>
+      </div>
+    </main>
+  </div>
+
+  <script
+    type="module"
+    src="../public/js/notices.js"
+  ></script>
+</body>
+</html>
