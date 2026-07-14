@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>청소 점검표</title>
+
+  <link rel="stylesheet" href="../public/css/common.css" />
+  <link rel="stylesheet" href="../public/css/mobile.css" />
+  <link rel="stylesheet" href="../public/css/request.css" />
+</head>
+
+<body>
+  <div class="phone">
+    <header class="request-page-header">
+      <button class="request-back" type="button" onclick="history.back()">
+        ‹
+      </button>
+
+      <h1>청소 점검표</h1>
+    </header>
+
+    <main class="request-form-main">
+      <section class="request-form-card">
+        <label>
+          점검 현장
+          <select id="checklistWorkplace"></select>
+        </label>
+
+        <div class="custom-checklist-section">
+          <strong>개인 점검 항목 추가</strong>
+
+          <div class="inline-add">
+            <input id="customChecklistInput" type="text" placeholder="추가할 점검 항목" />
+
+            <button id="addChecklistItemBtn" type="button">
+              추가
+            </button>
+          </div>
+        </div>
+
+        <div id="checklistList" class="checklist-list">
+          <p>점검 항목을 불러오는 중입니다.</p>
+        </div>
+
+        <label>
+          점검 메모
+          <textarea id="checklistNote" placeholder="특이사항이 있을 때 입력해 주세요."></textarea>
+        </label>
+
+        <button id="submitChecklistBtn" class="request-submit" type="button">
+          점검 완료 제출
+        </button>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="../public/js/cleaning-checklist.js"></script>
+</body>
+</html>

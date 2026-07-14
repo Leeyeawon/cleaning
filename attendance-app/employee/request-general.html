@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>요청 사항</title>
+
+  <link rel="stylesheet" href="../public/css/common.css" />
+  <link rel="stylesheet" href="../public/css/mobile.css" />
+  <link rel="stylesheet" href="../public/css/request.css" />
+</head>
+
+<body data-request-type="general_request">
+  <div class="phone">
+    <header class="request-page-header">
+      <button class="request-back" type="button" onclick="history.back()">
+        ‹
+      </button>
+
+      <h1>요청 사항</h1>
+    </header>
+
+    <main class="request-form-main">
+      <form id="simpleRequestForm" class="request-form-card">
+        <label>
+          제목
+          <input id="requestTitle" type="text" placeholder="요청 제목" required />
+        </label>
+
+        <label>
+          요청 내용
+          <textarea id="requestContent" placeholder="관리자에게 전달할 내용을 입력해 주세요." required></textarea>
+        </label>
+
+        <button class="request-submit" type="submit">
+          요청 보내기
+        </button>
+      </form>
+    </main>
+  </div>
+
+  <script type="module" src="../public/js/request-simple.js"></script>
+</body>
+</html>

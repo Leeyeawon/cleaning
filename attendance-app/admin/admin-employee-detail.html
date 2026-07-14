@@ -558,7 +558,8 @@
             <div class="panel-header"><h3>기본 정보</h3></div>
             <div class="employee-info-list detail-page-info">
               <div><span>연락처</span><strong id="detailPhone">-</strong></div>
-              <div><span>로그인 ID</span><strong id="detailLoginId">-</strong></div>
+              <div><span>앱 권한</span> <strong id="detailAppRole">-</strong></div>
+              <div><span>앱 승인</span> <strong id="detailAppApproval">-</strong></div> 
               <div><span>등록일</span><strong id="detailJoinDate">-</strong></div>
               <div><span>상태</span><strong id="detailStatus">-</strong></div>
             </div>
@@ -705,8 +706,11 @@
         </label>
 
         <label>
-          로그인 ID
-          <input id="editEmployeeCode" type="text" required />
+          앱 권한
+          <select id="employeeRoleInput">
+            <option value="employee">일반 직원</option>
+            <option value="team_lead">팀장</option>
+          </select>
         </label>
 
         <label>

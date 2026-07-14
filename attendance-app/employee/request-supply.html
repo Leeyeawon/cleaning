@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>비품 요청</title>
+
+  <link rel="stylesheet" href="../public/css/common.css" />
+  <link rel="stylesheet" href="../public/css/mobile.css" />
+  <link rel="stylesheet" href="../public/css/request.css" />
+</head>
+
+<body data-request-type="supply_request" data-lead-only="true">
+  <div class="phone">
+    <header class="request-page-header">
+      <button class="request-back" type="button" onclick="history.back()">
+        ‹
+      </button>
+
+      <h1>비품 요청</h1>
+    </header>
+
+    <main class="request-form-main">
+      <form id="simpleRequestForm" class="request-form-card">
+        <label>
+          필요 비품
+          <input id="requestTitle" type="text" placeholder="예: 쓰레기봉투 100L" required />
+        </label>
+
+        <label>
+          수량 및 요청 사유
+          <textarea id="requestContent" placeholder="필요한 수량과 요청 사유를 입력해 주세요." required></textarea>
+        </label>
+
+        <button class="request-submit" type="submit">
+          비품 요청 보내기
+        </button>
+      </form>
+    </main>
+  </div>
+
+  <script type="module" src="../public/js/request-simple.js"></script>
+</body>
+</html>

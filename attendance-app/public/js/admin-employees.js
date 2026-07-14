@@ -69,8 +69,8 @@ const employeeNameInput =
 const employeePhoneInput =
   document.getElementById("employeePhoneInput");
 
-const employeeCodeInput =
-  document.getElementById("employeeCodeInput");
+const employeeRoleInput =
+  document.getElementById("employeeRoleInput");
 
 const employeeDepartmentInput =
   document.getElementById("employeeDepartmentInput");
@@ -293,8 +293,11 @@ async function fetchWorkplaces() {
 }
 
 async function fetchEmployees() {
-  const { data, error } = await supabase.rpc(
-    "admin_get_employees"
+  const {
+    data,
+    error,
+  } = await supabase.rpc(
+    "admin_get_employees_v2"
   );
 
   if (error) {
@@ -308,10 +311,16 @@ async function fetchEmployees() {
     if (employeeTableBody) {
       employeeTableBody.innerHTML = `
         <tr>
-          <td colspan="7" class="empty-table">
+          <td
+            colspan="7"
+            class="empty-table"
+          >
             직원 정보를 불러오지 못했습니다.
-            <br>
-            ${escapeHtml(error.message)}
+            <br />
+            ${escapeHtml(
+              error.message ||
+              "Supabase 오류"
+            )}
           </td>
         </tr>
       `;
@@ -321,23 +330,42 @@ async function fetchEmployees() {
   }
 
   const employeeData =
-    Array.isArray(data) ? data : [];
+    Array.isArray(data)
+      ? data
+      : [];
 
   employees = employeeData.map(
     (employee) => ({
       ...employee,
 
-      workplaceIds: Array.isArray(
-        employee.workplaceIds
-      )
-        ? employee.workplaceIds.map(String)
-        : [],
+      status:
+        employee.status ||
+        "active",
 
-      workplaceNames: Array.isArray(
-        employee.workplaceNames
-      )
-        ? employee.workplaceNames
-        : [],
+      app_role:
+        employee.app_role ||
+        "employee",
+
+      app_approval_status:
+        employee
+          .app_approval_status ||
+        "not_requested",
+
+      workplaceIds:
+        Array.isArray(
+          employee.workplaceIds
+        )
+          ? employee.workplaceIds.map(
+              String
+            )
+          : [],
+
+      workplaceNames:
+        Array.isArray(
+          employee.workplaceNames
+        )
+          ? employee.workplaceNames
+          : [],
     })
   );
 }
@@ -511,81 +539,92 @@ function filterEmployees() {
       .toLowerCase() || "";
 
   const selectedStatus =
-    employeeStatusFilter?.value || "all";
+    employeeStatusFilter?.value ||
+    "all";
 
   const selectedRegion =
-    employeeRegionFilter?.value || "all";
+    employeeRegionFilter?.value ||
+    "all";
 
   const selectedTeam =
-    employeeTeamFilter?.value || "all";
+    employeeTeamFilter?.value ||
+    "all";
 
   const unassignedOnly =
-    unassignedOnlyCheck?.checked || false;
+    unassignedOnlyCheck?.checked ||
+    false;
 
-  return employees.filter((employee) => {
-    const employeeStatus =
-      normalizeStatus(employee.status);
+  return employees.filter(
+    (employee) => {
+      const employeeStatus =
+        normalizeStatus(
+          employee.status ||
+          "active"
+        );
 
-    const workplaceIds =
-      getEmployeeWorkplaceIds(employee);
+      const workplaceIds =
+        getEmployeeWorkplaceIds(
+          employee
+        );
 
-    const department =
-      employee.department || "";
+      const department =
+        employee.department || "";
 
-    const name = String(
-      employee.name || ""
-    ).toLowerCase();
+      const name =
+        String(
+          employee.name || ""
+        ).toLowerCase();
 
-    const phone = String(
-      employee.phone || ""
-    ).toLowerCase();
+      const phone =
+        String(
+          employee.phone || ""
+        ).toLowerCase();
 
-    const employeeCode = String(
-      employee.employee_code || ""
-    ).toLowerCase();
+      const keywordMatched =
+        !keyword ||
+        name.includes(keyword) ||
+        phone.includes(keyword);
 
-    const keywordMatched =
-      !keyword ||
-      name.includes(keyword) ||
-      phone.includes(keyword) ||
-      employeeCode.includes(keyword);
+      const statusMatched =
+        selectedStatus === "all" ||
+        employeeStatus ===
+          selectedStatus;
 
-    const statusMatched =
-      selectedStatus === "all" ||
-      employeeStatus === selectedStatus;
+      const regionMatched =
+        selectedRegion === "all" ||
+        (
+          selectedRegion ===
+            "unassigned" &&
+          workplaceIds.length === 0
+        ) ||
+        workplaceIds.includes(
+          String(selectedRegion)
+        );
 
-    const regionMatched =
-      selectedRegion === "all" ||
-      (
-        selectedRegion === "unassigned" &&
-        workplaceIds.length === 0
-      ) ||
-      workplaceIds.includes(
-        String(selectedRegion)
+      const departmentMatched =
+        selectedTeam === "all" ||
+        (
+          selectedTeam ===
+            "unassigned" &&
+          !department
+        ) ||
+        department ===
+          selectedTeam;
+
+      const unassignedMatched =
+        !unassignedOnly ||
+        !department ||
+        workplaceIds.length === 0;
+
+      return (
+        keywordMatched &&
+        statusMatched &&
+        regionMatched &&
+        departmentMatched &&
+        unassignedMatched
       );
-
-    const departmentMatched =
-      selectedTeam === "all" ||
-      (
-        selectedTeam ===
-          "unassigned" &&
-        !department
-      ) ||
-      department === selectedTeam;
-
-    const unassignedMatched =
-      !unassignedOnly ||
-      !department ||
-      workplaceIds.length === 0;
-
-    return (
-      keywordMatched &&
-      statusMatched &&
-      regionMatched &&
-      departmentMatched &&
-      unassignedMatched
-    );
-  });
+    }
+  );
 }
 
 /* =========================
@@ -675,9 +714,17 @@ function renderEmployeeTable() {
             </td>
 
             <td>
-              ${escapeHtml(
-                employee.employee_code || "-"
-              )}
+              <span class="employee-status ${
+                employee.app_role === "team_lead"
+                  ? "late"
+                  : "normal"
+              }">
+                ${
+                  employee.app_role === "team_lead"
+                    ? "팀장"
+                    : "일반 직원"
+                }
+              </span>
             </td>
 
             <td>
@@ -1166,16 +1213,9 @@ async function createEmployee(event) {
   const phone =
     employeePhoneInput.value.trim();
 
-  const employeeCode =
-    employeeCodeInput.value.trim();
-
-  if (
-    !name ||
-    !phone ||
-    !employeeCode
-  ) {
+  if (!name || !phone) {
     alert(
-      "직원명, 연락처, 로그인 ID는 필수입니다."
+      "직원명과 연락처는 필수입니다."
     );
 
     return;
@@ -1187,12 +1227,19 @@ async function createEmployee(event) {
     );
 
   const selectedInitialWorkplaceId =
-    employeeWorkplaceInput.value || null;
+    employeeWorkplaceInput.value ||
+    null;
 
   const newEmployee = {
     name,
     phone,
-    employee_code: employeeCode,
+
+    app_role:
+      employeeRoleInput?.value ||
+      "employee",
+
+    app_approval_status:
+      "not_requested",
 
     department:
       employeeDepartmentInput.value ||
@@ -1224,7 +1271,9 @@ async function createEmployee(event) {
       throw createError;
     }
 
-    if (selectedInitialWorkplaceId) {
+    if (
+      selectedInitialWorkplaceId
+    ) {
       const {
         error: assignmentError,
       } = await supabase.rpc(
@@ -1244,7 +1293,9 @@ async function createEmployee(event) {
       }
     }
 
-    alert("직원이 등록되었습니다.");
+    alert(
+      "직원이 등록되었습니다."
+    );
 
     closeEmployeeModal();
 
@@ -1265,7 +1316,9 @@ async function createEmployee(event) {
       }`
     );
   } finally {
-    submitButton.disabled = false;
+    submitButton.disabled =
+      false;
+
     submitButton.textContent =
       "저장";
   }

@@ -64,7 +64,7 @@
           <input
             id="employeeSearchInput"
             type="search"
-            placeholder="직원명, 연락처, 로그인 ID 검색"
+            placeholder="직원명, 연락처, 검색"
           />
 
           <select id="employeeStatusFilter">
@@ -92,6 +92,31 @@
           </label>
         </section>
 
+        <section class="employee-app-approval-card">
+          <div class="section-title-row">
+            <div>
+              <h2>앱 승인 대기</h2>
+
+              <p>
+                직원이 앱에서 처음 로그인하면 이곳에 표시됩니다.
+              </p>
+            </div>
+
+            <span id="appApprovalPendingCount">
+              0명
+            </span>
+          </div>
+
+          <div
+            id="appApprovalPendingList"
+            class="app-approval-pending-list"
+          >
+            <p class="app-approval-empty">
+              승인 대기 직원을 불러오는 중입니다.
+            </p>
+          </div>
+        </section>
+
         <section class="employee-list-card">
           <div class="section-title-row">
             <h2>직원 목록</h2>
@@ -104,7 +129,7 @@
                 <tr>
                   <th>직원명</th>
                   <th>연락처</th>
-                  <th>로그인 ID</th>
+                  <th>앱 권한</th>
                   <th>소속</th>
                   <th>배정 지역</th>
                   <th>상태</th>
@@ -142,8 +167,11 @@
         </label>
 
         <label>
-          로그인 ID
-          <input id="employeeCodeInput" type="text" placeholder="TEST001" required />
+          앱 권한
+          <select id="editEmployeeRole">
+            <option value="employee">일반 직원</option>
+            <option value="team_lead">팀장</option>
+          </select>
         </label>
 
         <label>
@@ -234,5 +262,5 @@
   <script src="../public/js/common.js"></script>
   <script type="module" src="../public/js/pc.js"></script>
   <script type="module" src="../public/js/admin-employees.js"></script>
-</body>
+  <script type="module" src="../public/js/admin-app-approval.js" ></script> </body>
 </html>

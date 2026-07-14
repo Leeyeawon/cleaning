@@ -69,3 +69,29 @@
   font-weight: 700;
   cursor: pointer;
 }
+
+#refreshBtn {
+  width: 100%;
+  height: 50px;
+  margin-top: 18px;
+  border-radius: 14px;
+  background: #111827;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+#refreshBtn:disabled {
+  background: #9ca3af;
+}
+
+.pending-logout-button {
+  width: 100%;
+  height: 46px;
+  margin-top: 9px;
+  border-radius: 14px;
+  background: #f3f4f6;
+  color: #4b5563;
+  font-size: 13px;
+  font-weight: 800;
+}

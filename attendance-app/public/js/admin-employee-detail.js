@@ -10,8 +10,8 @@ const targetUserId = urlParams.get("id");
 const detailName = document.getElementById("detailName");
 const detailInfo = document.getElementById("detailInfo");
 const detailPhone = document.getElementById("detailPhone");
-const detailLoginId = document.getElementById("detailLoginId");
-const detailJoinDate = document.getElementById("detailJoinDate");
+const detailAppRole = document.getElementById( "detailAppRole" ); 
+const detailAppApproval = document.getElementById( "detailAppApproval" ); const detailJoinDate = document.getElementById("detailJoinDate");
 const detailStatus = document.getElementById("detailStatus");
 const detailRegionList = document.getElementById("detailRegionList");
 const employeeDetailTitle = document.getElementById("employeeDetailTitle");
@@ -51,7 +51,7 @@ const employeeEditCloseBtn = document.getElementById("employeeEditCloseBtn");
 const employeeEditCancelBtn = document.getElementById("employeeEditCancelBtn");
 const editEmployeeName = document.getElementById("editEmployeeName");
 const editEmployeePhone = document.getElementById("editEmployeePhone");
-const editEmployeeCode = document.getElementById("editEmployeeCode");
+const editEmployeeRole = document.getElementById( "editEmployeeRole" ); 
 const editEmployeeDepartment = document.getElementById("editEmployeeDepartment");
 const regionEditModal = document.getElementById("regionEditModal");
 const regionEditList = document.getElementById("regionEditList");
@@ -132,8 +132,7 @@ async function fetchEmployeeProfile() {
   try {
     const { data, error } =
       await supabase.rpc(
-        "admin_get_employees"
-      );
+        "admin_get_employees_v2" );
 
     if (error) {
       throw error;
@@ -301,9 +300,26 @@ function renderProfileUI(employee) {
       employee.phone || "—";
   }
 
-  if (detailLoginId) {
-    detailLoginId.textContent =
-      employee.employee_code || "—";
+  if (detailAppRole) {
+    detailAppRole.textContent =
+      employee.app_role ===
+      "team_lead"
+        ? "팀장"
+        : "일반 직원";
+  }
+
+  if (detailAppApproval) {
+    const approvalText = {
+      not_requested: "로그인 전",
+      pending: "승인 대기",
+      approved: "승인 완료",
+      rejected: "승인 거절",
+    };
+
+    detailAppApproval.textContent =
+      approvalText[
+        employee.app_approval_status
+      ] || "로그인 전";
   }
 
   if (detailJoinDate) {
@@ -853,8 +869,9 @@ function openEmployeeEditModal() {
   editEmployeePhone.value =
     currentEmployeeData.phone || "";
 
-  editEmployeeCode.value =
-    currentEmployeeData.employee_code || "";
+  editEmployeeRole.value =
+    currentEmployeeData.app_role ||
+    "employee";
 
   editEmployeeDepartment.value =
     currentEmployeeData.department || "";
@@ -891,19 +908,12 @@ async function saveEmployeeProfile(
   const phone =
     editEmployeePhone.value.trim();
 
-  const employeeCode =
-    editEmployeeCode.value.trim();
-
   const department =
     editEmployeeDepartment.value;
 
-  if (
-    !name ||
-    !phone ||
-    !employeeCode
-  ) {
+  if (!name || !phone) {
     alert(
-      "직원명, 연락처, 로그인 ID를 모두 입력해 주세요."
+      "직원명과 연락처를 모두 입력해 주세요."
     );
 
     return;
@@ -919,19 +929,28 @@ async function saveEmployeeProfile(
     "저장 중...";
 
   try {
-    const { data, error } =
-      await supabase.rpc(
-        "admin_update_employee_profile",
-        {
-          p_user_id: targetUserId,
-          p_name: name,
-          p_phone: phone,
-          p_employee_code:
-            employeeCode,
-          p_department:
-            department || "",
-        }
-      );
+    const {
+      data,
+      error,
+    } = await supabase.rpc(
+      "admin_update_employee_profile_v2",
+      {
+        p_user_id:
+          targetUserId,
+
+        p_name:
+          name,
+
+        p_phone:
+          phone,
+
+        p_department:
+          department || "",
+
+        p_app_role:
+          editEmployeeRole.value,
+      }
+    );
 
     if (error) {
       throw error;
@@ -963,7 +982,9 @@ async function saveEmployeeProfile(
       }`
     );
   } finally {
-    saveButton.disabled = false;
+    saveButton.disabled =
+      false;
+
     saveButton.textContent =
       "수정 저장";
   }

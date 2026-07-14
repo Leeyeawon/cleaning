@@ -194,8 +194,8 @@
 }
 
 .calendar-day.selected {
-  background: #111827;
-  color: #ffffff;
+  background: #f5f6f8;
+  color: #000000;
 }
 
 .day-number,
@@ -215,8 +215,8 @@
 }
 
 .calendar-day.selected .today-number {
-  border-color: #ffffff;
-  color: #ffffff;
+  border-color: 3px #f32c2c;
+  color: #000000;
   background: transparent;
 }
 

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>연차 신청</title>
+
+  <link rel="stylesheet" href="../public/css/common.css" />
+  <link rel="stylesheet" href="../public/css/mobile.css" />
+  <link rel="stylesheet" href="../public/css/request.css" />
+</head>
+
+<body>
+  <div class="phone">
+    <header class="request-page-header">
+      <button class="request-back" type="button" onclick="history.back()">
+        ‹
+      </button>
+
+      <h1>연차 신청</h1>
+    </header>
+
+    <main class="request-form-main">
+      <form id="leaveRequestForm" class="request-form-card">
+        <label>
+          시작일
+          <input id="leaveStartDate" type="date" required />
+        </label>
+
+        <label>
+          종료일
+          <input id="leaveEndDate" type="date" required />
+        </label>
+
+        <label>
+          신청 사유
+          <textarea id="leaveReason" placeholder="신청 사유는 선택 입력입니다."></textarea>
+        </label>
+
+        <p class="request-form-guide">
+          관리자가 승인하면 앱과 관리자 출근부에 연차로 표시됩니다.
+        </p>
+
+        <button class="request-submit" type="submit">
+          연차 신청하기
+        </button>
+      </form>
+    </main>
+  </div>
+
+  <script type="module" src="../public/js/request-leave.js"></script>
+</body>
+</html>

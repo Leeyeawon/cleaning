@@ -3,35 +3,53 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>승인 대기</title>
 
-  <link rel="stylesheet" href="../public/css/pending.css">
+  <link rel="stylesheet" href="../public/css/common.css" />
+  <link rel="stylesheet" href="../public/css/mobile.css" />
+  <link rel="stylesheet" href="../public/css/pending.css" />
 </head>
+
 <body>
   <div class="phone">
     <main class="main pending-page">
       <section class="card pending-card">
-        <div class="pending-icon">⏳</div>
+        <div class="pending-icon">
+          ⏳
+        </div>
 
-        <h1>관리자 승인 대기 중입니다</h1>
+        <h1>
+          관리자 승인 대기 중입니다
+        </h1>
 
         <p>
-          계정은 정상적으로 로그인되었지만<br />
-          관리자가 승인해야 앱을 사용할 수 있습니다.
+          직원 정보는 확인되었습니다.<br />
+          관리자가 앱 사용을 승인하면<br />
+          모든 기능을 사용할 수 있습니다.
         </p>
 
         <div class="pending-info">
-          <strong>현재 상태</strong>
-          <span>승인 대기</span>
+          <strong>
+            현재 상태
+          </strong>
+
+          <span id="approvalStatusText">
+            승인 대기
+          </span>
         </div>
 
-        <button id="logoutBtn" class="main-button">
-          로그아웃
+        <button id="refreshBtn" class="main-button" type="button" >
+          승인 상태 다시 확인
+        </button>
+
+        <button id="logoutBtn" class="pending-logout-button" type="button" >
+          다른 계정으로 로그인
         </button>
       </section>
     </main>
   </div>
 
-  <script type="module" src="../public/js/pending.js"></script>
+  <script type="module" src="../public/js/pending.js" ></script>
 </body>
 </html>

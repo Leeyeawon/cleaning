@@ -531,3 +531,131 @@
   font-size: 14px;
   font-weight: 800;
 }
+
+/* =====================================
+   내정보 정렬 최종 보정
+===================================== */
+
+.profile-avatar {
+  display: none !important;
+}
+
+.profile-top {
+  display: block;
+}
+
+.profile-info {
+  width: 100%;
+  min-width: 0;
+  text-align: left;
+}
+
+.profile-list {
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+}
+
+.profile-item {
+  min-width: 0;
+  text-align: left;
+}
+
+.profile-item strong {
+  overflow-wrap: anywhere;
+}
+
+.menu-item,
+.setting-item {
+  width: 100%;
+  min-height: 58px;
+  padding: 11px 12px;
+  border: 0;
+  border-radius: 15px;
+  background: #f9fafb;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  text-align: left;
+}
+
+.menu-item > div,
+.setting-item > div {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.menu-item strong,
+.setting-item strong {
+  display: block;
+  margin: 0;
+  color: #111827;
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 18px;
+  text-align: left;
+}
+
+.menu-item p,
+.setting-item p {
+  margin: 2px 0 0;
+  color: #8b95a1;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 16px;
+  text-align: left;
+  word-break: keep-all;
+}
+
+.menu-item > span {
+  flex-shrink: 0;
+}
+
+.permission-badge {
+  flex-shrink: 0;
+  min-width: 58px;
+  height: 29px;
+  padding: 0 10px;
+  border-radius: 999px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.permission-badge.allowed {
+  background: #e8f7ef;
+  color: #168a4a;
+}
+
+.permission-badge.pending {
+  background: #fff4df;
+  color: #b45309;
+}
+
+.permission-badge.denied {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.switch {
+  flex-shrink: 0;
+}
+
+@media (max-width: 360px) {
+  .profile-list {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .profile-item:last-child {
+    grid-column: 1 / -1;
+  }
+}

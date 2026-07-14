@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>직원 로그인</title>
 
   <link rel="stylesheet" href="../public/css/common.css" />
@@ -14,43 +15,58 @@
   <div class="phone">
     <main class="login-main">
       <section class="login-card">
-        <div class="login-logo">📍</div>
-
-        <h1>직원 출퇴근 체크</h1>
-        <p>로그인 후 관리자의 승인을 받아야 앱을 사용할 수 있습니다.</p>
-
-        <button id="googleLoginBtn" class="login-button google" type="button">
-          Google로 로그인
-        </button>
-
-        <div class="divider">
-          <span>또는</span>
+        <div class="login-logo">
+          📍
         </div>
 
-        <form id="phoneLoginForm" class="phone-form">
-        <label>
+        <h1>
+          직원 출퇴근 체크
+        </h1>
+
+        <p>
+          이름과 전화번호로 로그인한 후<br />
+          관리자의 승인을 받아야 앱을 사용할 수 있습니다.
+        </p>
+
+        <form id="phoneLoginForm" class="phone-form" >
+          <label>
             이름
-            <input id="userNameInput" type="text" />
-        </label>
 
-        <label>
+            <input
+              id="userNameInput"
+              type="text"
+              placeholder="직원 이름"
+              autocomplete="name"
+              required
+            />
+          </label>
+
+          <label>
             전화번호
-            <input id="phoneInput" type="tel" />
-        </label>
 
-        <label>
-            직원번호
-            <input id="employeeCodeInput" type="text" />
-        </label>
+            <input
+              id="phoneInput"
+              type="tel"
+              inputmode="numeric"
+              placeholder="01012345678"
+              autocomplete="tel"
+              required
+            />
+          </label>
 
-        <button class="login-button" type="submit">
-            직원 정보로 로그인
-        </button>
+          <button id="loginSubmitBtn" class="login-button" type="submit">
+            로그인
+          </button>
         </form>
+
+        <p class="login-guide">
+          관리자가 웹에서 미리 등록한 이름과 전화번호가 일치해야 합니다.
+        </p>
       </section>
     </main>
   </div>
 
-  <script type="module" src="../public/js/login.js"></script>
+  <script type="module" src="../public/js/login.js"
+  ></script>
 </body>
 </html>
