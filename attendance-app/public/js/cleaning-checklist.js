@@ -294,10 +294,10 @@ async function init() {
         return;
       }
 
-      const checkedItems = [
+      const checklistResults = [
         ...checklistList
           .querySelectorAll(
-            'input[type="checkbox"]:checked'
+            'input[type="checkbox"]'
           ),
       ].map((input) => {
         const row =
@@ -309,21 +309,30 @@ async function init() {
           row
             ?.querySelector("span")
             ?.textContent
-            .trim() || "항목명 없음";
+            .trim() ||
+          "항목명 없음";
 
         return {
           id: input.value,
           label,
+          checked:
+            input.checked,
         };
       });
 
-      if (checkedItems.length === 0) {
-        const confirmed =
-          confirm(
-            "완료한 점검 항목이 없습니다.\n그래도 제출하시겠습니까?"
-          );
+      const completedCount =
+        checklistResults.filter(
+          (item) => item.checked
+        ).length;
 
-        if (!confirmed) return;
+      if (completedCount === 0) {
+        const confirmed = confirm(
+          "완료한 점검 항목이 없습니다.\n그래도 제출하시겠습니까?"
+        );
+
+        if (!confirmed) {
+          return;
+        }
       }
 
       submitBtn.disabled =
@@ -344,7 +353,7 @@ async function init() {
             workplaceSelect.value,
 
           p_checked_items:
-            checkedItems,
+            checklistResults,
 
           p_note:
             noteInput.value.trim(),

@@ -2685,3 +2685,75 @@ body[data-admin-page] .content {
   cursor: wait;
   opacity: 0.55;
 }
+
+.employee-attendance-panel-header {
+  height: auto;
+  min-height: 72px;
+  gap: 18px;
+}
+
+.attendance-panel-title h3 {
+  color: #111827;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.attendance-panel-title p {
+  margin-top: 4px;
+  color: #8a929e;
+  font-size: 11px;
+}
+
+.attendance-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.attendance-toggle-button,
+.attendance-print-button {
+  min-height: 36px;
+  padding: 0 13px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.attendance-toggle-button {
+  border: 1px solid #dbe1e8;
+  background: #ffffff;
+  color: #475569;
+}
+
+.attendance-toggle-button:hover {
+  border-color: #111827;
+  color: #111827;
+}
+
+.attendance-print-button {
+  border: 0;
+  background: #111827;
+  color: #ffffff;
+}
+
+.employee-attendance-table-scroll {
+  max-height: 355px;
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
+.attendance-collapsed-row {
+  display: none;
+}
+
+@media print {
+  .attendance-collapsed-row {
+    display: table-row !important;
+  }
+
+  .employee-attendance-table-scroll {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+}

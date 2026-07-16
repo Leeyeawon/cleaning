@@ -69,8 +69,8 @@ const employeeNameInput =
 const employeePhoneInput =
   document.getElementById("employeePhoneInput");
 
-const employeeRoleInput =
-  document.getElementById("employeeRoleInput");
+const editEmployeeRole =
+  document.getElementById("editEmployeeRole");
 
 const employeeDepartmentInput =
   document.getElementById("employeeDepartmentInput");
@@ -1235,7 +1235,7 @@ async function createEmployee(event) {
     phone,
 
     app_role:
-      employeeRoleInput?.value ||
+      editEmployeeRole?.value ||
       "employee",
 
     app_approval_status:

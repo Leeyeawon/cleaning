@@ -60,6 +60,7 @@ const regionEditCancelBtn = document.getElementById("regionEditCancelBtn");
 const regionEditSaveBtn = document.getElementById("regionEditSaveBtn");
 
 const dailyNoteType = document.getElementById("dailyNoteType");
+const toggleAttendanceRowsBtn = document.getElementById( "toggleAttendanceRowsBtn" );
 
 let currentEmployeeData = null;
 let viewMode = "monthly"; 
@@ -67,6 +68,7 @@ let selectedYear = new Date().getFullYear();
 let selectedMonth = new Date().getMonth(); 
 let currentAttendanceRecords = [];
 let dailyNotes = new Map();
+let attendanceExpanded = false;
 
 function formatTimeOnly(timeString) {
   if (!timeString) return "00:00";
@@ -300,12 +302,15 @@ function renderProfileUI(employee) {
       employee.phone || "—";
   }
 
+  const roleText =
+    employee.app_role ===
+    "team_lead"
+      ? "팀장"
+      : "사원";
+
   if (detailAppRole) {
     detailAppRole.textContent =
-      employee.app_role ===
-      "team_lead"
-        ? "팀장"
-        : "일반 직원";
+      roleText;
   }
 
   if (detailAppApproval) {
@@ -457,6 +462,19 @@ async function fetchAndRenderAttendance() {
       currentAttendanceRecords
     );
 
+    toggleAttendanceRowsBtn
+  ?.addEventListener(
+    "click",
+    () => {
+      attendanceExpanded =
+        !attendanceExpanded;
+
+      renderAttendanceTable(
+        currentAttendanceRecords
+      );
+    }
+  );
+
     syncDailyNoteEditor();
   } catch (error) {
     console.error(
@@ -488,6 +506,61 @@ function updateSummaryStats(list) {
   if (statLateCount) statLateCount.textContent = lateCount;
   if (statAbsentCount) statAbsentCount.textContent = absentCount;
   if (statWorkHours) statWorkHours.textContent = Math.floor(totalMinutes / 60);
+}
+
+function getRecentAttendanceDateKeys(
+  displayRows
+) {
+  const today = new Date();
+
+  const todayKey =
+    `${today.getFullYear()}-` +
+    `${String(
+      today.getMonth() + 1
+    ).padStart(2, "0")}-` +
+    `${String(
+      today.getDate()
+    ).padStart(2, "0")}`;
+
+  const rowsUntilToday =
+    displayRows.filter(
+      (row) =>
+        row.dateKey <= todayKey
+    );
+
+  const recentRows =
+    rowsUntilToday.length
+      ? rowsUntilToday.slice(-5)
+      : displayRows.slice(0, 5);
+
+  return new Set(
+    recentRows.map(
+      (row) => row.dateKey
+    )
+  );
+}
+
+function updateAttendanceToggleButton(
+  totalRows
+) {
+  if (!toggleAttendanceRowsBtn) {
+    return;
+  }
+
+  if (totalRows <= 5) {
+    toggleAttendanceRowsBtn.hidden =
+      true;
+
+    return;
+  }
+
+  toggleAttendanceRowsBtn.hidden =
+    false;
+
+  toggleAttendanceRowsBtn.textContent =
+    attendanceExpanded
+      ? "최근 5일만 보기"
+      : "전체 월 보기";
 }
 
 function renderAttendanceTable(
@@ -528,19 +601,27 @@ function renderAttendanceTable(
 
       displayRows.push({
         dateKey,
+
         record:
           recordMap.get(dateKey) ||
           null,
       });
     }
   } else {
-    displayRows = records.map(
-      (record) => ({
-        dateKey:
-          record.work_date,
-        record,
-      })
-    );
+    displayRows =
+      records
+        .map((record) => ({
+          dateKey:
+            record.work_date,
+
+          record,
+        }))
+        .sort(
+          (a, b) =>
+            a.dateKey.localeCompare(
+              b.dateKey
+            )
+        );
   }
 
   if (!displayRows.length) {
@@ -552,8 +633,15 @@ function renderAttendanceTable(
       </tr>
     `;
 
+    updateAttendanceToggleButton(0);
+
     return;
   }
+
+  const recentDateKeys =
+    getRecentAttendanceDateKeys(
+      displayRows
+    );
 
   detailRecordTableBody.innerHTML =
     displayRows
@@ -572,6 +660,26 @@ function renderAttendanceTable(
         const isAnnualLeave =
           noteData.dayType ===
           "annual_leave";
+
+        const isCollapsed =
+          !attendanceExpanded &&
+          !recentDateKeys.has(
+            dateKey
+          );
+
+        const rowClasses = [];
+
+        if (isAnnualLeave) {
+          rowClasses.push(
+            "annual-leave-row"
+          );
+        }
+
+        if (isCollapsed) {
+          rowClasses.push(
+            "attendance-collapsed-row"
+          );
+        }
 
         const dayText =
           String(
@@ -604,7 +712,8 @@ function renderAttendanceTable(
               : "";
 
         const workMinutes =
-          record && !isAnnualLeave
+          record &&
+          !isAnnualLeave
             ? calcWorkMinutes(
                 record.check_in_time,
                 record.check_out_time
@@ -619,11 +728,7 @@ function renderAttendanceTable(
             : "";
 
         return `
-          <tr class="${
-            isAnnualLeave
-              ? "annual-leave-row"
-              : ""
-          }">
+          <tr class="${rowClasses.join(" ")}">
             <td>
               <strong>
                 ${
@@ -667,6 +772,10 @@ function renderAttendanceTable(
         `;
       })
       .join("");
+
+  updateAttendanceToggleButton(
+    displayRows.length
+  );
 }
 
 function renderMemoHistory() {
@@ -911,6 +1020,9 @@ async function saveEmployeeProfile(
   const department =
     editEmployeeDepartment.value;
 
+  const appRole =
+    editEmployeeRole.value;
+
   if (!name || !phone) {
     alert(
       "직원명과 연락처를 모두 입력해 주세요."
@@ -929,37 +1041,48 @@ async function saveEmployeeProfile(
     "저장 중...";
 
   try {
-    const {
-      data,
-      error,
-    } = await supabase.rpc(
-      "admin_update_employee_profile_v2",
-      {
-        p_user_id:
-          targetUserId,
+    const { error } =
+      await supabase.rpc(
+        "admin_update_employee_profile_v2",
+        {
+          p_user_id:
+            targetUserId,
 
-        p_name:
-          name,
+          p_name:
+            name,
 
-        p_phone:
-          phone,
+          p_phone:
+            phone,
 
-        p_department:
-          department || "",
+          p_department:
+            department || "",
 
-        p_app_role:
-          editEmployeeRole.value,
-      }
-    );
+          p_app_role:
+            appRole,
+        }
+      );
 
     if (error) {
       throw error;
     }
 
-    currentEmployeeData = {
-      ...currentEmployeeData,
-      ...data,
-    };
+    /*
+      저장된 정보를 서버에서 다시 조회한다.
+      RPC 반환 형태와 관계없이 화면 직급이 확실하게 갱신된다.
+    */
+    const refreshedEmployee =
+      await fetchEmployeeProfile();
+
+    currentEmployeeData =
+      refreshedEmployee || {
+        ...currentEmployeeData,
+        name,
+        phone,
+        department:
+          department || null,
+        app_role:
+          appRole,
+      };
 
     renderProfileUI(
       currentEmployeeData
@@ -968,7 +1091,9 @@ async function saveEmployeeProfile(
     closeEmployeeEditModal();
 
     alert(
-      "직원 정보가 수정되었습니다."
+      appRole === "team_lead"
+        ? "직원 정보가 수정되고 팀장 직급이 부여되었습니다."
+        : "직원 정보가 수정되고 사원 직급이 부여되었습니다."
     );
   } catch (error) {
     console.error(
@@ -982,9 +1107,7 @@ async function saveEmployeeProfile(
       }`
     );
   } finally {
-    saveButton.disabled =
-      false;
-
+    saveButton.disabled = false;
     saveButton.textContent =
       "수정 저장";
   }
@@ -1343,6 +1466,7 @@ function setupEventListeners() {
             "none";
         }
 
+        attendanceExpanded = false;
         await fetchAndRenderAttendance();
       }
     );
@@ -1367,6 +1491,7 @@ function setupEventListeners() {
         selectedYear -= 1;
       }
 
+      attendanceExpanded = false;
       await fetchAndRenderAttendance();
     }
   );
@@ -1390,6 +1515,7 @@ function setupEventListeners() {
         selectedYear += 1;
       }
 
+      attendanceExpanded = false;
       await fetchAndRenderAttendance();
     }
   );
@@ -1400,6 +1526,7 @@ function setupEventListeners() {
   attendanceSearchBtn?.addEventListener(
     "click",
     async () => {
+      attendanceExpanded = false;
       await fetchAndRenderAttendance();
     }
   );
@@ -1432,6 +1559,7 @@ function setupEventListeners() {
           "none";
       }
 
+      attendanceExpanded = false;
       await fetchAndRenderAttendance();
 
       handlePrintTableOnly();
@@ -1755,6 +1883,7 @@ async function init() {
       todayStr;
   }
 
+  attendanceExpanded = false;
   await fetchAndRenderAttendance();
 }
 

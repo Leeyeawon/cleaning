@@ -81,22 +81,47 @@
                   점검 항목을 불러오는 중입니다.
                 </p>
               </div>
+              
+              <section class="app-custom-item-section">
+                <div class="app-custom-item-header">
+                  <div>
+                    <strong>앱에서 추가된 항목</strong>
+
+                    <p>
+                      팀장이 앱에서 직접 추가한 항목입니다.
+                      필요한 항목은 현장 공통 항목으로 전환할 수 있습니다.
+                    </p>
+                  </div>
+
+                  <span id="appCustomItemCount">
+                    0개
+                  </span>
+                </div>
+
+                <div
+                  id="appCustomChecklistCatalog"
+                  class="app-custom-item-list"
+                >
+                  <p class="workflow-list-empty">
+                    앱 추가 항목을 불러오는 중입니다.
+                  </p>
+                </div>
+              </section>
             </div>
           </article>
 
-          <article class="panel workflow-panel">
+          <article class="panel workflow-panel checklist-assignment-panel">
             <div class="panel-header">
               <div>
-                <h3>현장별 항목 배정</h3>
-                <p>앱에 표시할 항목을 선택합니다.</p>
-              </div>
+                <h3>현장 점검표 구성</h3>
+                <p> 현장을 선택하고 앱에 표시할 점검 항목과 순서를 설정합니다. </p> </div>
 
-              <span id="assignedItemCount">0개 선택</span>
+              <span id="assignedItemCount"> 0개 선택 </span>
             </div>
 
             <div class="workflow-panel-body">
-              <label class="workflow-field">
-                현장 선택
+              <label class="workflow-field checklist-workplace-field">
+                <span>적용할 현장</span>
 
                 <select id="checklistWorkplaceSelect">
                   <option value="">
@@ -105,23 +130,61 @@
                 </select>
               </label>
 
-              <p class="workflow-help">
-                체크한 항목만 해당 현장의 청소 점검표에
-                표시됩니다.
-              </p>
+              <section class="checklist-setting-section">
+                <div class="checklist-setting-title">
+                  <div>
+                    <strong>표시 항목 선택</strong>
+                    <p> 체크한 항목만 해당 현장의 앱에 표시됩니다. </p>
+                  </div>
+                </div>
 
-              <div
-                id="workplaceChecklistItems"
-                class="workflow-item-list"
-              >
-                <p class="workflow-list-empty">
-                  현장을 선택해 주세요.
-                </p>
-              </div>
+                <div
+                  id="workplaceChecklistItems"
+                  class="workflow-item-list checklist-selection-list"
+                >
+                  <p class="workflow-list-empty">
+                    현장을 선택해 주세요.
+                  </p>
+                </div>
+              </section>
+
+              <section class="checklist-preview-section">
+                <div class="checklist-setting-title">
+                  <div>
+                    <strong>앱 표시 미리보기</strong>
+                    <p> 아래 순서대로 직원 앱의 점검표에 표시됩니다. </p>
+                  </div>
+
+                  <span>위·아래 버튼으로 순서 변경</span>
+                </div>
+
+                <div class="checklist-preview-table-wrap">
+                  <table class="checklist-preview-table">
+                    <thead>
+                      <tr>
+                        <th>순서</th>
+                        <th>선택 항목</th>
+                        <th>순서 변경</th>
+                      </tr>
+                    </thead>
+
+                    <tbody id="checklistPreviewTableBody">
+                      <tr>
+                        <td
+                          colspan="3"
+                          class="checklist-preview-empty"
+                        >
+                          선택된 항목이 없습니다.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
 
               <button
                 id="saveWorkplaceChecklistBtn"
-                class="workflow-primary"
+                class="workflow-primary checklist-save-button"
                 type="button"
               >
                 현장 점검표 저장
@@ -173,12 +236,13 @@
 										<th>완료 수</th>
 										<th>완료한 항목</th>
 										<th>점검 메모</th>
+                    <th>상세</th>
 								</tr>
 								</thead>
 
 								<tbody id="submissionTableBody">
 									<tr>
-											<td colspan="6" class="workflow-empty" >
+											<td colspan="7" class="workflow-empty" >
 											제출 내역을 불러오는 중입니다.
 											</td>
 									</tr>
@@ -189,6 +253,94 @@
 				</section>
       </section>
     </main>
+  </div>
+
+  <div
+    id="checklistDetailModal"
+    class="detail-modal checklist-detail-modal"
+    aria-hidden="true"
+  >
+    <div class="detail-modal-panel checklist-detail-panel">
+      <header class="detail-modal-header checklist-detail-modal-header">
+        <div>
+          <h2>청소 점검표 상세</h2>
+          <p>제출된 점검 결과를 확인합니다.</p>
+        </div>
+
+        <button
+          id="checklistDetailCloseBtn"
+          type="button"
+          aria-label="닫기"
+        >
+          ×
+        </button>
+      </header>
+
+      <div
+        id="checklistDetailPrintArea"
+        class="checklist-detail-print-area"
+      >
+        <div class="checklist-detail-print-title">
+          <h1>청소 점검표</h1>
+          <p id="checklistDetailSubtitle"></p>
+        </div>
+
+        <section class="checklist-detail-summary">
+          <div>
+            <span>점검 현장</span>
+            <strong id="checklistDetailWorkplace">-</strong>
+          </div>
+
+          <div>
+            <span>제출 직원</span>
+            <strong id="checklistDetailEmployee">-</strong>
+          </div>
+
+          <div>
+            <span>점검일</span>
+            <strong id="checklistDetailDate">-</strong>
+          </div>
+
+          <div>
+            <span>완료 현황</span>
+            <strong id="checklistDetailProgress">0 / 0</strong>
+          </div>
+        </section>
+
+        <table class="checklist-detail-table">
+          <thead>
+            <tr>
+              <th>순서</th>
+              <th>점검 항목</th>
+              <th>결과</th>
+            </tr>
+          </thead>
+
+          <tbody id="checklistDetailTableBody"></tbody>
+        </table>
+
+        <section class="checklist-detail-note">
+          <strong>점검 메모</strong>
+          <p id="checklistDetailNote">-</p>
+        </section>
+      </div>
+
+      <footer class="checklist-detail-actions">
+        <button
+          id="checklistDetailCancelBtn"
+          type="button"
+        >
+          닫기
+        </button>
+
+        <button
+          id="checklistDetailPrintBtn"
+          type="button"
+        >
+          출력/PDF 저장
+        </button>
+      </footer>
+    </div>
   </div>
 
   <script src="../public/js/common.js"></script>
