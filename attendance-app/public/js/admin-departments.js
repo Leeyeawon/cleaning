@@ -1,62 +1,1303 @@
 import supabase from "./supabase.js";
 
-const workplaceTableBody = document.getElementById("workplaceTableBody");
-const btnSaveWorkplace = document.getElementById("btnSaveWorkplace");
+import {
+  requireAdmin,
+} from "./adminAuth.js";
 
-// 1. 근무지 목록 및 배정 직원수 조회
-async function loadWorkplaces() {
-  const { data, error } = await supabase
-    .from("workplaces")
-    .select(`
-      *,
-      workplace_users(count)
-    `);
+const workplaceTableBody =
+  document.getElementById(
+    "workplaceTableBody"
+  );
 
-  if (error) return console.error(error);
+const totalWorkplaceCount =
+  document.getElementById(
+    "totalWorkplaceCount"
+  );
 
-  workplaceTableBody.innerHTML = data.map(wp => `
-    <tr>
-      <td><strong>${wp.name}</strong></td>
-      <td>${wp.address || "-"}</td>
-      <td>${wp.radius_m}m</td>
-      <td>${wp.workplace_users[0]?.count || 0}명</td>
-      <td>
-        <button class="table-action-btn" onclick="assignEmployees('${wp.id}')">배정</button>
-        <button class="table-action-btn" style="color:red" onclick="deleteWorkplace('${wp.id}')">삭제</button>
-      </td>
-    </tr>
-  `).join("");
+const activeEmployeeCount =
+  document.getElementById(
+    "activeEmployeeCount"
+  );
+
+const assignedEmployeeCount =
+  document.getElementById(
+    "assignedEmployeeCount"
+  );
+
+const unassignedEmployeeCount =
+  document.getElementById(
+    "unassignedEmployeeCount"
+  );
+
+const totalAssignmentCount =
+  document.getElementById(
+    "totalAssignmentCount"
+  );
+
+const filteredWorkplaceCount =
+  document.getElementById(
+    "filteredWorkplaceCount"
+  );
+
+const zoneSearchInput =
+  document.getElementById(
+    "zoneSearchInput"
+  );
+
+const zoneRadiusFilter =
+  document.getElementById(
+    "zoneRadiusFilter"
+  );
+
+const zoneAddressInput =
+  document.getElementById(
+    "zoneAddressInput"
+  );
+
+const addZoneBtn =
+  document.getElementById(
+    "addZoneBtn"
+  );
+
+const zoneModal =
+  document.getElementById(
+    "zoneModal"
+  );
+
+const zoneModalTitle =
+  document.getElementById(
+    "zoneModalTitle"
+  );
+
+const zoneModalCloseBtn =
+  document.getElementById(
+    "zoneModalCloseBtn"
+  );
+
+const zoneModalCancelBtn =
+  document.getElementById(
+    "zoneModalCancelBtn"
+  );
+
+const zoneSaveBtn =
+  document.getElementById(
+    "zoneSaveBtn"
+  );
+
+const zoneNameInput =
+  document.getElementById(
+    "zoneNameInput"
+  );
+
+const zoneAddressFormInput =
+  document.getElementById(
+    "zoneAddressFormInput"
+  );
+
+const zoneLatInput =
+  document.getElementById(
+    "zoneLatInput"
+  );
+
+const zoneLngInput =
+  document.getElementById(
+    "zoneLngInput"
+  );
+
+const zoneRadiusInput =
+  document.getElementById(
+    "zoneRadiusInput"
+  );
+
+const assignModal =
+  document.getElementById(
+    "assignModal"
+  );
+
+const assignModalTitle =
+  document.getElementById(
+    "assignModalTitle"
+  );
+
+const assignModalCloseBtn =
+  document.getElementById(
+    "assignModalCloseBtn"
+  );
+
+const assignModalCancelBtn =
+  document.getElementById(
+    "assignModalCancelBtn"
+  );
+
+const assignSaveBtn =
+  document.getElementById(
+    "assignSaveBtn"
+  );
+
+const assignEmployeeList =
+  document.getElementById(
+    "assignEmployeeList"
+  );
+
+const assignmentCountText =
+  document.getElementById(
+    "assignmentCountText"
+  );
+
+const selectAllEmployeesBtn =
+  document.getElementById(
+    "selectAllEmployeesBtn"
+  );
+
+const clearAllEmployeesBtn =
+  document.getElementById(
+    "clearAllEmployeesBtn"
+  );
+
+let workplaces = [];
+let employees = [];
+
+let editingWorkplaceId = null;
+let assigningWorkplaceId = null;
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
-// 2. 근무지 등록/저장 로직
-btnSaveWorkplace?.addEventListener("click", async () => {
-  const name = document.getElementById("wpName").value;
-  const address = document.getElementById("wpAddress").value;
-  const lat = document.getElementById("wpLat").value;
-  const lng = document.getElementById("wpLng").value;
-  const radius = document.getElementById("wpRadius").value;
+function getEmployeeWorkplaceIds(
+  employee
+) {
+  const ids =
+    employee.workplaceIds ||
+    employee.workplace_ids ||
+    [];
 
-  const { error } = await supabase.from("workplaces").insert({
-    name, address, latitude: lat, longitude: lng, radius_m: radius
-  });
+  return Array.isArray(ids)
+    ? ids.map(String)
+    : [];
+}
 
-  if (!error) {
-    alert("등록 완료");
-    loadWorkplaces();
+function getAssignedEmployees(
+  workplaceId
+) {
+  const normalizedId =
+    String(workplaceId);
+
+  return employees.filter(
+    (employee) =>
+      getEmployeeWorkplaceIds(
+        employee
+      ).includes(normalizedId)
+  );
+}
+
+function updateSummary() {
+  const activeEmployees =
+    employees.filter(
+      (employee) =>
+        employee.status === "active"
+    );
+
+  const assignedEmployees =
+    activeEmployees.filter(
+      (employee) =>
+        getEmployeeWorkplaceIds(
+          employee
+        ).length > 0
+    );
+
+  const unassignedEmployees =
+    activeEmployees.filter(
+      (employee) =>
+        getEmployeeWorkplaceIds(
+          employee
+        ).length === 0
+    );
+
+  const assignmentCount =
+    activeEmployees.reduce(
+      (total, employee) =>
+        total +
+        getEmployeeWorkplaceIds(
+          employee
+        ).length,
+      0
+    );
+
+  totalWorkplaceCount.textContent =
+    workplaces.length;
+
+  activeEmployeeCount.textContent =
+    activeEmployees.length;
+
+  assignedEmployeeCount.textContent =
+    assignedEmployees.length;
+
+  unassignedEmployeeCount.textContent =
+    unassignedEmployees.length;
+
+  totalAssignmentCount.textContent =
+    assignmentCount;
+}
+
+function getFilteredWorkplaces() {
+  const nameKeyword =
+    zoneSearchInput.value
+      .trim()
+      .toLowerCase();
+
+  const addressKeyword =
+    zoneAddressInput.value
+      .trim()
+      .toLowerCase();
+
+  const radiusValue =
+    zoneRadiusFilter.value;
+
+  return workplaces.filter(
+    (workplace) => {
+      const name =
+        String(
+          workplace.name || ""
+        ).toLowerCase();
+
+      const address =
+        String(
+          workplace.address || ""
+        ).toLowerCase();
+
+      const radius =
+        Number(
+          workplace.radius_m || 0
+        );
+
+      const matchesName =
+        !nameKeyword ||
+        name.includes(nameKeyword);
+
+      const matchesAddress =
+        !addressKeyword ||
+        address.includes(
+          addressKeyword
+        );
+
+      const matchesRadius =
+        radiusValue === "all" ||
+        radius <= Number(radiusValue);
+
+      return (
+        matchesName &&
+        matchesAddress &&
+        matchesRadius
+      );
+    }
+  );
+}
+
+function renderWorkplaceTable() {
+  const filtered =
+    getFilteredWorkplaces();
+
+  filteredWorkplaceCount.textContent =
+    `${filtered.length}개 지역`;
+
+  if (filtered.length === 0) {
+    workplaceTableBody.innerHTML = `
+      <tr>
+        <td
+          colspan="5"
+          style="
+            padding:30px;
+            text-align:center;
+            color:#737373;
+          "
+        >
+          조건에 맞는 근무지역이 없습니다.
+        </td>
+      </tr>
+    `;
+
+    return;
   }
-});
 
-// 3. 근무지 삭제
-window.deleteWorkplace = async (id) => {
-  if (!confirm("정말 삭제하시겠습니까?")) return;
-  await supabase.from("workplaces").delete().eq("id", id);
-  loadWorkplaces();
-};
+  workplaceTableBody.innerHTML =
+    filtered
+      .map((workplace) => {
+        const assigned =
+          getAssignedEmployees(
+            workplace.id
+          );
 
-// 4. 직원 배정 창 (추후 직원 선택 모달 호출로 연결)
-window.assignEmployees = (wpId) => {
-  alert("해당 근무지에 배정할 직원을 선택하는 모달창을 띄웁니다.");
-  // 여기에 별도의 직원 선택 모달 호출 로직을 넣으시면 됩니다.
-};
+        return `
+          <tr>
+            <td>
+              <strong>
+                ${escapeHtml(
+                  workplace.name
+                )}
+              </strong>
+            </td>
 
-loadWorkplaces();// 페이지 로드 시 실행
+            <td class="zone-address">
+              ${escapeHtml(
+                workplace.address ||
+                  "주소 미등록"
+              )}
+            </td>
+
+            <td>
+              <span
+                class="zone-radius-chip"
+              >
+                ${Number(
+                  workplace.radius_m ||
+                    0
+                )}m
+              </span>
+            </td>
+
+            <td>
+              <button
+                type="button"
+                class="table-action-btn"
+                data-assign-workplace="${
+                  workplace.id
+                }"
+              >
+                ${assigned.length}명 배정
+              </button>
+            </td>
+
+            <td>
+              <div
+                class="zone-action-group"
+              >
+                <button
+                  type="button"
+                  class="table-action-btn"
+                  data-edit-workplace="${
+                    workplace.id
+                  }"
+                >
+                  수정
+                </button>
+
+                <button
+                  type="button"
+                  class="table-action-btn"
+                  data-delete-workplace="${
+                    workplace.id
+                  }"
+                  style="color:#dc2626;"
+                >
+                  삭제
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      })
+      .join("");
+
+  workplaceTableBody
+    .querySelectorAll(
+      "[data-assign-workplace]"
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        () => {
+          openAssignmentModal(
+            button.dataset
+              .assignWorkplace
+          );
+        }
+      );
+    });
+
+  workplaceTableBody
+    .querySelectorAll(
+      "[data-edit-workplace]"
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        () => {
+          openZoneModal(
+            button.dataset
+              .editWorkplace
+          );
+        }
+      );
+    });
+
+  workplaceTableBody
+    .querySelectorAll(
+      "[data-delete-workplace]"
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        () => {
+          deleteWorkplace(
+            button.dataset
+              .deleteWorkplace
+          );
+        }
+      );
+    });
+}
+
+async function loadData() {
+  workplaceTableBody.innerHTML = `
+    <tr>
+      <td
+        colspan="5"
+        style="
+          padding:30px;
+          text-align:center;
+          color:#737373;
+        "
+      >
+        근무지역 정보를 불러오는 중입니다.
+      </td>
+    </tr>
+  `;
+
+  const [
+    workplaceResult,
+    employeeResult,
+  ] = await Promise.all([
+    supabase
+      .from("workplaces")
+      .select(`
+        id,
+        name,
+        address,
+        latitude,
+        longitude,
+        radius_m
+      `)
+      .order("name"),
+
+    supabase.rpc(
+      "admin_get_employees_v2"
+    ),
+  ]);
+
+  if (workplaceResult.error) {
+    console.error(
+      "근무지역 조회 실패:",
+      workplaceResult.error
+    );
+
+    workplaceTableBody.innerHTML = `
+      <tr>
+        <td
+          colspan="5"
+          style="
+            padding:30px;
+            text-align:center;
+            color:#dc2626;
+          "
+        >
+          근무지역을 불러오지 못했습니다.
+          <br />
+          ${escapeHtml(
+            workplaceResult.error
+              .message
+          )}
+        </td>
+      </tr>
+    `;
+
+    return;
+  }
+
+  if (employeeResult.error) {
+    console.error(
+      "직원 조회 실패:",
+      employeeResult.error
+    );
+
+    workplaceTableBody.innerHTML = `
+      <tr>
+        <td
+          colspan="5"
+          style="
+            padding:30px;
+            text-align:center;
+            color:#dc2626;
+          "
+        >
+          배정 직원 정보를 불러오지
+          못했습니다.
+          <br />
+          ${escapeHtml(
+            employeeResult.error
+              .message
+          )}
+        </td>
+      </tr>
+    `;
+
+    return;
+  }
+
+  workplaces =
+    workplaceResult.data || [];
+
+  employees =
+    Array.isArray(
+      employeeResult.data
+    )
+      ? employeeResult.data
+      : [];
+
+  updateSummary();
+  renderWorkplaceTable();
+}
+
+function resetZoneForm() {
+  zoneNameInput.value = "";
+  zoneAddressFormInput.value = "";
+  zoneLatInput.value = "";
+  zoneLngInput.value = "";
+  zoneRadiusInput.value = "100";
+}
+
+function openZoneModal(
+  workplaceId = null
+) {
+  editingWorkplaceId =
+    workplaceId
+      ? String(workplaceId)
+      : null;
+
+  resetZoneForm();
+
+  if (editingWorkplaceId) {
+    const workplace =
+      workplaces.find(
+        (item) =>
+          String(item.id) ===
+          editingWorkplaceId
+      );
+
+    if (!workplace) {
+      alert(
+        "근무지역 정보를 찾지 못했습니다."
+      );
+
+      return;
+    }
+
+    zoneModalTitle.textContent =
+      "근무지역 수정";
+
+    zoneNameInput.value =
+      workplace.name || "";
+
+    zoneAddressFormInput.value =
+      workplace.address || "";
+
+    zoneLatInput.value =
+      workplace.latitude ?? "";
+
+    zoneLngInput.value =
+      workplace.longitude ?? "";
+
+    zoneRadiusInput.value =
+      workplace.radius_m || 100;
+  } else {
+    zoneModalTitle.textContent =
+      "근무지역 등록";
+  }
+
+  zoneModal.classList.add("open");
+
+  setTimeout(() => {
+    zoneNameInput.focus();
+  }, 0);
+}
+
+function closeZoneModal() {
+  zoneModal.classList.remove("open");
+  editingWorkplaceId = null;
+  resetZoneForm();
+}
+
+async function saveWorkplace() {
+  const name =
+    zoneNameInput.value.trim();
+
+  const address =
+    zoneAddressFormInput.value
+      .trim();
+
+  const latitude =
+    Number(zoneLatInput.value);
+
+  const longitude =
+    Number(zoneLngInput.value);
+
+  const radius =
+    Number(zoneRadiusInput.value);
+
+  if (!name) {
+    alert(
+      "근무지명을 입력해 주세요."
+    );
+
+    zoneNameInput.focus();
+    return;
+  }
+
+  if (!address) {
+    alert("주소를 입력해 주세요.");
+
+    zoneAddressFormInput.focus();
+    return;
+  }
+
+  if (
+    !Number.isFinite(latitude) ||
+    latitude < -90 ||
+    latitude > 90
+  ) {
+    alert(
+      "올바른 위도를 입력해 주세요."
+    );
+
+    zoneLatInput.focus();
+    return;
+  }
+
+  if (
+    !Number.isFinite(longitude) ||
+    longitude < -180 ||
+    longitude > 180
+  ) {
+    alert(
+      "올바른 경도를 입력해 주세요."
+    );
+
+    zoneLngInput.focus();
+    return;
+  }
+
+  if (
+    !Number.isFinite(radius) ||
+    radius <= 0
+  ) {
+    alert(
+      "출근 허용 반경을 입력해 주세요."
+    );
+
+    zoneRadiusInput.focus();
+    return;
+  }
+
+  const payload = {
+    name,
+    address,
+    latitude,
+    longitude,
+    radius_m: radius,
+  };
+
+  zoneSaveBtn.disabled = true;
+  zoneSaveBtn.textContent =
+    "저장 중...";
+
+  try {
+    let result;
+
+    if (editingWorkplaceId) {
+      result = await supabase
+        .from("workplaces")
+        .update(payload)
+        .eq(
+          "id",
+          editingWorkplaceId
+        );
+    } else {
+      result = await supabase
+        .from("workplaces")
+        .insert(payload);
+    }
+
+    if (result.error) {
+      throw result.error;
+    }
+
+    alert(
+      editingWorkplaceId
+        ? "근무지역이 수정되었습니다."
+        : "근무지역이 등록되었습니다."
+    );
+
+    closeZoneModal();
+    await loadData();
+  } catch (error) {
+    console.error(
+      "근무지역 저장 실패:",
+      error
+    );
+
+    alert(
+      `근무지역을 저장하지 못했습니다.\n${
+        error.message ||
+        "Supabase 권한을 확인해 주세요."
+      }`
+    );
+  } finally {
+    zoneSaveBtn.disabled = false;
+    zoneSaveBtn.textContent =
+      "저장";
+  }
+}
+
+async function deleteWorkplace(
+  workplaceId
+) {
+  const workplace =
+    workplaces.find(
+      (item) =>
+        String(item.id) ===
+        String(workplaceId)
+    );
+
+  if (!workplace) {
+    return;
+  }
+
+  const assigned =
+    getAssignedEmployees(
+      workplaceId
+    );
+
+  if (assigned.length > 0) {
+    alert(
+      `현재 ${assigned.length}명의 직원이 배정되어 있습니다.\n직원 배정을 모두 해제한 후 삭제해 주세요.`
+    );
+
+    return;
+  }
+
+  const confirmed =
+    confirm(
+      `"${workplace.name}" 근무지역을 삭제하시겠습니까?\n\n출퇴근 기록이 존재하는 지역은 삭제되지 않을 수 있습니다.`
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    const { count, error: countError } =
+      await supabase
+        .from("attendance")
+        .select("*", {
+          count: "exact",
+          head: true,
+        })
+        .eq(
+          "workplace_id",
+          workplaceId
+        );
+
+    if (countError) {
+      throw countError;
+    }
+
+    if ((count || 0) > 0) {
+      alert(
+        `이 지역에는 출퇴근 기록 ${count}건이 있어 삭제할 수 없습니다.\n기록 보존을 위해 지역 정보를 수정해서 사용해 주세요.`
+      );
+
+      return;
+    }
+
+    const { error } =
+      await supabase
+        .from("workplaces")
+        .delete()
+        .eq("id", workplaceId);
+
+    if (error) {
+      throw error;
+    }
+
+    alert(
+      "근무지역이 삭제되었습니다."
+    );
+
+    await loadData();
+  } catch (error) {
+    console.error(
+      "근무지역 삭제 실패:",
+      error
+    );
+
+    alert(
+      `근무지역을 삭제하지 못했습니다.\n${
+        error.message ||
+        "연결된 데이터를 확인해 주세요."
+      }`
+    );
+  }
+}
+
+function openAssignmentModal(
+  workplaceId
+) {
+  assigningWorkplaceId =
+    String(workplaceId);
+
+  const workplace =
+    workplaces.find(
+      (item) =>
+        String(item.id) ===
+        assigningWorkplaceId
+    );
+
+  if (!workplace) {
+    alert(
+      "근무지역 정보를 찾지 못했습니다."
+    );
+
+    return;
+  }
+
+  assignModalTitle.textContent =
+    `${workplace.name} 직원 배정`;
+
+  renderAssignmentEmployees();
+
+  assignModal.classList.add("open");
+}
+
+function closeAssignmentModal() {
+  assignModal.classList.remove("open");
+  assigningWorkplaceId = null;
+  assignEmployeeList.innerHTML = "";
+}
+
+function renderAssignmentEmployees() {
+  if (!assigningWorkplaceId) {
+    return;
+  }
+
+  if (employees.length === 0) {
+    assignEmployeeList.innerHTML = `
+      <p style="color:#737373;">
+        등록된 직원이 없습니다.
+      </p>
+    `;
+
+    assignmentCountText.textContent =
+      "배정 가능한 직원이 없습니다.";
+
+    return;
+  }
+
+  const sortedEmployees =
+    [...employees].sort(
+      (first, second) => {
+        const firstActive =
+          first.status === "active"
+            ? 0
+            : 1;
+
+        const secondActive =
+          second.status === "active"
+            ? 0
+            : 1;
+
+        if (
+          firstActive !== secondActive
+        ) {
+          return (
+            firstActive -
+            secondActive
+          );
+        }
+
+        return String(
+          first.name || ""
+        ).localeCompare(
+          String(
+            second.name || ""
+          ),
+          "ko"
+        );
+      }
+    );
+
+  assignEmployeeList.innerHTML =
+    sortedEmployees
+      .map((employee) => {
+        const assigned =
+          getEmployeeWorkplaceIds(
+            employee
+          ).includes(
+            assigningWorkplaceId
+          );
+
+        const inactive =
+          employee.status !== "active";
+
+        return `
+          <label
+            style="
+              width:100%;
+              min-height:44px;
+              padding:10px 12px;
+              border:1px solid #e5e5e5;
+              border-radius:8px;
+              background:#fff;
+              display:flex;
+              align-items:center;
+              gap:10px;
+              cursor:pointer;
+            "
+          >
+            <input
+              type="checkbox"
+              name="assignedEmployee"
+              value="${employee.id}"
+              ${assigned
+                ? "checked"
+                : ""}
+              style="
+                width:18px;
+                height:18px;
+              "
+            />
+
+            <span
+              style="
+                flex:1;
+                display:flex;
+                flex-direction:column;
+                gap:2px;
+              "
+            >
+              <strong
+                style="
+                  color:#171717;
+                  font-size:14px;
+                "
+              >
+                ${escapeHtml(
+                  employee.name ||
+                    "이름 없음"
+                )}
+              </strong>
+
+              <small
+                style="
+                  color:#737373;
+                  font-size:12px;
+                "
+              >
+                ${escapeHtml(
+                  employee.department ||
+                    "소속 미지정"
+                )}
+              </small>
+            </span>
+
+            ${
+              inactive
+                ? `
+                  <small
+                    style="
+                      color:#dc2626;
+                      font-size:11px;
+                    "
+                  >
+                    비활성
+                  </small>
+                `
+                : ""
+            }
+          </label>
+        `;
+      })
+      .join("");
+
+  updateAssignmentCount();
+
+  assignEmployeeList
+    .querySelectorAll(
+      'input[name="assignedEmployee"]'
+    )
+    .forEach((input) => {
+      input.addEventListener(
+        "change",
+        updateAssignmentCount
+      );
+    });
+}
+
+function updateAssignmentCount() {
+  const selectedCount =
+    assignEmployeeList
+      .querySelectorAll(
+        'input[name="assignedEmployee"]:checked'
+      ).length;
+
+  assignmentCountText.textContent =
+    `${selectedCount}명이 이 근무지역에 배정됩니다.`;
+}
+
+async function saveAssignments() {
+  if (!assigningWorkplaceId) {
+    return;
+  }
+
+  const selectedUserIds =
+    new Set(
+      [
+        ...assignEmployeeList
+          .querySelectorAll(
+            'input[name="assignedEmployee"]:checked'
+          ),
+      ].map(
+        (input) =>
+          String(input.value)
+      )
+    );
+
+  const changedEmployees =
+    employees.filter(
+      (employee) => {
+        const currentlyAssigned =
+          getEmployeeWorkplaceIds(
+            employee
+          ).includes(
+            assigningWorkplaceId
+          );
+
+        const shouldBeAssigned =
+          selectedUserIds.has(
+            String(employee.id)
+          );
+
+        return (
+          currentlyAssigned !==
+          shouldBeAssigned
+        );
+      }
+    );
+
+  if (
+    changedEmployees.length === 0
+  ) {
+    alert(
+      "변경된 직원 배정이 없습니다."
+    );
+
+    closeAssignmentModal();
+    return;
+  }
+
+  assignSaveBtn.disabled = true;
+  assignSaveBtn.textContent =
+    "저장 중...";
+
+  try {
+    for (
+      const employee
+      of changedEmployees
+    ) {
+      const currentIds =
+        getEmployeeWorkplaceIds(
+          employee
+        );
+
+      const shouldBeAssigned =
+        selectedUserIds.has(
+          String(employee.id)
+        );
+
+      let nextIds;
+
+      if (shouldBeAssigned) {
+        nextIds = [
+          ...new Set([
+            ...currentIds,
+            assigningWorkplaceId,
+          ]),
+        ];
+      } else {
+        nextIds =
+          currentIds.filter(
+            (workplaceId) =>
+              workplaceId !==
+              assigningWorkplaceId
+          );
+      }
+
+      const { error } =
+        await supabase.rpc(
+          "admin_set_user_workplaces",
+          {
+            p_user_id:
+              employee.id,
+
+            p_workplace_ids:
+              nextIds,
+          }
+        );
+
+      if (error) {
+        throw new Error(
+          `${employee.name || "직원"} 배정 실패: ${error.message}`
+        );
+      }
+    }
+
+    alert(
+      "직원 배정이 저장되었습니다."
+    );
+
+    closeAssignmentModal();
+    await loadData();
+  } catch (error) {
+    console.error(
+      "직원 배정 저장 실패:",
+      error
+    );
+
+    alert(
+      `직원 배정을 저장하지 못했습니다.\n${error.message}`
+    );
+
+    await loadData();
+  } finally {
+    assignSaveBtn.disabled = false;
+    assignSaveBtn.textContent =
+      "배정 저장";
+  }
+}
+
+addZoneBtn.addEventListener(
+  "click",
+  () => openZoneModal()
+);
+
+zoneModalCloseBtn.addEventListener(
+  "click",
+  closeZoneModal
+);
+
+zoneModalCancelBtn.addEventListener(
+  "click",
+  closeZoneModal
+);
+
+zoneSaveBtn.addEventListener(
+  "click",
+  saveWorkplace
+);
+
+assignModalCloseBtn.addEventListener(
+  "click",
+  closeAssignmentModal
+);
+
+assignModalCancelBtn.addEventListener(
+  "click",
+  closeAssignmentModal
+);
+
+assignSaveBtn.addEventListener(
+  "click",
+  saveAssignments
+);
+
+selectAllEmployeesBtn.addEventListener(
+  "click",
+  () => {
+    assignEmployeeList
+      .querySelectorAll(
+        'input[name="assignedEmployee"]'
+      )
+      .forEach((input) => {
+        input.checked = true;
+      });
+
+    updateAssignmentCount();
+  }
+);
+
+clearAllEmployeesBtn.addEventListener(
+  "click",
+  () => {
+    assignEmployeeList
+      .querySelectorAll(
+        'input[name="assignedEmployee"]'
+      )
+      .forEach((input) => {
+        input.checked = false;
+      });
+
+    updateAssignmentCount();
+  }
+);
+
+zoneSearchInput.addEventListener(
+  "input",
+  renderWorkplaceTable
+);
+
+zoneAddressInput.addEventListener(
+  "input",
+  renderWorkplaceTable
+);
+
+zoneRadiusFilter.addEventListener(
+  "change",
+  renderWorkplaceTable
+);
+
+zoneModal.addEventListener(
+  "click",
+  (event) => {
+    if (event.target === zoneModal) {
+      closeZoneModal();
+    }
+  }
+);
+
+assignModal.addEventListener(
+  "click",
+  (event) => {
+    if (
+      event.target === assignModal
+    ) {
+      closeAssignmentModal();
+    }
+  }
+);
+
+async function initPage() {
+  const admin =
+    await requireAdmin();
+
+  if (!admin) {
+    return;
+  }
+
+  await loadData();
+}
+
+initPage();

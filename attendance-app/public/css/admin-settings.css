@@ -1,0 +1,362 @@
+.photo-storage-card {
+  margin-top: 24px;
+  padding: 22px;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  background: #fbfcfe;
+}
+
+.photo-storage-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.photo-storage-heading h4 {
+  color: #111827;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.photo-storage-heading p {
+  margin-top: 5px;
+  color: #7b8491;
+  font-size: 12px;
+}
+
+.photo-storage-badge {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.photo-storage-badge.normal {
+  background: #e8f7ef;
+  color: #168a4a;
+}
+
+.photo-storage-badge.warning {
+  background: #fff4df;
+  color: #b45309;
+}
+
+.photo-storage-badge.danger {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.photo-storage-amount {
+  margin-top: 25px;
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+
+.photo-storage-amount > strong {
+  color: #111827;
+  font-size: 31px;
+  font-weight: 950;
+  letter-spacing: -1px;
+}
+
+.photo-storage-amount span {
+  color: #9ca3af;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.photo-storage-progress {
+  height: 10px;
+  margin-top: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e5e7eb;
+}
+
+.photo-storage-progress span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: #2563eb;
+  transition: width 0.25s ease;
+}
+
+.photo-storage-progress span.warning {
+  background: #f59e0b;
+}
+
+.photo-storage-progress span.danger {
+  background: #dc2626;
+}
+
+.photo-storage-details {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.photo-storage-details > div {
+  min-height: 76px;
+  padding: 13px;
+  border: 1px solid #e7eaf0;
+  border-radius: 13px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+}
+
+.photo-storage-details span {
+  color: #8b95a5;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.photo-storage-details strong {
+  color: #1f2937;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.photo-storage-oldest {
+  margin-top: 12px;
+  color: #7b8491;
+  font-size: 11px;
+}
+
+.photo-storage-actions {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.photo-storage-button {
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.photo-storage-button.secondary {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.photo-storage-button.warning {
+  background: #fff4df;
+  color: #b45309;
+}
+
+.photo-storage-button.danger {
+  margin-left: auto;
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.photo-storage-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.photo-storage-guide {
+  margin-top: 18px;
+  padding: 13px 14px;
+  border-radius: 12px;
+  background: #eef4ff;
+}
+
+.photo-storage-guide strong {
+  color: #1d4ed8;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.photo-storage-guide p {
+  margin-top: 5px;
+  color: #64748b;
+  font-size: 10px;
+  line-height: 17px;
+}
+
+.photo-delete-modal[hidden] {
+  display: none;
+}
+
+.photo-delete-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.photo-delete-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.58);
+  backdrop-filter: blur(3px);
+}
+
+.photo-delete-dialog {
+  position: relative;
+  width: min(480px, 100%);
+  overflow: hidden;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow:
+    0 25px 70px
+    rgba(15, 23, 42, 0.25);
+}
+
+.photo-delete-dialog-header {
+  padding: 20px;
+  border-bottom: 1px solid #eceef2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.photo-delete-dialog-header span {
+  color: #dc2626;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.photo-delete-dialog-header h3 {
+  margin-top: 4px;
+  font-size: 19px;
+  font-weight: 900;
+}
+
+.photo-delete-dialog-header > button {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: #f3f4f6;
+  font-size: 20px;
+}
+
+.photo-delete-dialog-content {
+  padding: 20px;
+}
+
+.photo-delete-dialog-content > p {
+  color: #374151;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.photo-delete-dialog-content ul {
+  margin: 14px 0;
+  padding: 13px 14px 13px 30px;
+  border-radius: 12px;
+  background: #fff7f7;
+  color: #7f1d1d;
+  font-size: 11px;
+  line-height: 19px;
+}
+
+.photo-delete-dialog-content label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #4b5563;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.photo-delete-dialog-content label strong {
+  color: #dc2626;
+  font-size: 13px;
+}
+
+.photo-delete-dialog-content input {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 11px;
+}
+
+.photo-delete-dialog-content input:focus {
+  border-color: #dc2626;
+  outline: none;
+  box-shadow:
+    0 0 0 3px
+    rgba(220, 38, 38, 0.1);
+}
+
+.photo-delete-dialog-actions {
+  padding: 16px 20px 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+}
+
+.photo-delete-dialog-actions button {
+  min-height: 41px;
+  padding: 0 15px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.photo-delete-dialog-actions .cancel {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.photo-delete-dialog-actions .delete {
+  background: #dc2626;
+  color: #fff;
+}
+
+.photo-delete-dialog-actions .delete:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+  .photo-storage-details {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .photo-storage-button {
+    flex: 1 1 calc(50% - 9px);
+  }
+
+  .photo-storage-button.danger {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .photo-storage-card {
+    padding: 17px;
+  }
+
+  .photo-storage-details {
+    grid-template-columns: 1fr;
+  }
+
+  .photo-storage-button {
+    flex-basis: 100%;
+  }
+
+  .photo-storage-amount > strong {
+    font-size: 26px;
+  }
+}

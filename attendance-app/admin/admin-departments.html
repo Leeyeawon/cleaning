@@ -2,13 +2,30 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>근무지역 관리 | 근태관리 Admin</title>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
 
-  <link rel="stylesheet" href="../public/css/common.css" />
-  <link rel="stylesheet" href="../public/css/pc.css" />
-  <link rel="stylesheet" href="../public/css/admin.css" />
+  <title>
+    근무지역 관리 | 근태관리 Admin
+  </title>
+
+  <link
+    rel="stylesheet"
+    href="../public/css/common.css"
+  />
+
+  <link
+    rel="stylesheet"
+    href="../public/css/pc.css"
+  />
+
+  <link
+    rel="stylesheet"
+    href="../public/css/admin.css"
+  />
 </head>
 
 <body data-admin-page="departments">
@@ -19,75 +36,124 @@
       <header class="top-header">
         <div>
           <h2>근무지역 관리</h2>
-          <p>출근 가능 지역, 허용 반경, 배정 직원을 관리합니다.</p>
+
+          <p>
+            출근 가능 위치와 배정 직원을
+            관리합니다.
+          </p>
         </div>
 
         <div class="header-actions">
-          <button class="download-button" type="button" id="addZoneBtn">
+          <button
+            class="download-button"
+            type="button"
+            id="addZoneBtn"
+          >
             + 근무지역 등록
           </button>
         </div>
       </header>
 
       <section class="content">
-        <section class="stats-grid zone-summary-grid">
+        <section
+          class="stats-grid zone-summary-grid"
+        >
           <article class="stat-card">
             <p>전체 지역</p>
-            <strong>12</strong>
+
+            <strong id="totalWorkplaceCount">
+              0
+            </strong>
+
             <span>개</span>
           </article>
 
           <article class="stat-card">
-            <p>활성 지역</p>
-            <strong>10</strong>
-            <span>개</span>
+            <p>활성 직원</p>
+
+            <strong id="activeEmployeeCount">
+              0
+            </strong>
+
+            <span>명</span>
           </article>
 
           <article class="stat-card dark">
-            <p>비활성 지역</p>
-            <strong>2</strong>
-            <span>개</span>
+            <p>배정 직원</p>
+
+            <strong id="assignedEmployeeCount">
+              0
+            </strong>
+
+            <span>명</span>
           </article>
 
           <article class="stat-card warning">
             <p>미배정 직원</p>
-            <strong>5</strong>
+
+            <strong id="unassignedEmployeeCount">
+              0
+            </strong>
+
             <span>명</span>
           </article>
 
           <article class="stat-card">
-            <p>총 배정 직원</p>
-            <strong>48</strong>
-            <span>명</span>
+            <p>전체 배정</p>
+
+            <strong id="totalAssignmentCount">
+              0
+            </strong>
+
+            <span>건</span>
           </article>
         </section>
 
         <section class="zone-filter-panel">
           <div class="zone-filter-group">
-            <input type="text" id="zoneSearchInput" placeholder="지역명 검색" />
-
-            <select id="zoneStatusFilter">
-              <option value="all">전체 상태</option>
-              <option value="활성">활성</option>
-              <option value="비활성">비활성</option>
-              <option value="운영 종료">운영 종료</option>
-            </select>
+            <input
+              type="search"
+              id="zoneSearchInput"
+              placeholder="지역명 검색"
+            />
 
             <select id="zoneRadiusFilter">
-              <option value="all">전체 반경</option>
-              <option value="100">100m 이하</option>
-              <option value="150">150m 이하</option>
-              <option value="200">200m 이하</option>
+              <option value="all">
+                전체 반경
+              </option>
+
+              <option value="100">
+                100m 이하
+              </option>
+
+              <option value="150">
+                150m 이하
+              </option>
+
+              <option value="200">
+                200m 이하
+              </option>
+
+              <option value="300">
+                300m 이하
+              </option>
             </select>
 
-            <input type="text" id="zoneAddressInput" placeholder="주소 검색" />
+            <input
+              type="search"
+              id="zoneAddressInput"
+              placeholder="주소 검색"
+            />
           </div>
         </section>
 
         <section class="panel">
           <div class="panel-header">
-            <h3>근무 지역 목록</h3>
-            <button type="button" id="btnOpenAddModal" style="background:#2563eb; color:#fff; padding:6px 14px; border-radius:6px;">+ 근무지 추가</button>
+            <h3>근무지역 목록</h3>
+
+            <span id="filteredWorkplaceCount">
+              0개 지역
+            </span>
           </div>
 
           <div class="attendance-table-wrap">
@@ -96,142 +162,144 @@
                 <tr>
                   <th>근무지명</th>
                   <th>주소</th>
-                  <th>반경(m)</th>
+                  <th>허용 반경</th>
                   <th>배정 직원</th>
                   <th>관리</th>
                 </tr>
               </thead>
-              <tbody id="workplaceTableBody"></tbody>
+
+              <tbody id="workplaceTableBody">
+                <tr>
+                  <td colspan="5">
+                    근무지역 정보를 불러오는
+                    중입니다.
+                  </td>
+                </tr>
+              </tbody>
             </table>
           </div>
         </section>
-
-        <div id="wpModal" class="modal" style="display:none;">
-          <div class="modal-content">
-            <h3>근무지 정보 등록</h3>
-            <input type="text" id="wpName" placeholder="근무지명 (예: 서면지점)">
-            <input type="text" id="wpAddress" placeholder="주소">
-            <input type="number" id="wpLat" placeholder="위도 (예: 35.15)">
-            <input type="number" id="wpLng" placeholder="경도 (예: 129.05)">
-            <input type="number" id="wpRadius" placeholder="허용 반경 (미터)">
-            <button id="btnSaveWorkplace">저장하기</button>
-          </div>
-        </div>
       </section>
     </main>
   </div>
 
-  <div class="zone-modal" id="zoneModal">
+  <!-- 근무지역 등록·수정 -->
+  <div
+    class="zone-modal"
+    id="zoneModal"
+  >
     <div class="zone-modal-content">
       <div class="zone-modal-header">
-        <h3 id="zoneModalTitle">근무지역 등록</h3>
-        <button type="button" id="zoneModalCloseBtn">×</button>
+        <h3 id="zoneModalTitle">
+          근무지역 등록
+        </h3>
+
+        <button type="button" id="zoneModalCloseBtn" aria-label="닫기" >
+          ×
+        </button>
       </div>
 
       <div class="zone-modal-body">
         <div class="zone-form-grid">
-          <label>
-            지역명
-            <input type="text" id="zoneNameInput" placeholder="예: 서면 B구역" />
-          </label>
-
-          <label>
-            상태
-            <select id="zoneStatusInput">
-              <option value="활성">활성</option>
-              <option value="비활성">비활성</option>
-              <option value="운영 종료">운영 종료</option>
-            </select>
+          <label class="full">
+            근무지명
+            <input type="text" id="zoneNameInput" placeholder="예: 서면지점" />
           </label>
 
           <label class="full">
             주소
-            <input type="text" id="zoneAddressFormInput" placeholder="주소 입력" />
-          </label>
-
-          <label class="full">
-            상세 위치 설명
-            <input type="text" id="zoneDetailInput" placeholder="예: 건물 1층 정문 기준" />
+            <input type="text" id="zoneAddressFormInput" placeholder="근무지 주소" />
           </label>
 
           <label>
             위도
-            <input type="text" id="zoneLatInput" placeholder="35.1577" />
+            <input type="number" id="zoneLatInput" step="any" placeholder="35.1577" />
           </label>
 
           <label>
             경도
-            <input type="text" id="zoneLngInput" placeholder="129.0592" />
+            <input type="number" id="zoneLngInput" step="any" placeholder="129.0592" />
           </label>
 
           <label>
             출근 허용 반경
-            <input type="number" id="zoneRadiusInput" placeholder="100" />
+            <input type="number" id="zoneRadiusInput" min="1" placeholder="100" />
           </label>
 
           <label>
             단위
             <input type="text" value="m" disabled />
           </label>
-
-          <label>
-            기본 출근 시간
-            <input type="time" id="zoneStartTimeInput" value="09:00" />
-          </label>
-
-          <label>
-            기본 퇴근 시간
-            <input type="time" id="zoneEndTimeInput" value="18:00" />
-          </label>
         </div>
-
-        <label class="zone-memo-label">
-          관리자 메모
-          <textarea id="zoneMemoInput" placeholder="예: 지하상가 근처라 GPS 오차 주의"></textarea>
-        </label>
       </div>
 
       <div class="zone-modal-footer">
-        <button type="button" class="cancel-btn" id="zoneModalCancelBtn">취소</button>
-        <button type="button" class="save-btn" id="zoneSaveBtn">저장</button>
+        <button type="button" class="cancel-btn" id="zoneModalCancelBtn" >
+          취소
+        </button>
+
+        <button type="button" class="save-btn" id="zoneSaveBtn" >
+          저장
+        </button>
       </div>
     </div>
   </div>
 
-  <div class="zone-modal" id="assignModal">
+  <!-- 직원 배정 -->
+  <div class="zone-modal" id="assignModal" >
     <div class="zone-modal-content small">
       <div class="zone-modal-header">
-        <h3 id="assignModalTitle">직원 배정</h3>
-        <button type="button" id="assignModalCloseBtn">×</button>
+        <h3 id="assignModalTitle">
+          직원 배정
+        </h3>
+
+        <button type="button" id="assignModalCloseBtn" aria-label="닫기" >
+          ×
+        </button>
       </div>
 
       <div class="zone-modal-body">
-        <div class="assigned-employee-box">
-          <h4>현재 배정 직원</h4>
-          <div id="assignedEmployeeList"></div>
+        <p
+          id="assignmentCountText"
+          style="
+            margin-bottom:12px;
+            color:#737373;
+            font-size:13px;
+          "
+        >
+          배정된 직원을 선택합니다.
+        </p>
+
+        <div style=" display:flex; gap:8px; margin-bottom:12px; " >
+          <button type="button" class="table-action-btn" id="selectAllEmployeesBtn" >
+            전체 선택
+          </button>
+
+          <button type="button" class="table-action-btn" id="clearAllEmployeesBtn" >
+            전체 해제
+          </button>
         </div>
 
-        <label class="zone-memo-label">
-          직원 추가 배정
-          <select id="assignEmployeeSelect">
-            <option value="박서연">박서연</option>
-            <option value="김다은">김다은</option>
-            <option value="최준혁">최준혁</option>
-            <option value="정하윤">정하윤</option>
-            <option value="한지우">한지우</option>
-          </select>
-        </label>
+        <div class="assigned-employee-box">
+          <h4>직원 목록</h4>
+          <div id="assignEmployeeList" class="zone-employee-list" ></div>
+        </div>
       </div>
 
       <div class="zone-modal-footer">
-        <button type="button" class="cancel-btn" id="assignModalCancelBtn">취소</button>
-        <button type="button" class="save-btn" id="assignSaveBtn">배정 저장</button>
+        <button type="button" class="cancel-btn" id="assignModalCancelBtn" >
+          취소
+        </button>
+
+        <button type="button" class="save-btn" id="assignSaveBtn" >
+          배정 저장
+        </button>
       </div>
     </div>
   </div>
 
   <script src="../public/js/common.js"></script>
-  <script type="module" src="../public/js/pc.js"></script>
-  <script type="module" src="../public/js/admin-departments.js"></script>
+  <script type="module" src="../public/js/pc.js" ></script>
+  <script type="module" src="../public/js/admin-departments.js" ></script>
 </body>
 </html>

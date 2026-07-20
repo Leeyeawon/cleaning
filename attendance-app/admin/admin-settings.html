@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="../public/css/common.css" />
   <link rel="stylesheet" href="../public/css/pc.css" />
   <link rel="stylesheet" href="../public/css/admin.css" />
+  <link rel="stylesheet" href="../public/css/admin-settings.css" />
 </head>
 
 <body data-admin-page="settings">
@@ -327,10 +328,106 @@
                 </label>
               </div>
 
-              <div class="settings-help-box">
-                <strong>주의</strong>
-                <p>실제 삭제 기능은 Supabase 연결 후 권한과 백업 정책을 정한 뒤 적용하는 것을 추천합니다.</p>
+            <section class="photo-storage-card">
+              <div class="photo-storage-heading">
+                <div>
+                  <h4>업로드 사진 저장공간</h4>
+
+                  <p>
+                    요청 및 청소 점검표에 첨부된 사진을 관리합니다.
+                  </p>
+                </div>
+
+                <span
+                  id="photoStorageStatusBadge"
+                  class="photo-storage-badge"
+                >
+                  확인 중
+                </span>
               </div>
+
+              <div class="photo-storage-amount">
+                <strong id="photoStorageUsed">
+                  0MB
+                </strong>
+
+                <span>
+                  /
+                  <b id="photoStorageLimit">
+                    800MB
+                  </b>
+                </span>
+              </div>
+
+              <div class="photo-storage-progress">
+                <span id="photoStorageProgressBar"></span>
+              </div>
+
+              <div class="photo-storage-details">
+                <div>
+                  <span>사용률</span>
+                  <strong id="photoStoragePercent">0%</strong>
+                </div>
+
+                <div>
+                  <span>저장된 사진</span>
+                  <strong id="photoStorageFileCount">0장</strong>
+                </div>
+
+                <div>
+                  <span>1년 경과 사진</span>
+                  <strong id="photoStorageExpiredCount">0장</strong>
+                </div>
+
+                <div>
+                  <span>남은 공간</span>
+                  <strong id="photoStorageRemaining">800MB</strong>
+                </div>
+              </div>
+
+              <p
+                id="photoStorageOldest"
+                class="photo-storage-oldest"
+              >
+                저장된 사진이 없습니다.
+              </p>
+
+              <div class="photo-storage-actions">
+                <button
+                  id="refreshPhotoStorageBtn"
+                  class="photo-storage-button secondary"
+                  type="button"
+                >
+                  사용량 새로고침
+                </button>
+
+                <button
+                  id="cleanupExpiredPhotosBtn"
+                  class="photo-storage-button warning"
+                  type="button"
+                >
+                  1년 지난 사진 정리
+                </button>
+
+                <button
+                  id="openDeleteAllPhotosBtn"
+                  class="photo-storage-button danger"
+                  type="button"
+                >
+                  업로드 사진 모두 삭제
+                </button>
+              </div>
+
+              <div class="photo-storage-guide">
+                <strong>사진 보관 정책</strong>
+
+                <p>
+                  사진은 업로드 후 365일 동안 보관됩니다.
+                  매일 새벽 3시에 오래된 사진이 자동으로 정리됩니다.
+                  사진 사용량이 800MB에 도달하면 새로운 사진 업로드가 중단됩니다.
+                </p>
+              </div>
+            </section>
             </section>
           </div>
         </section>
@@ -338,8 +435,91 @@
     </main>
   </div>
 
+
+  <div
+    id="deleteAllPhotosModal"
+    class="photo-delete-modal"
+    hidden
+  >
+    <div
+      class="photo-delete-modal-backdrop"
+      data-close-photo-modal
+    ></div>
+
+    <section
+      class="photo-delete-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="deleteAllPhotosTitle"
+    >
+      <div class="photo-delete-dialog-header">
+        <div>
+          <span>주의</span>
+
+          <h3 id="deleteAllPhotosTitle">
+            업로드 사진 전체 삭제
+          </h3>
+        </div>
+
+        <button
+          type="button"
+          data-close-photo-modal
+          aria-label="닫기"
+        >
+          ×
+        </button>
+      </div>
+
+      <div class="photo-delete-dialog-content">
+        <p>
+          요청과 청소 점검표에 첨부된 모든 사진이
+          영구적으로 삭제됩니다.
+        </p>
+
+        <ul>
+          <li>요청 내용과 점검표 제출 기록은 유지됩니다.</li>
+          <li>삭제된 사진은 복구할 수 없습니다.</li>
+          <li>Storage 원본과 파일 정보가 함께 삭제됩니다.</li>
+        </ul>
+
+        <label for="deleteAllPhotosConfirmInput">
+          계속하려면 아래 문구를 정확히 입력하세요.
+
+          <strong>사진 전체 삭제</strong>
+
+          <input
+            id="deleteAllPhotosConfirmInput"
+            type="text"
+            autocomplete="off"
+            placeholder="사진 전체 삭제"
+          >
+        </label>
+      </div>
+
+      <div class="photo-delete-dialog-actions">
+        <button
+          type="button"
+          class="cancel"
+          data-close-photo-modal
+        >
+          취소
+        </button>
+
+        <button
+          id="confirmDeleteAllPhotosBtn"
+          type="button"
+          class="delete"
+          disabled
+        >
+          사진 전체 삭제
+        </button>
+      </div>
+    </section>
+  </div>
+
   <script src="../public/js/common.js"></script>
   <script type="module" src="../public/js/pc.js"></script>
   <script type="module" src="../public/js/admin-settings.js"></script>
+  <script type="module" src="../public/js/admin-photo-storage.js"></script>
 </body>
 </html>

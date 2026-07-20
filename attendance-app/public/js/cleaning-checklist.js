@@ -5,6 +5,14 @@ import {
   getEmployeeSessionToken,
 } from "./employeeAuth.js";
 
+import {
+  preparePhotos,
+  releasePhoto,
+  uploadPhotos,
+} from "./photo-upload.js";
+
+const MAX_PHOTO_COUNT = 20;
+
 const workplaceSelect =
   document.getElementById(
     "checklistWorkplace"
@@ -20,49 +28,263 @@ const customInput =
     "customChecklistInput"
   );
 
-const addItemBtn =
-  document.getElementById(
-    "addChecklistItemBtn"
-  );
-
 const noteInput =
   document.getElementById(
     "checklistNote"
   );
 
-const submitBtn =
+const photoInput =
+  document.getElementById(
+    "checklistPhotoInput"
+  );
+
+const photoList =
+  document.getElementById(
+    "checklistPhotoList"
+  );
+
+const photoCount =
+  document.getElementById(
+    "checklistPhotoCount"
+  );
+
+const uploadProgress =
+  document.getElementById(
+    "checklistUploadProgress"
+  );
+
+const uploadProgressText =
+  document.getElementById(
+    "checklistUploadProgressText"
+  );
+
+const uploadProgressBar =
+  document.getElementById(
+    "checklistUploadProgressBar"
+  );
+
+const submitButton =
   document.getElementById(
     "submitChecklistBtn"
   );
 
+let selectedPhotos = [];
+
+let createdSubmissionId = null;
+
+
 function escapeHtml(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+  return String(
+    value ?? ""
+  )
+    .replaceAll(
+      "&",
+      "&amp;"
+    )
+    .replaceAll(
+      "<",
+      "&lt;"
+    )
+    .replaceAll(
+      ">",
+      "&gt;"
+    )
+    .replaceAll(
+      '"',
+      "&quot;"
+    )
+    .replaceAll(
+      "'",
+      "&#039;"
+    );
 }
 
-async function loadChecklistItems() {
-  const workplaceId =
-    workplaceSelect.value;
 
-  if (!workplaceId) {
-    checklistList.innerHTML = `
-      <p class="request-empty">
-        배정된 현장이 없습니다.
-      </p>
-    `;
+function formatFileSize(bytes) {
+  return `${(
+    bytes /
+    1024 /
+    1024
+  ).toFixed(2)}MB`;
+}
+
+
+function renderPhotos() {
+  photoCount.textContent =
+    `${selectedPhotos.length}/${MAX_PHOTO_COUNT}`;
+
+  if (
+    selectedPhotos.length === 0
+  ) {
+    photoList.innerHTML = "";
 
     return;
   }
 
-  checklistList.innerHTML = `
-    <p class="request-empty">
-      점검 항목을 불러오는 중입니다.
-    </p>
-  `;
+  photoList.innerHTML =
+    selectedPhotos
+      .map(
+        (photo) => `
+          <article class="checklist-photo-item">
+            <img
+              src="${photo.previewUrl}"
+              alt="현장 사진 미리보기"
+            >
+
+            ${
+              photo.uploaded
+                ? `
+                  <span class="checklist-photo-complete">
+                    업로드 완료
+                  </span>
+                `
+                : `
+                  <button
+                    type="button"
+                    data-remove-photo="${photo.id}"
+                    aria-label="사진 삭제"
+                  >
+                    ×
+                  </button>
+                `
+            }
+
+            <small>
+              ${formatFileSize(
+                photo.file.size
+              )}
+            </small>
+          </article>
+        `
+      )
+      .join("");
+
+  photoList
+    .querySelectorAll(
+      "[data-remove-photo]"
+    )
+    .forEach(
+      (button) => {
+        button.addEventListener(
+          "click",
+          () => {
+            removePhoto(
+              button.dataset
+                .removePhoto
+            );
+          }
+        );
+      }
+    );
+}
+
+
+function removePhoto(photoId) {
+  const targetPhoto =
+    selectedPhotos.find(
+      (photo) =>
+        photo.id === photoId
+    );
+
+  if (
+    !targetPhoto ||
+    targetPhoto.uploaded
+  ) {
+    return;
+  }
+
+  releasePhoto(
+    targetPhoto
+  );
+
+  selectedPhotos =
+    selectedPhotos.filter(
+      (photo) =>
+        photo.id !== photoId
+    );
+
+  renderPhotos();
+}
+
+
+async function handlePhotoSelection() {
+  const files =
+    Array.from(
+      photoInput.files || []
+    );
+
+  if (!files.length) {
+    return;
+  }
+
+  const remainingCount =
+    MAX_PHOTO_COUNT -
+    selectedPhotos.length;
+
+  if (remainingCount <= 0) {
+    alert(
+      "사진은 최대 20장까지 첨부할 수 있습니다."
+    );
+
+    photoInput.value = "";
+    return;
+  }
+
+  if (
+    files.length >
+    remainingCount
+  ) {
+    alert(
+      `사진을 ${remainingCount}장 더 추가할 수 있습니다.`
+    );
+
+    photoInput.value = "";
+    return;
+  }
+
+  photoInput.disabled = true;
+
+  try {
+    const preparedPhotos =
+      await preparePhotos(
+        files,
+        remainingCount
+      );
+
+    selectedPhotos.push(
+      ...preparedPhotos
+    );
+
+    renderPhotos();
+  } catch (error) {
+    console.error(
+      "사진 준비 실패:",
+      error
+    );
+
+    alert(
+      error.message ||
+      "사진을 처리하지 못했습니다."
+    );
+  } finally {
+    photoInput.disabled =
+      false;
+
+    photoInput.value = "";
+  }
+}
+
+
+async function loadItems() {
+  const workplaceId =
+    workplaceSelect.value;
+
+  if (!workplaceId) {
+    checklistList.innerHTML =
+      "<p>배정된 현장이 없습니다.</p>";
+
+    return;
+  }
 
   const {
     data,
@@ -80,31 +302,21 @@ async function loadChecklistItems() {
 
   if (error) {
     console.error(
-      "청소 점검표 조회 오류:",
+      "점검 항목 조회 실패:",
       error
     );
 
-    checklistList.innerHTML = `
-      <p class="request-empty error">
-        점검 항목을 불러오지 못했습니다.
-      </p>
-    `;
+    checklistList.innerHTML =
+      "<p>점검 항목을 불러오지 못했습니다.</p>";
 
     return;
   }
 
-  const items =
-    Array.isArray(data)
-      ? data
-      : [];
+  const items = data || [];
 
-  if (items.length === 0) {
-    checklistList.innerHTML = `
-      <p class="request-empty">
-        등록된 점검 항목이 없습니다.<br />
-        위에서 개인 점검 항목을 추가할 수 있습니다.
-      </p>
-    `;
+  if (!items.length) {
+    checklistList.innerHTML =
+      "<p>등록된 항목이 없습니다. 위에서 항목을 추가해 주세요.</p>";
 
     return;
   }
@@ -116,233 +328,139 @@ async function loadChecklistItems() {
           <label class="checklist-row">
             <input
               type="checkbox"
-              value="${escapeHtml(item.id)}"
-            />
+              value="${escapeHtml(
+                item.id
+              )}"
+            >
 
             <span>
-              ${escapeHtml(item.label)}
+              ${escapeHtml(
+                item.label
+              )}
             </span>
-
-            ${
-              item.source === "custom"
-                ? `<small>개인</small>`
-                : ""
-            }
           </label>
         `
       )
       .join("");
 }
 
-async function loadWorkplaces() {
+
+async function addChecklistItem() {
+  const label =
+    customInput.value.trim();
+
+  if (!label) {
+    customInput.focus();
+    return;
+  }
+
   const {
-    data,
     error,
   } = await supabase.rpc(
-    "get_my_workplaces",
+    "add_my_checklist_item",
     {
       p_session_token:
         getEmployeeSessionToken(),
+
+      p_workplace_id:
+        workplaceSelect.value,
+
+      p_label: label,
     }
   );
 
   if (error) {
     console.error(
-      "근무지역 조회 오류:",
+      "항목 추가 실패:",
       error
     );
 
     alert(
-      "배정 현장을 불러오지 못했습니다."
+      "항목을 추가하지 못했습니다."
     );
 
     return;
   }
 
-  const workplaces =
-    Array.isArray(data)
-      ? data
-      : [];
+  customInput.value = "";
 
-  if (workplaces.length === 0) {
-    workplaceSelect.innerHTML = `
-      <option value="">
-        배정 현장 없음
-      </option>
-    `;
-
-    await loadChecklistItems();
-
-    return;
-  }
-
-  workplaceSelect.innerHTML =
-    workplaces
-      .map(
-        (workplace) => `
-          <option value="${escapeHtml(
-            workplace.workplace_id
-          )}">
-            ${escapeHtml(
-              workplace.workplace_name
-            )}
-          </option>
-        `
-      )
-      .join("");
-
-  await loadChecklistItems();
+  await loadItems();
 }
 
-async function init() {
-  const employee =
-    await getCurrentEmployee();
 
-  if (!employee) return;
+function updateProgress(
+  current,
+  total
+) {
+  uploadProgress.hidden =
+    false;
 
+  uploadProgressText.textContent =
+    `${current}/${total}`;
+
+  const percentage =
+    total > 0
+      ? Math.round(
+          (current / total) *
+            100
+        )
+      : 0;
+
+  uploadProgressBar.style.width =
+    `${percentage}%`;
+}
+
+
+async function submitChecklist() {
   if (
-    employee.app_role !==
-    "team_lead"
+    !workplaceSelect.value
   ) {
     alert(
-      "청소 점검표는 팀장만 사용할 수 있습니다."
-    );
-
-    location.replace(
-      "request.html"
+      "점검 현장을 선택해 주세요."
     );
 
     return;
   }
 
-  workplaceSelect.addEventListener(
-    "change",
-    loadChecklistItems
+  const checkedItems = [
+    ...checklistList
+      .querySelectorAll(
+        'input[type="checkbox"]:checked'
+      ),
+  ].map(
+    (input) =>
+      input.value
   );
 
-  addItemBtn.addEventListener(
-    "click",
-    async () => {
-      const label =
-        customInput.value.trim();
+  if (
+    checkedItems.length === 0 &&
+    !confirm(
+      "선택된 점검 항목이 없습니다. 그대로 제출할까요?"
+    )
+  ) {
+    return;
+  }
 
-      if (!label) {
-        alert(
-          "추가할 항목을 입력해 주세요."
-        );
+  submitButton.disabled = true;
 
-        return;
-      }
+  submitButton.textContent =
+    createdSubmissionId
+      ? "남은 사진 업로드 중..."
+      : "점검표 저장 중...";
 
-      if (!workplaceSelect.value) {
-        alert(
-          "점검 현장을 먼저 선택해 주세요."
-        );
-
-        return;
-      }
-
-      addItemBtn.disabled =
-        true;
-
+  try {
+    /*
+     * 처음 누른 경우에만
+     * 점검표 제출 내역 생성
+     */
+    if (
+      !createdSubmissionId
+    ) {
       const {
-        error,
-      } = await supabase.rpc(
-        "add_my_checklist_item",
-        {
-          p_session_token:
-            getEmployeeSessionToken(),
-
-          p_workplace_id:
-            workplaceSelect.value,
-
-          p_label:
-            label,
-        }
-      );
-
-      addItemBtn.disabled =
-        false;
-
-      if (error) {
-        console.error(
-          "개인 점검 항목 추가 오류:",
-          error
-        );
-
-        alert(
-          "점검 항목을 추가하지 못했습니다."
-        );
-
-        return;
-      }
-
-      customInput.value = "";
-
-      await loadChecklistItems();
-    }
-  );
-
-  submitBtn.addEventListener(
-    "click",
-    async () => {
-      if (!workplaceSelect.value) {
-        alert(
-          "점검 현장을 선택해 주세요."
-        );
-
-        return;
-      }
-
-      const checklistResults = [
-        ...checklistList
-          .querySelectorAll(
-            'input[type="checkbox"]'
-          ),
-      ].map((input) => {
-        const row =
-          input.closest(
-            ".checklist-row"
-          );
-
-        const label =
-          row
-            ?.querySelector("span")
-            ?.textContent
-            .trim() ||
-          "항목명 없음";
-
-        return {
-          id: input.value,
-          label,
-          checked:
-            input.checked,
-        };
-      });
-
-      const completedCount =
-        checklistResults.filter(
-          (item) => item.checked
-        ).length;
-
-      if (completedCount === 0) {
-        const confirmed = confirm(
-          "완료한 점검 항목이 없습니다.\n그래도 제출하시겠습니까?"
-        );
-
-        if (!confirmed) {
-          return;
-        }
-      }
-
-      submitBtn.disabled =
-        true;
-
-      submitBtn.textContent =
-        "점검표 제출 중...";
-
-      const {
-        error,
+        data:
+          submissionId,
+        error:
+          submissionError,
       } = await supabase.rpc(
         "submit_cleaning_checklist",
         {
@@ -353,43 +471,225 @@ async function init() {
             workplaceSelect.value,
 
           p_checked_items:
-            checklistResults,
+            checkedItems,
 
           p_note:
             noteInput.value.trim(),
         }
       );
 
-      submitBtn.disabled =
-        false;
-
-      submitBtn.textContent =
-        "점검 완료 제출";
-
-      if (error) {
-        console.error(
-          "청소 점검표 제출 오류:",
-          error
-        );
-
-        alert(
-          "점검표를 제출하지 못했습니다."
-        );
-
-        return;
+      if (submissionError) {
+        throw submissionError;
       }
 
-      alert(
-        "청소 점검표가 제출되었습니다."
+      createdSubmissionId =
+        submissionId;
+    }
+
+    const pendingPhotos =
+      selectedPhotos.filter(
+        (photo) =>
+          !photo.uploaded
       );
 
-      location.replace(
-        "request.html"
+    if (
+      pendingPhotos.length > 0
+    ) {
+      submitButton.textContent =
+        "사진 업로드 중...";
+
+      await uploadPhotos({
+        photos:
+          selectedPhotos,
+
+        parentType:
+          "cleaning_checklist",
+
+        parentId:
+          createdSubmissionId,
+
+        onProgress({
+          current,
+          total,
+        }) {
+          updateProgress(
+            current,
+            total
+          );
+        },
+
+        onUploaded({
+          photo,
+          current,
+          total,
+        }) {
+          photo.uploaded = true;
+
+          updateProgress(
+            current,
+            total
+          );
+
+          renderPhotos();
+        },
+      });
+    }
+
+    selectedPhotos.forEach(
+      releasePhoto
+    );
+
+    alert(
+      selectedPhotos.length
+        ? "청소 점검표와 현장 사진이 제출되었습니다."
+        : "청소 점검표가 제출되었습니다."
+    );
+
+    location.replace(
+      "request.html"
+    );
+  } catch (error) {
+    console.error(
+      "청소 점검표 제출 실패:",
+      error
+    );
+
+    const uploadedCount =
+      selectedPhotos.filter(
+        (photo) =>
+          photo.uploaded
+      ).length;
+
+    if (
+      createdSubmissionId
+    ) {
+      alert(
+        `점검표는 저장되었지만 사진 업로드가 중단되었습니다.\n` +
+        `현재 ${uploadedCount}/${selectedPhotos.length}장 완료\n\n` +
+        `${
+          error.message ||
+          "남은 사진을 다시 업로드해 주세요."
+        }`
       );
+
+      submitButton.textContent =
+        "남은 사진 다시 업로드";
+    } else {
+      alert(
+        error.message ||
+        "점검표를 제출하지 못했습니다."
+      );
+    }
+  } finally {
+    submitButton.disabled =
+      false;
+
+    if (
+      selectedPhotos.every(
+        (photo) =>
+          !photo.uploaded
+      )
+    ) {
+      submitButton.textContent =
+        "점검 완료 제출";
+    }
+  }
+}
+
+
+async function init() {
+  const employee =
+    await getCurrentEmployee();
+
+  if (!employee) {
+    return;
+  }
+
+  if (
+    employee.app_role !==
+    "team_lead"
+  ) {
+    alert(
+      "팀장만 사용할 수 있습니다."
+    );
+
+    location.replace(
+      "request.html"
+    );
+
+    return;
+  }
+
+  const {
+    data: workplaces,
+    error:
+      workplaceError,
+  } = await supabase.rpc(
+    "get_my_workplaces",
+    {
+      p_session_token:
+        getEmployeeSessionToken(),
     }
   );
 
-  await loadWorkplaces();
+  if (workplaceError) {
+    console.error(
+      "배정 현장 조회 실패:",
+      workplaceError
+    );
+
+    alert(
+      "배정 현장을 불러오지 못했습니다."
+    );
+
+    return;
+  }
+
+  workplaceSelect.innerHTML =
+    (workplaces || [])
+      .map(
+        (workplace) => `
+          <option
+            value="${escapeHtml(
+              workplace.workplace_id
+            )}"
+          >
+            ${escapeHtml(
+              workplace.workplace_name
+            )}
+          </option>
+        `
+      )
+      .join("");
+
+  workplaceSelect.addEventListener(
+    "change",
+    loadItems
+  );
+
+  document
+    .getElementById(
+      "addChecklistItemBtn"
+    )
+    .addEventListener(
+      "click",
+      addChecklistItem
+    );
+
+  photoInput.addEventListener(
+    "change",
+    handlePhotoSelection
+  );
+
+  submitButton.addEventListener(
+    "click",
+    submitChecklist
+  );
+
+  renderPhotos();
+
+  await loadItems();
 }
+
 
 init();

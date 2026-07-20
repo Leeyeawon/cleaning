@@ -1,312 +1,954 @@
-/* =========================================================
-   🔥 관리자 대시보드 (Supabase 실시간 DB 연동 완료 버전)
-========================================================= */
 import supabase from "./supabase.js";
+import {
+  requireAdmin,
+} from "./adminAuth.js";
 
-// DOM 요소 연결
-const dashboardDate = document.getElementById("dashboardDate");
-const dashboardTaskList = document.getElementById("dashboardTaskList");
-const dashboardRegionList = document.getElementById("dashboardRegionList");
-const dashboardRequestList = document.getElementById("dashboardRequestList");
-const dashboardActivityList = document.getElementById("dashboardActivityList");
-const dashboardRefreshBtn = document.getElementById("dashboardRefreshBtn");
+const dashboardDate =
+  document.getElementById(
+    "dashboardDate"
+  );
 
-// 상단 통계 숫자 요소
-const statTotalEmployees = document.getElementById("statTotalEmployees");
-const statActiveWorkplaces = document.getElementById("statActiveWorkplaces");
-const statTodayIssues = document.getElementById("statTodayIssues");
-const statPendingRequests = document.getElementById("statPendingRequests");
-const statPendingUsers = document.getElementById("statPendingUsers");
+const dashboardHeroTitle =
+  document.getElementById(
+    "dashboardHeroTitle"
+  );
 
-// 오늘 날짜 문자열 (YYYY-MM-DD)
-function getLocalDateKey(date = new Date()
+const dashboardHeroDescription =
+  document.getElementById(
+    "dashboardHeroDescription"
+  );
+
+const dashboardTaskList =
+  document.getElementById(
+    "dashboardTaskList"
+  );
+
+const dashboardRegionList =
+  document.getElementById(
+    "dashboardRegionList"
+  );
+
+const dashboardRequestList =
+  document.getElementById(
+    "dashboardRequestList"
+  );
+
+const dashboardActivityList =
+  document.getElementById(
+    "dashboardActivityList"
+  );
+
+const dashboardRefreshBtn =
+  document.getElementById(
+    "dashboardRefreshBtn"
+  );
+
+const statTotalEmployees =
+  document.getElementById(
+    "statTotalEmployees"
+  );
+
+const statActiveWorkplaces =
+  document.getElementById(
+    "statActiveWorkplaces"
+  );
+
+const statTodayIssues =
+  document.getElementById(
+    "statTodayIssues"
+  );
+
+const statPendingRequests =
+  document.getElementById(
+    "statPendingRequests"
+  );
+
+const statPendingUsers =
+  document.getElementById(
+    "statPendingUsers"
+  );
+
+let dashboardData = {
+  users: [],
+  workplaces: [],
+  assignments: [],
+  attendance: [],
+  leave: [],
+  requests: [],
+  notices: [],
+};
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function getLocalDateKey(
+  date = new Date()
 ) {
-  return (
-    `${date.getFullYear()}-` +
-    `${String(
+  const year =
+    date.getFullYear();
+
+  const month =
+    String(
       date.getMonth() + 1
-    ).padStart(2, "0")}-` +
-    `${String(
+    ).padStart(2, "0");
+
+  const day =
+    String(
       date.getDate()
-    ).padStart(2, "0")}`
+    ).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function setDashboardDate() {
+  if (!dashboardDate) {
+    return;
+  }
+
+  const formattedDate =
+    new Date().toLocaleDateString(
+      "ko-KR",
+      {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        weekday: "long",
+      }
+    );
+
+  dashboardDate.textContent =
+    `${formattedDate} 관리자 운영 현황입니다.`;
+}
+
+function normalizeStatus(status) {
+  return String(status || "")
+    .trim()
+    .toLowerCase()
+    .replaceAll(" ", "_");
+}
+
+function isLateStatus(status) {
+  const value =
+    normalizeStatus(status);
+
+  return (
+    value === "late" ||
+    value === "지각"
   );
 }
 
-const todayStr = getLocalDateKey();
+function isLocationErrorStatus(
+  status
+) {
+  const value =
+    normalizeStatus(status);
 
-// 1. 상단 안내 문구 날짜 설정
-function setDashboardDate() {
-  if (!dashboardDate) return;
-  const today = new Date();
-  const formattedDate = today.toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    weekday: "long",
-  });
-  dashboardDate.textContent = `${formattedDate} 관리자 운영 현황을 실시간으로 확인합니다.`;
+  return (
+    value === "location_error" ||
+    value === "위치오류" ||
+    value === "위치_오류"
+  );
 }
 
-// 2. 🔥 상단 요약 카드 숫자 실시간 DB 조회 (Promise.all로 병렬 처리하여 속도 최적화)
-async function loadSummaryStats() {
-  try {
-    const [
-      { count: totalEmployees },
-      { count: activeWorkplaces },
-      { count: todayIssues },
-      { count: pendingRequests },
-      { count: pendingUsers }
-    ] = await Promise.all([
-      // ① 전체 활성 직원 수
-      supabase.from("users").select("*", { count: "exact", head: true }).eq("status", "active"),
-      // ② 활성 근무 지역 수
-      supabase.from("workplaces").select("*", { count: "exact", head: true }).eq("is_active", true),
-      // ③ 오늘 처리 필요 (오늘 지각하거나 위치오류로 찍힌 출근 기록)
-      supabase.from("attendance").select("*", { count: "exact", head: true }).eq("work_date", todayStr).in("status", ["late", "location_error", "지각", "위치오류"]),
-      // ④ 미확인 업무/요청사항 (대기중인 요청)
-      supabase.from("employee_requests").select("*", { count: "exact", head: true }).eq("status", "pending"),
-      // ⑤ 신규 가입 승인 대기 직원
-      supabase.from("users").select("*", { count: "exact", head: true }).eq("status", "pending")
-    ]);
+function getRequestTypeLabel(type) {
+  const labels = {
+    annual_leave: "연차 신청",
+    supply_request: "비품 요청",
+    general_request: "요청 사항",
+    phone_change: "연락처 변경",
+    profile_change: "정보 변경",
+  };
 
-    if (statTotalEmployees) statTotalEmployees.textContent = totalEmployees || 0;
-    if (statActiveWorkplaces) statActiveWorkplaces.textContent = activeWorkplaces || 0;
-    if (statTodayIssues) statTodayIssues.textContent = todayIssues || 0;
-    if (statPendingRequests) statPendingRequests.textContent = pendingRequests || 0;
-    if (statPendingUsers) statPendingUsers.textContent = pendingUsers || 0;
-  } catch (error) {
-    console.error("대시보드 통계 조회 실패:", error);
-  }
+  return labels[type] || "기타 요청";
 }
 
-// 3. 🔥 오늘 관리자 체크리스트 동적 생성
-async function loadDashboardTasks() {
-  if (!dashboardTaskList) return;
+function getRequestStatus(request) {
+  const labels = {
+    pending: {
+      text: "승인 대기",
+      background: "#fff4df",
+      color: "#b45309",
+    },
 
-  try {
-    // 3개의 대기 건수 병렬 조회
-    const [
-      { count: lateCount },
-      { count: editRequestCount },
-      { count: newEmployeeCount }
-    ] = await Promise.all([
-      supabase.from("attendance").select("*", { count: "exact", head: true }).eq("work_date", todayStr).in("status", ["late", "지각"]),
-      supabase.from("employee_requests").select("*", { count: "exact", head: true }).eq("status", "pending"),
-      supabase.from("users").select("*", { count: "exact", head: true }).eq("status", "pending")
-    ]);
+    approved: {
+      text: "승인 완료",
+      background: "#e8f7ef",
+      color: "#168a4a",
+    },
 
-    const tasks = [
-      {
-        title: "신규 가입 승인 대기",
-        desc: "직원 앱에서 가입 후 관리자 승인을 기다리는 직원이 있습니다.",
-        count: newEmployeeCount || 0,
-        link: "admin-employees.html",
-      },
-      {
-        title: "오늘 지각 발생 내역",
-        desc: "오늘 출근 시 지각으로 기록된 직원이 있습니다. 사유를 확인해 주세요.",
-        count: lateCount || 0,
-        link: "admin-attendance-issue.html",
-      },
-      {
-        title: "직원 업무 및 수정 요청",
-        desc: "출퇴근 수정 및 업무 관련 요청 중 미처리된 건이 있습니다.",
-        count: editRequestCount || 0,
-        link: "admin-notices.html", // 또는 요청 관리 페이지
-      }
-    ];
+    rejected: {
+      text: "반려",
+      background: "#fee2e2",
+      color: "#dc2626",
+    },
+  };
 
-    dashboardTaskList.innerHTML = tasks
-      .map((task) => `
-        <a href="${task.link}" class="dashboard-task-item">
-          <div>
-            <strong>${task.title}</strong>
-            <p>${task.desc}</p>
-          </div>
-          <span style="${task.count > 0 ? 'background:#fee2e2; color:#dc2626; font-weight:bold; padding:4px 10px; border-radius:12px;' : ''}">
-            ${task.count}건
-          </span>
-        </a>
-      `)
-      .join("");
-  } catch (error) {
-    console.error("체크리스트 조회 실패:", error);
-    dashboardTaskList.innerHTML = `<p style="padding:10px; color:#888;">체크리스트를 불러오지 못했습니다.</p>`;
-  }
-}
-
-// 4. 🔥 지역별 운영 현황 실시간 조회
-async function loadRegionStatus() {
-  if (!dashboardRegionList) return;
-
-  try {
-    // 활성 근무지 목록 가져오기
-    const { data: workplaces, error: wpError } = await supabase
-      .from("workplaces")
-      .select("id, name")
-      .eq("is_active", true);
-
-    if (wpError || !workplaces || workplaces.length === 0) {
-      dashboardRegionList.innerHTML = `<p style="padding:10px; color:#888;">등록된 근무 지역이 없습니다.</p>`;
-      return;
+  return (
+    labels[request.status] || {
+      text: request.status || "-",
+      background: "#f3f4f6",
+      color: "#6b7280",
     }
+  );
+}
 
-    // 각 근무지별로 배정 직원수, 오늘 출근자수, 문제 발생 건수 조회
-    const regionData = await Promise.all(
-      workplaces.map(async (wp) => {
-        const [
-          { count: assignedCount },
-          { count: workingCount },
-          { count: issueCount }
-        ] = await Promise.all([
-          supabase.from("workplace_users").select("*", { count: "exact", head: true }).eq("workplace_id", wp.id),
-          supabase.from("attendance").select("*", { count: "exact", head: true }).eq("workplace_id", wp.id).eq("work_date", todayStr),
-          supabase.from("attendance").select("*", { count: "exact", head: true }).eq("workplace_id", wp.id).eq("work_date", todayStr).in("status", ["late", "location_error", "지각", "위치오류"])
-        ]);
+function formatRelativeTime(value) {
+  if (!value) {
+    return "-";
+  }
 
-        return {
-          name: wp.name,
-          assigned: assignedCount || 0,
-          working: workingCount || 0,
-          issue: issueCount || 0
-        };
-      })
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+
+  const difference =
+    Date.now() - date.getTime();
+
+  const minutes =
+    Math.max(
+      0,
+      Math.floor(
+        difference / 60000
+      )
     );
 
-    dashboardRegionList.innerHTML = regionData
-      .map((region) => `
-        <div class="dashboard-region-item">
-          <div class="dashboard-region-top">
-            <strong>${region.name}</strong>
-            <span style="${region.issue > 0 ? 'color:#dc2626; font-weight:bold;' : 'color:#6b7280;'}">문제 ${region.issue}건</span>
-          </div>
-          <div class="dashboard-region-meta">
-            <div>
-              <p>배정</p>
-              <strong>${region.assigned}명</strong>
-            </div>
-            <div>
-              <p>오늘 출근</p>
-              <strong>${region.working}명</strong>
-            </div>
-            <div>
-              <p>확인 필요</p>
-              <strong style="${region.issue > 0 ? 'color:#dc2626;' : ''}">${region.issue}건</strong>
-            </div>
-          </div>
-        </div>
-      `)
-      .join("");
-  } catch (error) {
-    console.error("지역별 현황 조회 실패:", error);
-    dashboardRegionList.innerHTML = `<p style="padding:10px; color:#888;">지역 데이터를 불러오지 못했습니다.</p>`;
+  if (minutes < 1) {
+    return "방금 전";
   }
+
+  if (minutes < 60) {
+    return `${minutes}분 전`;
+  }
+
+  const hours =
+    Math.floor(minutes / 60);
+
+  if (hours < 24) {
+    return `${hours}시간 전`;
+  }
+
+  const days =
+    Math.floor(hours / 24);
+
+  if (days < 30) {
+    return `${days}일 전`;
+  }
+
+  return date.toLocaleDateString(
+    "ko-KR"
+  );
 }
 
-// 5. 🔥 최근 요청사항 조회 (최신 5건)
-async function loadRecentRequests() {
-  if (!dashboardRequestList) return;
+async function fetchDashboardData() {
+  const today =
+    getLocalDateKey();
 
-  try {
-    const { data: requests, error } = await supabase
-      .from("employee_requests")
-      .select(`
-        id, request_type, title, status, created_at,
-        users ( name )
-      `)
-      .order("created_at", { ascending: false })
-      .limit(5);
+  const results =
+    await Promise.all([
+      supabase
+        .from("users")
+        .select(`
+          id,
+          name,
+          department,
+          status,
+          app_approval_status
+        `),
 
-    if (error || !requests || requests.length === 0) {
-      dashboardRequestList.innerHTML = `<p style="padding:16px; color:#888; text-align:center;">최근 들어온 요청사항이 없습니다.</p>`;
-      return;
-    }
+      supabase
+        .from("workplaces")
+        .select("id, name")
+        .order("name"),
 
-    dashboardRequestList.innerHTML = requests
-      .map((req) => {
-        const userName = req.users?.name || "직원";
-        const statusText = req.status === "pending" ? "미확인" : req.status === "approved" ? "승인됨" : "반려됨";
-        const statusColor = req.status === "pending" ? "#dc2626" : "#168a4a";
+      supabase
+        .from("workplace_users")
+        .select(
+          "workplace_id, user_id"
+        ),
+
+      supabase
+        .from("attendance")
+        .select(`
+          id,
+          user_id,
+          workplace_id,
+          work_date,
+          check_in_time,
+          check_out_time,
+          status
+        `)
+        .eq("work_date", today),
+
+      supabase
+        .from(
+          "employee_daily_notes"
+        )
+        .select(
+          "user_id, note_date, day_type"
+        )
+        .eq("note_date", today)
+        .eq(
+          "day_type",
+          "annual_leave"
+        ),
+
+      supabase.rpc(
+        "admin_get_employee_requests"
+      ),
+
+      supabase
+        .from("notices")
+        .select(`
+          id,
+          title,
+          status,
+          important,
+          created_at
+        `)
+        .order(
+          "created_at",
+          {
+            ascending: false,
+          }
+        )
+        .limit(5),
+    ]);
+
+  const failedResult =
+    results.find(
+      (result) => result.error
+    );
+
+  if (failedResult) {
+    throw failedResult.error;
+  }
+
+  dashboardData = {
+    users: results[0].data || [],
+    workplaces:
+      results[1].data || [],
+    assignments:
+      results[2].data || [],
+    attendance:
+      results[3].data || [],
+    leave: results[4].data || [],
+    requests:
+      results[5].data || [],
+    notices:
+      results[6].data || [],
+  };
+}
+
+function getCalculatedData() {
+  const activeUsers =
+    dashboardData.users.filter(
+      (user) =>
+        user.status === "active"
+    );
+
+  const pendingUsers =
+    dashboardData.users.filter(
+      (user) =>
+        user.status !== "deleted" &&
+        user.app_approval_status ===
+          "pending"
+    );
+
+  const pendingRequests =
+    dashboardData.requests.filter(
+      (request) =>
+        request.status === "pending"
+    );
+
+  const leaveUserIds =
+    new Set(
+      dashboardData.leave.map(
+        (item) =>
+          String(item.user_id)
+      )
+    );
+
+  const attendedUserIds =
+    new Set(
+      dashboardData.attendance.map(
+        (item) =>
+          String(item.user_id)
+      )
+    );
+
+  const lateRecords =
+    dashboardData.attendance.filter(
+      (record) =>
+        isLateStatus(record.status)
+    );
+
+  const locationErrorRecords =
+    dashboardData.attendance.filter(
+      (record) =>
+        isLocationErrorStatus(
+          record.status
+        )
+    );
+
+  const absentUsers =
+    activeUsers.filter((user) => {
+      const userId =
+        String(user.id);
+
+      return (
+        !attendedUserIds.has(userId) &&
+        !leaveUserIds.has(userId)
+      );
+    });
+
+  const todayIssueCount =
+    lateRecords.length +
+    locationErrorRecords.length +
+    absentUsers.length;
+
+  return {
+    activeUsers,
+    pendingUsers,
+    pendingRequests,
+    leaveUserIds,
+    attendedUserIds,
+    lateRecords,
+    locationErrorRecords,
+    absentUsers,
+    todayIssueCount,
+  };
+}
+
+function renderSummary(calculated) {
+  statTotalEmployees.textContent =
+    calculated.activeUsers.length;
+
+  statActiveWorkplaces.textContent =
+    dashboardData.workplaces.length;
+
+  statTodayIssues.textContent =
+    calculated.todayIssueCount;
+
+  statPendingRequests.textContent =
+    calculated.pendingRequests.length;
+
+  statPendingUsers.textContent =
+    calculated.pendingUsers.length;
+}
+
+function renderHero(calculated) {
+  const totalTasks =
+    calculated.todayIssueCount +
+    calculated.pendingRequests.length +
+    calculated.pendingUsers.length;
+
+  if (totalTasks === 0) {
+    dashboardHeroTitle.textContent =
+      "현재 처리해야 할 업무가 없습니다.";
+
+    dashboardHeroDescription.textContent =
+      "출퇴근 문제와 승인 대기 요청이 모두 처리되었습니다.";
+
+    return;
+  }
+
+  dashboardHeroTitle.textContent =
+    `처리해야 할 업무가 ${totalTasks}건 있습니다.`;
+
+  dashboardHeroDescription.textContent =
+    `출퇴근 확인 ${calculated.todayIssueCount}건 · ` +
+    `직원 요청 ${calculated.pendingRequests.length}건 · ` +
+    `앱 승인 ${calculated.pendingUsers.length}건`;
+}
+
+function renderTasks(calculated) {
+  const attendanceDescription =
+    `미출근 ${calculated.absentUsers.length}명, ` +
+    `지각 ${calculated.lateRecords.length}건, ` +
+    `위치 오류 ${calculated.locationErrorRecords.length}건입니다.`;
+
+  const tasks = [
+    {
+      title: "앱 로그인 승인 대기",
+      description:
+        "앱 로그인을 요청한 직원의 이용을 승인해 주세요.",
+      count:
+        calculated.pendingUsers.length,
+      unit: "명",
+      href: "admin-employees.html",
+    },
+
+    {
+      title: "오늘 출퇴근 확인",
+      description:
+        attendanceDescription,
+      count:
+        calculated.todayIssueCount,
+      unit: "건",
+      href:
+        "admin-attendance-issue.html",
+    },
+
+    {
+      title: "직원 요청 승인 대기",
+      description:
+        "연차, 비품, 연락처 및 일반 요청을 확인해 주세요.",
+      count:
+        calculated.pendingRequests.length,
+      unit: "건",
+      href: "admin-requests.html",
+    },
+  ];
+
+  dashboardTaskList.innerHTML =
+    tasks
+      .map((task) => {
+        const badgeStyle =
+          task.count > 0
+            ? `
+              background:#fee2e2;
+              color:#dc2626;
+              font-weight:700;
+              padding:4px 10px;
+              border-radius:9999px;
+            `
+            : `
+              background:#f3f4f6;
+              color:#737373;
+              padding:4px 10px;
+              border-radius:9999px;
+            `;
 
         return `
-          <div class="dashboard-request-item" style="padding:12px; border-bottom:1px solid #f3f4f6;">
-            <div class="dashboard-request-top" style="display:flex; justify-content:space-between; margin-bottom:4px;">
-              <strong>${userName}</strong>
-              <span style="color:${statusColor}; font-weight:bold; font-size:12px;">${statusText}</span>
+          <a
+            href="${task.href}"
+            class="dashboard-task-item"
+          >
+            <div>
+              <strong>
+                ${escapeHtml(task.title)}
+              </strong>
+
+              <p>
+                ${escapeHtml(
+                  task.description
+                )}
+              </p>
             </div>
-            <p style="font-size:13px; color:#4b5563; margin:0;">[${req.request_type || '일반요청'}] ${req.title}</p>
+
+            <span style="${badgeStyle}">
+              ${task.count}${task.unit}
+            </span>
+          </a>
+        `;
+      })
+      .join("");
+}
+
+function renderRegions(calculated) {
+  if (
+    dashboardData.workplaces.length === 0
+  ) {
+    dashboardRegionList.innerHTML = `
+      <p style="padding:16px; color:#737373;">
+        등록된 근무 지역이 없습니다.
+      </p>
+    `;
+
+    return;
+  }
+
+  const activeUserIds =
+    new Set(
+      calculated.activeUsers.map(
+        (user) => String(user.id)
+      )
+    );
+
+  dashboardRegionList.innerHTML =
+    dashboardData.workplaces
+      .map((workplace) => {
+        const workplaceId =
+          String(workplace.id);
+
+        const assignedUserIds =
+          new Set(
+            dashboardData.assignments
+              .filter(
+                (assignment) =>
+                  String(
+                    assignment.workplace_id
+                  ) === workplaceId &&
+                  activeUserIds.has(
+                    String(
+                      assignment.user_id
+                    )
+                  )
+              )
+              .map(
+                (assignment) =>
+                  String(
+                    assignment.user_id
+                  )
+              )
+          );
+
+        const workplaceAttendance =
+          dashboardData.attendance.filter(
+            (record) =>
+              String(
+                record.workplace_id
+              ) === workplaceId
+          );
+
+        const workingUserIds =
+          new Set(
+            workplaceAttendance.map(
+              (record) =>
+                String(record.user_id)
+            )
+          );
+
+        const attendanceIssues =
+          workplaceAttendance.filter(
+            (record) =>
+              isLateStatus(
+                record.status
+              ) ||
+              isLocationErrorStatus(
+                record.status
+              )
+          ).length;
+
+        const absentCount =
+          [...assignedUserIds].filter(
+            (userId) =>
+              !calculated
+                .attendedUserIds
+                .has(userId) &&
+              !calculated
+                .leaveUserIds
+                .has(userId)
+          ).length;
+
+        const issueCount =
+          attendanceIssues +
+          absentCount;
+
+        return `
+          <div
+            class="dashboard-region-item"
+          >
+            <div
+              class="dashboard-region-top"
+            >
+              <strong>
+                ${escapeHtml(
+                  workplace.name
+                )}
+              </strong>
+
+              <span
+                style="
+                  background:${
+                    issueCount > 0
+                      ? "#fee2e2"
+                      : "#f3f4f6"
+                  };
+                  color:${
+                    issueCount > 0
+                      ? "#dc2626"
+                      : "#737373"
+                  };
+                "
+              >
+                확인 ${issueCount}건
+              </span>
+            </div>
+
+            <div
+              class="dashboard-region-meta"
+            >
+              <div>
+                <p>배정</p>
+                <strong>
+                  ${assignedUserIds.size}명
+                </strong>
+              </div>
+
+              <div>
+                <p>오늘 출근</p>
+                <strong>
+                  ${workingUserIds.size}명
+                </strong>
+              </div>
+
+              <div>
+                <p>미출근</p>
+                <strong
+                  style="
+                    color:${
+                      absentCount > 0
+                        ? "#dc2626"
+                        : "#171717"
+                    };
+                  "
+                >
+                  ${absentCount}명
+                </strong>
+              </div>
+            </div>
           </div>
         `;
       })
       .join("");
-  } catch (error) {
-    console.error("요청사항 조회 실패:", error);
-    dashboardRequestList.innerHTML = `<p style="padding:10px; color:#888;">요청 내역을 불러오지 못했습니다.</p>`;
-  }
 }
 
-// 6. 🔥 최근 관리자 활동 (최신 공지사항 또는 출근 기록 렌더링)
-async function loadRecentActivities() {
-  if (!dashboardActivityList) return;
+function renderRecentRequests() {
+  const requests =
+    [...dashboardData.requests]
+      .sort(
+        (first, second) =>
+          new Date(
+            second.created_at
+          ) -
+          new Date(
+            first.created_at
+          )
+      )
+      .slice(0, 5);
 
-  try {
-    // 최신 공지사항 3건을 관리자 활동으로 표시
-    const { data: notices, error } = await supabase
-      .from("notices")
-      .select("title, created_at")
-      .order("created_at", { ascending: false })
-      .limit(3);
+  if (requests.length === 0) {
+    dashboardRequestList.innerHTML = `
+      <p
+        style="
+          padding:16px;
+          color:#737373;
+          text-align:center;
+        "
+      >
+        최근 요청사항이 없습니다.
+      </p>
+    `;
 
-    if (error || !notices || notices.length === 0) {
-      dashboardActivityList.innerHTML = `<p style="padding:16px; color:#888; text-align:center;">최근 활동 내역이 없습니다.</p>`;
-      return;
-    }
+    return;
+  }
 
-    dashboardActivityList.innerHTML = notices
+  dashboardRequestList.innerHTML =
+    requests
+      .map((request) => {
+        const status =
+          getRequestStatus(request);
+
+        let requestTitle =
+          request.title || "요청";
+
+        if (
+          request.request_type ===
+          "annual_leave"
+        ) {
+          requestTitle =
+            request.start_date ===
+            request.end_date
+              ? request.start_date
+              : `${request.start_date} ~ ${request.end_date}`;
+        }
+
+        return `
+          <a
+            href="admin-requests.html"
+            class="dashboard-request-item"
+            style="
+              text-decoration:none;
+              color:inherit;
+            "
+          >
+            <div
+              class="dashboard-request-top"
+            >
+              <strong>
+                ${escapeHtml(
+                  request.user_name ||
+                    "직원"
+                )}
+              </strong>
+
+              <span
+                style="
+                  background:${status.background};
+                  color:${status.color};
+                "
+              >
+                ${escapeHtml(status.text)}
+              </span>
+            </div>
+
+            <p>
+              ${escapeHtml(
+                getRequestTypeLabel(
+                  request.request_type
+                )
+              )}
+              ·
+              ${escapeHtml(requestTitle)}
+            </p>
+          </a>
+        `;
+      })
+      .join("");
+}
+
+function renderRecentActivities() {
+  if (
+    dashboardData.notices.length === 0
+  ) {
+    dashboardActivityList.innerHTML = `
+      <p
+        style="
+          padding:16px;
+          color:#737373;
+        "
+      >
+        최근 등록된 공지가 없습니다.
+      </p>
+    `;
+
+    return;
+  }
+
+  dashboardActivityList.innerHTML =
+    dashboardData.notices
+      .slice(0, 3)
       .map((notice) => {
-        const timeDiff = Math.floor((new Date() - new Date(notice.created_at)) / (1000 * 60 * 60));
-        const timeText = timeDiff > 24 ? `${Math.floor(timeDiff / 24)}일 전` : timeDiff > 0 ? `${timeDiff}시간 전` : "방금 전";
+        const status =
+          notice.status || "저장됨";
 
         return `
-          <div class="dashboard-activity-item" style="padding:12px; border-bottom:1px solid #f3f4f6;">
-            <div class="dashboard-activity-top" style="display:flex; justify-content:space-between; margin-bottom:4px;">
-              <strong style="font-size:14px; color:#111827;">${notice.title}</strong>
-              <span style="font-size:11px; background:#f3f4f6; color:#6b7280; padding:2px 6px; border-radius:4px;">공지 등록</span>
+          <a
+            href="admin-notices.html"
+            class="dashboard-activity-item"
+            style="
+              text-decoration:none;
+              color:inherit;
+            "
+          >
+            <div
+              class="dashboard-activity-top"
+            >
+              <strong>
+                ${notice.important
+                  ? "중요 · "
+                  : ""}
+                ${escapeHtml(
+                  notice.title
+                )}
+              </strong>
+
+              <span>
+                ${escapeHtml(status)}
+              </span>
             </div>
-            <p style="font-size:12px; color:#8b95a1; margin:0;">관리자 · ${timeText}</p>
-          </div>
+
+            <p>
+              공지 등록 ·
+              ${formatRelativeTime(
+                notice.created_at
+              )}
+            </p>
+          </a>
         `;
       })
       .join("");
-  } catch (error) {
-    console.error("관리자 활동 조회 실패:", error);
-    dashboardActivityList.innerHTML = `<p style="padding:10px; color:#888;">활동 내역을 불러오지 못했습니다.</p>`;
-  }
 }
 
-// 7. 새로고침 버튼 이벤트
-function handleDashboardRefresh() {
-  initDashboard();
-  alert("🔄 최신 DB 데이터로 대시보드를 새로고침했습니다.");
+function renderLoadFailure(error) {
+  console.error(
+    "관리자 대시보드 조회 실패:",
+    error
+  );
+
+  dashboardHeroTitle.textContent =
+    "운영 현황을 불러오지 못했습니다.";
+
+  dashboardHeroDescription.textContent =
+    error.message ||
+    "Supabase 연결과 관리자 권한을 확인해 주세요.";
+
+  const failureMessage = `
+    <p style="padding:16px; color:#dc2626;">
+      데이터를 불러오지 못했습니다.
+    </p>
+  `;
+
+  dashboardTaskList.innerHTML =
+    failureMessage;
+
+  dashboardRegionList.innerHTML =
+    failureMessage;
+
+  dashboardRequestList.innerHTML =
+    failureMessage;
+
+  dashboardActivityList.innerHTML =
+    failureMessage;
 }
 
-// 🔥 대시보드 전체 초기화 실행
-async function initDashboard() {
-  setDashboardDate();
-  
-  // 모든 섹션을 병렬로 동시 조회하여 0.3초 만에 쾌적하게 로딩!
-  await Promise.all([
-    loadSummaryStats(),
-    loadDashboardTasks(),
-    loadRegionStatus(),
-    loadRecentRequests(),
-    loadRecentActivities()
-  ]);
-
+async function loadDashboard() {
   if (dashboardRefreshBtn) {
-    dashboardRefreshBtn.removeEventListener("click", handleDashboardRefresh);
-    dashboardRefreshBtn.addEventListener("click", handleDashboardRefresh);
+    dashboardRefreshBtn.disabled = true;
+    dashboardRefreshBtn.textContent =
+      "불러오는 중...";
   }
+
+  try {
+    await fetchDashboardData();
+
+    const calculated =
+      getCalculatedData();
+
+    renderSummary(calculated);
+    renderHero(calculated);
+    renderTasks(calculated);
+    renderRegions(calculated);
+    renderRecentRequests();
+    renderRecentActivities();
+  } catch (error) {
+    renderLoadFailure(error);
+  } finally {
+    if (dashboardRefreshBtn) {
+      dashboardRefreshBtn.disabled =
+        false;
+
+      dashboardRefreshBtn.textContent =
+        "새로고침";
+    }
+  }
+}
+
+async function initDashboard() {
+  const admin =
+    await requireAdmin();
+
+  if (!admin) {
+    return;
+  }
+
+  setDashboardDate();
+
+  dashboardRefreshBtn?.addEventListener(
+    "click",
+    loadDashboard
+  );
+
+  await loadDashboard();
 }
 
 initDashboard();
