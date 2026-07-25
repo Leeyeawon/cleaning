@@ -474,3 +474,72 @@ button {
   background: #262626;
   color: #ffffff;
 }
+
+.admin-notification-button
+strong.is-empty {
+  background: #e5e5e5;
+  color: #737373;
+}
+
+.admin-notification-empty {
+  min-height: 150px;
+  padding: 32px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  color: #737373;
+  text-align: center;
+}
+
+.admin-notification-empty strong {
+  color: #404040;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.admin-notification-empty p {
+  margin-top: 6px;
+  color: #a3a3a3;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.admin-notification-empty.error strong {
+  color: #dc2626;
+}
+
+.admin-notification-item.approval
+.admin-notification-item-top span {
+  background: #171717;
+}
+
+.admin-notification-item.leave
+.admin-notification-item-top span {
+  background: #d97706;
+}
+
+.admin-notification-item.request
+.admin-notification-item-top span {
+  background: #2563eb;
+}
+
+.admin-notification-item.profile
+.admin-notification-item-top span {
+  background: #64748b;
+}
+
+.admin-notification-item.attendance
+.admin-notification-item-top span {
+  background: #dc2626;
+}
+
+.admin-notification-item.location
+.admin-notification-item-top span {
+  background: #c2410c;
+}
+
+.admin-notification-item.assignment
+.admin-notification-item-top span {
+  background: #7c3aed;
+}

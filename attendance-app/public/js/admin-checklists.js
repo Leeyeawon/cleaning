@@ -146,6 +146,21 @@ const checklistDetailNote =
     "checklistDetailNote"
   );
 
+const checklistDetailPhotoCount =
+  document.getElementById(
+    "checklistDetailPhotoCount"
+  );
+
+const checklistDetailPhotoList =
+  document.getElementById(
+    "checklistDetailPhotoList"
+  );
+
+let currentChecklistPhotos = [];
+
+let openedChecklistSubmissionId =
+  null;
+
 let appCustomItems = [];
 let assignedItemOrder = [];
 let submissions = [];
@@ -1316,7 +1331,629 @@ function getSubmittedItemLabels(
     );
 }
 
-function openChecklistSubmissionDetail(
+function formatPhotoFileSize(
+  fileSize
+) {
+  const size =
+    Number(fileSize) || 0;
+
+  if (size < 1024) {
+    return `${size}B`;
+  }
+
+  if (
+    size <
+    1024 * 1024
+  ) {
+    return `${Math.ceil(
+      size / 1024
+    )}KB`;
+  }
+
+  return `${(
+    size /
+    1024 /
+    1024
+  ).toFixed(1)}MB`;
+}
+
+
+function showChecklistPhotoLoading() {
+  currentChecklistPhotos = [];
+
+  checklistDetailPhotoCount.textContent =
+    "불러오는 중";
+
+  checklistDetailPhotoList.innerHTML = `
+    <p class="checklist-detail-photo-empty">
+      사진을 불러오는 중입니다.
+    </p>
+  `;
+}
+
+
+function renderChecklistDetailPhotos() {
+  checklistDetailPhotoCount.textContent =
+    `${currentChecklistPhotos.length}장`;
+
+  if (
+    currentChecklistPhotos.length === 0
+  ) {
+    checklistDetailPhotoList.innerHTML = `
+      <p class="checklist-detail-photo-empty">
+        첨부된 사진이 없습니다.
+      </p>
+    `;
+
+    return;
+  }
+
+  checklistDetailPhotoList.innerHTML =
+    currentChecklistPhotos
+      .map((photo, index) => {
+        const originalName =
+          photo.original_name ||
+          photo.file_name ||
+          `현장사진-${index + 1}.jpg`;
+
+        const fileSize =
+          photo.file_size ??
+          photo.size_bytes ??
+          0;
+
+        const previewContent =
+          photo.signedUrl
+            ? `
+              <a
+                class="checklist-detail-photo-preview"
+                href="${escapeHtml(
+                  photo.signedUrl
+                )}"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="사진 크게 보기"
+              >
+                <img
+                  src="${escapeHtml(
+                    photo.signedUrl
+                  )}"
+                  alt="현장 사진 ${index + 1}"
+                  loading="lazy"
+                >
+              </a>
+            `
+            : `
+              <div class="checklist-detail-photo-unavailable">
+                미리보기 불가
+              </div>
+            `;
+
+        return `
+          <article class="checklist-detail-photo-card">
+            ${previewContent}
+
+            <div class="checklist-detail-photo-info">
+              <div>
+                <strong title="${escapeHtml(
+                  originalName
+                )}">
+                  사진 ${index + 1}
+                </strong>
+
+                <small>
+                  ${formatPhotoFileSize(
+                    fileSize
+                  )}
+                </small>
+              </div>
+
+              <div class="checklist-detail-photo-actions">
+                <button
+                  type="button"
+                  data-checklist-photo-download="${escapeHtml(
+                    photo.id
+                  )}"
+                >
+                  다운로드
+                </button>
+
+                <button
+                  type="button"
+                  class="photo-delete-button"
+                  data-checklist-photo-delete="${escapeHtml(
+                    photo.id
+                  )}"
+                >
+                  삭제
+                </button>
+              </div>
+            </div>
+          </article>
+        `;
+      })
+      .join("");
+
+  checklistDetailPhotoList
+    .querySelectorAll(
+      "[data-checklist-photo-download]"
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        async () => {
+          await downloadChecklistPhoto(
+            button.dataset
+              .checklistPhotoDownload,
+            button
+          );
+        }
+      );
+    });
+
+    checklistDetailPhotoList
+  .querySelectorAll(
+    "[data-checklist-photo-delete]"
+  )
+  .forEach((button) => {
+    button.addEventListener(
+      "click",
+      async () => {
+        await deleteChecklistPhoto(
+          button.dataset
+            .checklistPhotoDelete,
+          button
+        );
+      }
+    );
+  });
+}
+
+
+async function loadChecklistDetailPhotos(
+  submissionId
+) {
+  const requestedSubmissionId =
+    String(submissionId);
+
+  showChecklistPhotoLoading();
+
+  const {
+    data,
+    error,
+  } = await supabase.rpc(
+    "admin_get_uploads",
+    {
+      p_parent_type:
+        "cleaning_checklist",
+
+      p_parent_id:
+        requestedSubmissionId,
+    }
+  );
+
+  if (
+    openedChecklistSubmissionId !==
+    requestedSubmissionId
+  ) {
+    return;
+  }
+
+  if (error) {
+    console.error(
+      "점검표 사진 조회 실패:",
+      error
+    );
+
+    checklistDetailPhotoCount.textContent =
+      "조회 실패";
+
+    checklistDetailPhotoList.innerHTML = `
+      <p class="checklist-detail-photo-error">
+        사진을 불러오지 못했습니다.
+      </p>
+    `;
+
+    return;
+  }
+
+  const photos =
+    Array.isArray(data)
+      ? data
+      : [];
+
+  const photosWithSignedUrls =
+    await Promise.all(
+      photos.map(
+        async (photo) => {
+          const {
+            data: signedData,
+            error: signedError,
+          } = await supabase.storage
+            .from(
+              "employee-uploads"
+            )
+            .createSignedUrl(
+              photo.object_path,
+              600
+            );
+
+          if (signedError) {
+            console.error(
+              "사진 미리보기 주소 생성 실패:",
+              signedError
+            );
+          }
+
+          return {
+            ...photo,
+
+            signedUrl:
+              signedData?.signedUrl ||
+              "",
+          };
+        }
+      )
+    );
+
+  if (
+    openedChecklistSubmissionId !==
+    requestedSubmissionId
+  ) {
+    return;
+  }
+
+  currentChecklistPhotos =
+    photosWithSignedUrls;
+
+  renderChecklistDetailPhotos();
+}
+
+
+async function downloadChecklistPhoto(
+  photoId,
+  button
+) {
+  const photo =
+    currentChecklistPhotos.find(
+      (item) =>
+        String(item.id) ===
+        String(photoId)
+    );
+
+  if (!photo) {
+    alert(
+      "다운로드할 사진을 찾지 못했습니다."
+    );
+
+    return;
+  }
+
+  const originalButtonText =
+    button.textContent;
+
+  button.disabled = true;
+  button.textContent =
+    "받는 중...";
+
+  try {
+    const {
+      data,
+      error,
+    } = await supabase.storage
+      .from(
+        "employee-uploads"
+      )
+      .download(
+        photo.object_path
+      );
+
+    if (error) {
+      throw error;
+    }
+
+    const downloadUrl =
+      URL.createObjectURL(data);
+
+    const downloadLink =
+      document.createElement(
+        "a"
+      );
+
+    downloadLink.href =
+      downloadUrl;
+
+    downloadLink.download =
+      photo.original_name ||
+      photo.file_name ||
+      `cleaning-photo-${photo.id}.jpg`;
+
+    document.body.appendChild(
+      downloadLink
+    );
+
+    downloadLink.click();
+    downloadLink.remove();
+
+    setTimeout(
+      () => {
+        URL.revokeObjectURL(
+          downloadUrl
+        );
+      },
+      1000
+    );
+  } catch (error) {
+    console.error(
+      "사진 다운로드 실패:",
+      error
+    );
+
+    alert(
+      `사진을 다운로드하지 못했습니다.\n${
+        error.message ||
+        "잠시 후 다시 시도해 주세요."
+      }`
+    );
+  } finally {
+    button.disabled = false;
+    button.textContent =
+      originalButtonText;
+  }
+}
+
+async function deleteChecklistPhoto(
+  photoId,
+  button
+) {
+  const photo =
+    currentChecklistPhotos.find(
+      (item) =>
+        String(item.id) ===
+        String(photoId)
+    );
+
+  if (!photo) {
+    alert(
+      "삭제할 사진을 찾지 못했습니다."
+    );
+
+    return;
+  }
+
+  const confirmed =
+    confirm(
+      "이 사진을 삭제하시겠습니까?\n\n삭제한 사진은 복구할 수 없습니다."
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+  const originalButtonText =
+    button.textContent;
+
+  button.disabled = true;
+  button.textContent =
+    "삭제 중...";
+
+  try {
+    const {
+      data,
+      error,
+    } =
+      await supabase.functions.invoke(
+        "delete-employee-photo",
+        {
+          body: {
+            photo_id:
+              photo.id,
+          },
+        }
+      );
+
+    if (error) {
+      let errorMessage =
+        error.message;
+
+      try {
+        const errorBody =
+          await error.context?.json();
+
+        errorMessage =
+          errorBody?.error ||
+          errorMessage;
+      } catch {
+        // 응답 본문을 읽지 못한 경우
+      }
+
+      throw new Error(
+        errorMessage ||
+        "사진 삭제에 실패했습니다."
+      );
+    }
+
+    if (
+      !data?.success
+    ) {
+      throw new Error(
+        data?.error ||
+        "사진 삭제에 실패했습니다."
+      );
+    }
+
+    currentChecklistPhotos =
+      currentChecklistPhotos.filter(
+        (item) =>
+          String(item.id) !==
+          String(photoId)
+      );
+
+    renderChecklistDetailPhotos();
+  } catch (error) {
+    console.error(
+      "사진 삭제 실패:",
+      error
+    );
+
+    alert(
+      `사진을 삭제하지 못했습니다.\n${
+        error.message ||
+        "잠시 후 다시 시도해 주세요."
+      }`
+    );
+
+    button.disabled = false;
+    button.textContent =
+      originalButtonText;
+  }
+}
+
+async function deleteChecklistSubmission(
+  submissionId,
+  button
+) {
+  const submission =
+    submissions.find(
+      (item) =>
+        String(item.id) ===
+        String(submissionId)
+    );
+
+  if (!submission) {
+    alert(
+      "삭제할 점검표를 찾지 못했습니다."
+    );
+
+    return;
+  }
+
+  const employeeName =
+    submission.users?.name ||
+    "이름 없음";
+
+  const workplaceName =
+    getWorkplaceName(
+      submission.workplace_id
+    );
+
+  const confirmation =
+    prompt(
+      `${workplaceName} · ${employeeName} 직원의 점검표를 삭제합니다.\n\n연결된 현장 사진도 모두 삭제되며 복구할 수 없습니다.\n계속하려면 아래에 "삭제"라고 입력해 주세요.`
+    );
+
+  if (
+    confirmation === null
+  ) {
+    return;
+  }
+
+  if (
+    confirmation.trim() !==
+    "삭제"
+  ) {
+    alert(
+      '"삭제"라고 정확하게 입력해야 합니다.'
+    );
+
+    return;
+  }
+
+  const originalButtonText =
+    button.textContent;
+
+  button.disabled = true;
+  button.textContent =
+    "삭제 중...";
+
+  try {
+    const {
+      data,
+      error,
+    } =
+      await supabase.functions.invoke(
+        "delete-cleaning-submission",
+        {
+          body: {
+            submission_id:
+              submission.id,
+
+            confirmation:
+              "삭제",
+          },
+        }
+      );
+
+    if (error) {
+      let errorMessage =
+        error.message;
+
+      try {
+        const errorBody =
+          await error.context?.json();
+
+        errorMessage =
+          errorBody?.error ||
+          errorMessage;
+      } catch {
+        // 응답 내용을 읽지 못한 경우
+      }
+
+      throw new Error(
+        errorMessage ||
+        "점검표 삭제에 실패했습니다."
+      );
+    }
+
+    if (
+      !data?.success
+    ) {
+      throw new Error(
+        data?.error ||
+        "점검표 삭제에 실패했습니다."
+      );
+    }
+
+    submissions =
+      submissions.filter(
+        (item) =>
+          String(item.id) !==
+          String(submissionId)
+      );
+
+    if (
+      openedChecklistSubmissionId ===
+      String(submissionId)
+    ) {
+      closeChecklistSubmissionDetail();
+    }
+
+    renderSubmissions();
+
+    alert(
+      `점검표가 삭제되었습니다.\n연결 사진 ${Number(
+        data.deleted_photo_count
+      ) || 0}장도 함께 삭제했습니다.`
+    );
+  } catch (error) {
+    console.error(
+      "점검표 삭제 실패:",
+      error
+    );
+
+    alert(
+      `점검표를 삭제하지 못했습니다.\n${
+        error.message ||
+        "잠시 후 다시 시도해 주세요."
+      }`
+    );
+
+    button.disabled = false;
+    button.textContent =
+      originalButtonText;
+  }
+}
+
+async function openChecklistSubmissionDetail(
   submissionId
 ) {
   const submission =
@@ -1329,6 +1966,9 @@ function openChecklistSubmissionDetail(
   if (!submission) {
     return;
   }
+
+  openedChecklistSubmissionId =
+    String(submission.id);
 
   const results =
     getSubmissionItemResults(
@@ -1353,37 +1993,24 @@ function openChecklistSubmissionDetail(
       submission.workplace_id
     );
 
+  checklistDetailCloseBtn.onclick =
+    closeChecklistSubmissionDetail;
 
-  checklistDetailCloseBtn
-    ?.addEventListener(
-      "click",
-      closeChecklistSubmissionDetail
-    );
+  checklistDetailCancelBtn.onclick =
+    closeChecklistSubmissionDetail;
 
-  checklistDetailCancelBtn
-    ?.addEventListener(
-      "click",
-      closeChecklistSubmissionDetail
-    );
+  checklistDetailPrintBtn.onclick =
+    printChecklistSubmissionDetail;
 
-  checklistDetailPrintBtn
-    ?.addEventListener(
-      "click",
-      printChecklistSubmissionDetail
-    );
-
-  checklistDetailModal
-    ?.addEventListener(
-      "click",
-      (event) => {
-        if (
-          event.target ===
-          checklistDetailModal
-        ) {
-          closeChecklistSubmissionDetail();
-        }
+  checklistDetailModal.onclick =
+    (event) => {
+      if (
+        event.target ===
+        checklistDetailModal
+      ) {
+        closeChecklistSubmissionDetail();
       }
-    );
+    };
 
   checklistDetailSubtitle.textContent =
     `${workplaceName} · ${employeeName}`;
@@ -1403,7 +2030,8 @@ function openChecklistSubmissionDetail(
     `${completedResults.length} / ${results.length}`;
 
   checklistDetailNote.textContent =
-    submission.note || "메모 없음";
+    submission.note ||
+    "메모 없음";
 
   if (!results.length) {
     checklistDetailTableBody.innerHTML = `
@@ -1427,7 +2055,9 @@ function openChecklistSubmissionDetail(
               </td>
 
               <td>
-                ${escapeHtml(item.label)}
+                ${escapeHtml(
+                  item.label
+                )}
               </td>
 
               <td>
@@ -1457,9 +2087,18 @@ function openChecklistSubmissionDetail(
     "aria-hidden",
     "false"
   );
+
+  await loadChecklistDetailPhotos(
+    submission.id
+  );
 }
 
 function closeChecklistSubmissionDetail() {
+  openedChecklistSubmissionId =
+    null;
+
+  currentChecklistPhotos = [];
+
   checklistDetailModal.classList.remove(
     "open"
   );
@@ -1748,13 +2387,27 @@ function renderSubmissions() {
             </td>
 
             <td>
-              <button
-                type="button"
-                class="workflow-detail-button"
-                data-submission-detail="${escapeHtml(submission.id)}"
-              >
-                상세
-              </button>
+              <div class="workflow-submission-actions">
+                <button
+                  type="button"
+                  class="workflow-detail-button"
+                  data-submission-detail="${escapeHtml(
+                    submission.id
+                  )}"
+                >
+                  상세
+                </button>
+
+                <button
+                  type="button"
+                  class="workflow-submission-delete-button"
+                  data-submission-delete="${escapeHtml(
+                    submission.id
+                  )}"
+                >
+                  삭제
+                </button>
+              </div>
             </td>
           </tr>
         `;
@@ -1776,6 +2429,23 @@ function renderSubmissions() {
         }
       );
     });
+
+    submissionTableBody
+  .querySelectorAll(
+    "[data-submission-delete]"
+  )
+  .forEach((button) => {
+    button.addEventListener(
+      "click",
+      async () => {
+        await deleteChecklistSubmission(
+          button.dataset
+            .submissionDelete,
+          button
+        );
+      }
+    );
+  });
 }
 
 submissionDateFilter.addEventListener(
