@@ -18,8 +18,13 @@ const infoRequestBtn = document.getElementById("infoRequestBtn");
 const locationSettingBtn = document.getElementById("locationSettingBtn");
 const locationPermission = document.getElementById("locationPermission");
 const notificationToggle = document.getElementById("notificationToggle");
+const installAppBtn = document.getElementById( "installAppBtn" );
+const installAppStatus = document.getElementById( "installAppStatus" );
+const installAppDescription = document.getElementById( "installAppDescription" );
+
 const logoutButton = document.getElementById("logoutButton");
 
+let deferredInstallPrompt = null;
 let currentEmployee = null;
 
 function formatDate(dateString) {
@@ -375,6 +380,176 @@ async function openLocationSettingGuide() {
   }
 }
 
+function isPwaInstalled() {
+  return (
+    window.matchMedia(
+      "(display-mode: standalone)"
+    ).matches ||
+    window.navigator
+      .standalone === true
+  );
+}
+
+
+function isIosDevice() {
+  return (
+    /iphone|ipad|ipod/i.test(
+      navigator.userAgent
+    ) ||
+    (
+      navigator.platform ===
+        "MacIntel" &&
+      navigator.maxTouchPoints >
+        1
+    )
+  );
+}
+
+
+function updateInstallSetting() {
+  if (
+    !installAppBtn ||
+    !installAppStatus
+  ) {
+    return;
+  }
+
+  if (isPwaInstalled()) {
+    installAppStatus.textContent =
+      "설치됨";
+
+    installAppStatus.className =
+      "permission-badge allowed";
+
+    installAppBtn.disabled =
+      true;
+
+    if (
+      installAppDescription
+    ) {
+      installAppDescription
+        .textContent =
+        "현재 홈 화면에 설치된 앱으로 실행 중입니다.";
+    }
+
+    return;
+  }
+
+  installAppBtn.disabled =
+    false;
+
+  if (
+    deferredInstallPrompt
+  ) {
+    installAppStatus.textContent =
+      "설치";
+
+    installAppStatus.className =
+      "permission-badge install";
+
+    return;
+  }
+
+  installAppStatus.textContent =
+    "설치 안내";
+
+  installAppStatus.className =
+    "permission-badge pending";
+}
+
+
+async function installEmployeePwa() {
+  if (isPwaInstalled()) {
+    alert(
+      "이미 홈 화면에 설치된 앱으로 실행 중입니다."
+    );
+
+    return;
+  }
+
+  if (
+    deferredInstallPrompt
+  ) {
+    deferredInstallPrompt
+      .prompt();
+
+    const choice =
+      await deferredInstallPrompt
+        .userChoice;
+
+    deferredInstallPrompt =
+      null;
+
+    if (
+      choice.outcome ===
+      "accepted"
+    ) {
+      installAppStatus
+        .textContent =
+        "설치 중";
+    } else {
+      updateInstallSetting();
+    }
+
+    return;
+  }
+
+  if (isIosDevice()) {
+    alert(
+      "iPhone 앱 설치 방법\n\n" +
+      "1. Safari로 현재 페이지를 엽니다.\n" +
+      "2. 화면 아래의 공유 버튼을 누릅니다.\n" +
+      "3. '홈 화면에 추가'를 누릅니다.\n" +
+      "4. 오른쪽 위의 '추가'를 누릅니다."
+    );
+
+    return;
+  }
+
+  alert(
+    "앱 설치 방법\n\n" +
+    "1. 브라우저 오른쪽 위의 메뉴(⋮)를 누릅니다.\n" +
+    "2. '앱 설치' 또는 '홈 화면에 추가'를 누릅니다.\n" +
+    "3. 설치를 선택합니다."
+  );
+}
+
+
+function initPwaInstallSetting() {
+  updateInstallSetting();
+
+  installAppBtn?.addEventListener(
+    "click",
+    installEmployeePwa
+  );
+}
+
+window.addEventListener(
+  "beforeinstallprompt",
+  (event) => {
+    event.preventDefault();
+
+    deferredInstallPrompt =
+      event;
+
+    updateInstallSetting();
+  }
+);
+
+window.addEventListener(
+  "appinstalled",
+  () => {
+    deferredInstallPrompt =
+      null;
+
+    updateInstallSetting();
+
+    alert(
+      "앱이 홈 화면에 설치되었습니다."
+    );
+  }
+);
+
 async function initNotificationSetting() {
   if (!notificationToggle) return;
 
@@ -447,7 +622,8 @@ async function init() {
   );
 
   initNotificationSetting();
-
+  initPwaInstallSetting();
+  
   logoutButton?.addEventListener(
     "click",
     async () => {

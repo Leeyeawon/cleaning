@@ -1,3 +1,5 @@
+import "./pwa-register.js";
+
 import supabase from "./supabase.js";
 
 export function getEmployeeSessionToken() {

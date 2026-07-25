@@ -659,3 +659,19 @@
     grid-column: 1 / -1;
   }
 }
+
+.permission-badge.install {
+  background: #111827;
+  color: #ffffff;
+}
+
+.setting-item:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.setting-item:disabled
+.permission-badge.allowed {
+  background: #e8f7ef;
+  color: #168a4a;
+}
