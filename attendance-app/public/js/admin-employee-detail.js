@@ -627,7 +627,7 @@ function renderAttendanceTable(
   if (!displayRows.length) {
     detailRecordTableBody.innerHTML = `
       <tr>
-        <td colspan="5">
+        <td colspan="7" class="empty-row">
           조회된 기록이 없습니다.
         </td>
       </tr>
@@ -730,49 +730,59 @@ function renderAttendanceTable(
         return `
           <tr class="${rowClasses.join(" ")}">
             <td>
-              <strong>
-                ${
-                  selectedMonth + 1
-                }.${dayText}
-              </strong>
+              <span style="color:${statusColor}; font-weight:bold; background:#f3f4f6; padding:3px 8px; border-radius:6px; font-size:12px;">
+                ${statusText}
+              </span>
             </td>
 
-            <td>
-              ${getKoreanDayOfWeek(
-                dateKey
-              )}
+            <td style="color:#4b5563; font-size:13px; text-align:left;">
+              ${memoText}
             </td>
 
-            <td>
+            <td class="attendance-edit-control">
               ${
-                isAnnualLeave
+                item.id
                   ? `
-                    <strong class="annual-leave-text">
-                      연차
-                    </strong>
+                    <button
+                      type="button"
+                      class="detail-attendance-edit-btn"
+                      data-attendance-edit-id="${item.id}"
+                      data-attendance-edit-date="${dateStr}"
+                    >
+                      수정
+                    </button>
                   `
-                  : escapeHtml(
-                      workTime
-                    )
+                  : "—"
               }
-            </td>
-
-            <td>
-              ${escapeHtml(
-                workTimeText
-              )}
-            </td>
-
-            <td class="daily-note-cell">
-              ${escapeHtml(
-                noteData.content
-              )}
             </td>
           </tr>
         `;
       })
       .join("");
 
+  detailRecordTableBody
+    .querySelectorAll("[data-attendance-edit-id]")
+    .forEach((button) => {
+      button.addEventListener("click", () => {
+        const params = new URLSearchParams({
+          attendanceId:
+            button.dataset.attendanceEditId,
+
+          date:
+            button.dataset.attendanceEditDate,
+
+          userId:
+            targetUserId,
+
+          returnTo:
+            `admin-employee-detail.html?id=${targetUserId}`,
+        });
+
+        window.location.href =
+          `admin-attendance-edit.html?${params.toString()}`;
+      });
+    });
+    
   updateAttendanceToggleButton(
     displayRows.length
   );

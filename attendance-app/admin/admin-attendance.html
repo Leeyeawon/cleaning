@@ -32,12 +32,20 @@
       </header>
 
       <section class="content">
-        <div class="alert-banner">
+        <div
+          class="alert-banner"
+          id="monthlyLateAlert"
+          hidden
+        >
           <div>
             <span>⚠️</span>
-            <p>이번 달 지각 3회 이상 직원 3명이 있습니다.</p>
+            <p id="monthlyLateAlertText"></p>
           </div>
-          <button type="button" onclick="location.href='admin-attendance-issue.html'">
+
+          <button
+            type="button"
+            onclick="location.href='admin-attendance-issue.html'"
+          >
             지각 직원 확인
           </button>
         </div>

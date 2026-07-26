@@ -11,6 +11,8 @@ const statusFilter = document.getElementById("statusFilter");
 const employeeSearchInput = document.getElementById("employeeSearchInput");
 const lateList = document.querySelector(".late-list");
 const excelDownloadBtn = document.getElementById("excelDownloadBtn");
+const monthlyLateAlert = document.getElementById("monthlyLateAlert");
+const monthlyLateAlertText = document.getElementById("monthlyLateAlertText");
 
 // 상단 통계 숫자 DOM
 const statCheckIn = document.getElementById("statCheckIn");
@@ -488,68 +490,169 @@ function renderAttendanceTable(data) {
 
 // 8. 🔥 이번 달 지각 3회 이상 상습 지각자 실시간 조회
 async function loadMonthlyLateEmployees() {
-  if (!lateList) return;
+  if (monthlyLateAlert) {
+    monthlyLateAlert.hidden = true;
+  }
 
   try {
     const today = new Date();
-    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split("T")[0];
 
-    // 이번 달 1일부터 오늘까지의 지각 기록 모두 조회
-    const { data: lateData, error } = await supabase
-      .from("attendance")
-      .select(`
-        user_id,
-        users ( name, department ),
-        workplaces ( name )
-      `)
-      .gte("work_date", firstDayOfMonth)
-      .in("status", ["late", "지각"]);
+    const year = today.getFullYear();
 
-    if (error || !lateData || lateData.length === 0) {
-      lateList.innerHTML = `<p style="padding:16px; color:#888; text-align:center;">이번 달 지각자가 없습니다.</p>`;
-      return;
+    const month = String(
+      today.getMonth() + 1
+    ).padStart(2, "0");
+
+    const firstDayOfMonth =
+      `${year}-${month}-01`;
+
+    const { data, error } =
+      await supabase
+        .from("attendance")
+        .select(`
+          user_id,
+          work_date,
+          users (
+            name,
+            department
+          ),
+          workplaces (
+            name
+          )
+        `)
+        .gte(
+          "work_date",
+          firstDayOfMonth
+        )
+        .lte(
+          "work_date",
+          todayStr
+        )
+        .in(
+          "status",
+          ["late", "지각"]
+        );
+
+    if (error) {
+      throw error;
     }
 
-    // 직원별 지각 횟수 집계 (Map 활용)
-    const countMap = new Map();
-    lateData.forEach((item) => {
-      const uid = item.user_id;
-      if (!countMap.has(uid)) {
-        countMap.set(uid, {
-          name: item.users?.name || "직원",
-          info: `${item.users?.department || '부서없음'} · ${item.workplaces?.name || '미배정'}`,
-          count: 0
-        });
+    const employeeLateMap =
+      new Map();
+
+    (data || []).forEach((item) => {
+      if (!item.user_id) {
+        return;
       }
-      countMap.get(uid).count++;
+
+      if (
+        !employeeLateMap.has(
+          item.user_id
+        )
+      ) {
+        employeeLateMap.set(
+          item.user_id,
+          {
+            name:
+              item.users?.name ||
+              "직원",
+
+            department:
+              item.users?.department ||
+              "부서 없음",
+
+            workplace:
+              item.workplaces?.name ||
+              "미배정",
+
+            dates: new Set(),
+          }
+        );
+      }
+
+      employeeLateMap
+        .get(item.user_id)
+        .dates.add(item.work_date);
     });
 
-    // 지각 3회 이상인 직원만 필터링 후 횟수 많은 순 정렬
-    const chronicLates = Array.from(countMap.values())
-      .filter((emp) => emp.count >= 3)
-      .sort((a, b) => b.count - a.count);
+    const chronicLates = [
+      ...employeeLateMap.values(),
+    ]
+      .map((employee) => ({
+        ...employee,
+        count: employee.dates.size,
+      }))
+      .filter(
+        (employee) =>
+          employee.count >= 3
+      )
+      .sort(
+        (a, b) =>
+          b.count - a.count
+      );
 
-    if (chronicLates.length === 0) {
-      lateList.innerHTML = `<p style="padding:16px; color:#888; text-align:center;">지각 3회 이상 직원이 없습니다.</p>`;
+    if (!chronicLates.length) {
+      if (lateList) {
+        lateList.innerHTML = `
+          <p style="padding:16px; color:#888; text-align:center;">
+            지각 3회 이상 직원이 없습니다.
+          </p>
+        `;
+      }
+
       return;
     }
 
-    lateList.innerHTML = chronicLates
-      .map((emp) => `
-        <div class="late-item">
-          <div>
-            <strong>${emp.name}</strong>
-            <p>${emp.info}</p>
-          </div>
-          <span style="background:#fee2e2; color:#dc2626; font-weight:bold; padding:4px 8px; border-radius:8px;">
-            ${emp.count}회
-          </span>
-        </div>
-      `)
-      .join("");
-  } catch (err) {
-    console.error("지각자 조회 에러:", err);
-    lateList.innerHTML = `<p style="padding:10px; color:#888;">지각 정보를 불러오지 못했습니다.</p>`;
+    if (monthlyLateAlert) {
+      monthlyLateAlert.hidden = false;
+    }
+
+    if (monthlyLateAlertText) {
+      monthlyLateAlertText.textContent =
+        `이번 달 지각 3회 이상 직원 ${chronicLates.length}명이 있습니다.`;
+    }
+
+    if (lateList) {
+      lateList.innerHTML =
+        chronicLates
+          .map((employee) => `
+            <div class="late-item">
+              <div>
+                <strong>
+                  ${employee.name}
+                </strong>
+
+                <p>
+                  ${employee.department}
+                  ·
+                  ${employee.workplace}
+                </p>
+              </div>
+
+              <span style="background:#fee2e2; color:#dc2626; font-weight:bold; padding:4px 8px; border-radius:8px;">
+                ${employee.count}회
+              </span>
+            </div>
+          `)
+          .join("");
+    }
+  } catch (error) {
+    console.error(
+      "지각자 조회 에러:",
+      error
+    );
+
+    if (monthlyLateAlert) {
+      monthlyLateAlert.hidden = true;
+    }
+
+    if (lateList) {
+      lateList.innerHTML = `
+        <p style="padding:10px; color:#888;">
+          지각 정보를 불러오지 못했습니다.
+        </p>
+      `;
+    }
   }
 }
 

@@ -89,35 +89,51 @@ function goByStatus(status) {
 }
 
 function getLoginErrorMessage(error) {
-  const message =
-    error?.message || "";
+const errorMessage =
+  error.message || "";
 
-  if (
-    message.includes(
-      "EMPLOYEE_NOT_FOUND"
-    )
-  ) {
-    return (
-      "등록된 직원 정보를 찾지 못했습니다.\n" +
-      "이름과 전화번호를 확인해주세요."
-    );
-  }
+let message =
+  "로그인에 실패했습니다. 잠시 후 다시 시도해주세요.";
 
-  if (
-    message.includes(
-      "DUPLICATE_EMPLOYEE"
-    )
-  ) {
-    return (
-      "같은 이름과 전화번호가 중복 등록되어 있습니다.\n" +
-      "관리자에게 문의해주세요."
-    );
-  }
-
-  return (
-    "로그인에 실패했습니다.\n" +
-    "잠시 후 다시 시도해주세요."
-  );
+if (
+  errorMessage.includes(
+    "EMPLOYEE_NOT_FOUND"
+  )
+) {
+  message =
+    "등록된 직원 정보를 찾지 못했습니다. 이름과 전화번호를 확인해주세요.";
+} else if (
+  errorMessage.includes(
+    "DUPLICATE_EMPLOYEE"
+  )
+) {
+  message =
+    "같은 이름과 전화번호가 중복 등록되어 있습니다. 관리자에게 문의해주세요.";
+} else if (
+  errorMessage.includes(
+    "ACCOUNT_INACTIVE"
+  )
+) {
+  message =
+    "비활성화된 계정입니다. 관리자에게 문의해주세요.";
+} else if (
+  errorMessage.includes(
+    "ACCOUNT_RESIGNED"
+  ) ||
+  errorMessage.includes(
+    "ACCOUNT_DELETED"
+  )
+) {
+  message =
+    "사용이 종료된 계정입니다. 관리자에게 문의해주세요.";
+} else if (
+  errorMessage.includes(
+    "ACCOUNT_NOT_ACTIVE"
+  )
+) {
+  message =
+    "아직 활성화되지 않은 계정입니다. 관리자에게 문의해주세요.";
+}
 }
 
 phoneLoginForm?.addEventListener(

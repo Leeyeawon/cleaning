@@ -1,116 +1,106 @@
-/* =========================================================
-  관리자 출퇴근 기록 수정
-  - Supabase 출퇴근 기록 조회
-  - 날짜 / 유형 / 상태 / 직원 검색
-  - 출근·퇴근 시간 수정
-  - 수정 이력 저장
-  - 최근 수정 이력 조회
-  - 엑셀 다운로드
-========================================================= */
-
 import supabase from "./supabase.js";
 
-/* =========================
-  DOM
-========================= */
+const byId = (id) =>
+  document.getElementById(id);
 
 const editDateFilter =
-  document.getElementById("editDateFilter");
+  byId("editDateFilter");
 
 const editTypeFilter =
-  document.getElementById("editTypeFilter");
+  byId("editTypeFilter");
 
 const editStatusFilter =
-  document.getElementById("editStatusFilter");
+  byId("editStatusFilter");
 
 const editSearchInput =
-  document.getElementById("editSearchInput");
+  byId("editSearchInput");
 
 const editTableBody =
-  document.getElementById("editTableBody");
+  byId("editTableBody");
 
 const editHistoryList =
-  document.getElementById("editHistoryList");
+  byId("editHistoryList");
 
 const editModal =
-  document.getElementById("editModal");
+  byId("editModal");
 
 const editModalCloseBtn =
-  document.getElementById("editModalCloseBtn");
+  byId("editModalCloseBtn");
 
 const editModalCancelBtn =
-  document.getElementById("editModalCancelBtn");
+  byId("editModalCancelBtn");
 
 const editSaveBtn =
-  document.getElementById("editSaveBtn");
+  byId("editSaveBtn");
 
 const editModalEmployeeName =
-  document.getElementById("editModalEmployeeName");
+  byId("editModalEmployeeName");
 
 const editModalEmployeeInfo =
-  document.getElementById("editModalEmployeeInfo");
+  byId("editModalEmployeeInfo");
 
 const editCheckInInput =
-  document.getElementById("editCheckInInput");
+  byId("editCheckInInput");
 
 const editCheckOutInput =
-  document.getElementById("editCheckOutInput");
+  byId("editCheckOutInput");
+
+const editWorkplaceSelect =
+  byId("editWorkplaceSelect");
 
 const editRecordStatusSelect =
-  document.getElementById("editRecordStatusSelect");
+  byId("editRecordStatusSelect");
 
 const editReasonSelect =
-  document.getElementById("editReasonSelect");
+  byId("editReasonSelect");
 
 const editMemoInput =
-  document.getElementById("editMemoInput");
+  byId("editMemoInput");
 
 const editRequiredCount =
-  document.getElementById("editRequiredCount");
+  byId("editRequiredCount");
 
 const missingCheckOutCount =
-  document.getElementById("missingCheckOutCount");
+  byId("missingCheckOutCount");
 
 const locationErrorCount =
-  document.getElementById("locationErrorCount");
+  byId("locationErrorCount");
 
 const todayEditedCount =
-  document.getElementById("todayEditedCount");
-
-const editHistoryDownloadBtn =
-  document.getElementById("editHistoryDownloadBtn");
+  byId("todayEditedCount");
 
 const editResetFilterBtn =
-  document.getElementById("editResetFilterBtn");
+  byId("editResetFilterBtn");
 
-/* =========================
-  상태값
-========================= */
+const editPageParams =
+  new URLSearchParams(window.location.search);
 
-let attendanceRecords = [];
-let filteredRecords = [];
-let editHistories = [];
+const presetAttendanceId =
+  editPageParams.get("attendanceId");
 
-let selectedRecordId = null;
+const presetWorkDate =
+  editPageParams.get("date");
 
-/* =========================
-  기본 함수
-========================= */
+const editReturnTo =
+  editPageParams.get("returnTo");
 
-function getTodayString() {
-  const now = new Date();
+function getSafeReturnUrl() {
+  if (
+    editReturnTo &&
+    editReturnTo.startsWith(
+      "admin-employee-detail.html?"
+    )
+  ) {
+    return editReturnTo;
+  }
 
-  const year = now.getFullYear();
-  const month = String(
-    now.getMonth() + 1
-  ).padStart(2, "0");
-
-  const day = String(
-    now.getDate()
-  ).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
+  return null;
 }
+
+let attendanceRows = [];
+let editHistories = [];
+let workplaces = [];
+let selectedRow = null;
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -121,370 +111,446 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
-function formatDate(dateString) {
-  if (!dateString) {
-    return "—";
+function getTodayString() {
+  const now = new Date();
+
+  return [
+    now.getFullYear(),
+
+    String(
+      now.getMonth() + 1
+    ).padStart(2, "0"),
+
+    String(
+      now.getDate()
+    ).padStart(2, "0"),
+  ].join("-");
+}
+
+function formatDate(value) {
+  if (!value) return "—";
+
+  const date =
+    new Date(`${value}T00:00:00`);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
   }
 
-  const date = new Date(
-    `${dateString}T00:00:00`
+  return date.toLocaleDateString(
+    "ko-KR"
   );
-
-  if (Number.isNaN(date.getTime())) {
-    return dateString;
-  }
-
-  return date.toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
 }
 
-function formatDateTime(dateTimeString) {
-  if (!dateTimeString) {
-    return "—";
-  }
+function formatTime(value) {
+  if (!value) return "—";
 
-  const date = new Date(dateTimeString);
+  const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
     return "—";
   }
 
-  return date.toLocaleString("ko-KR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
+  return date.toLocaleTimeString(
+    "ko-KR",
+    {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }
+  );
 }
 
-function formatTime(dateTimeString) {
-  if (!dateTimeString) {
-    return "—";
-  }
+function formatDateTime(value) {
+  if (!value) return "—";
 
-  const date = new Date(dateTimeString);
+  const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
     return "—";
   }
 
-  return date.toLocaleTimeString("ko-KR", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
+  return date.toLocaleString(
+    "ko-KR",
+    {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }
+  );
 }
 
-function getTimeInputValue(dateTimeString) {
-  if (!dateTimeString) {
-    return "";
-  }
+function getTimeInputValue(value) {
+  if (!value) return "";
 
-  const date = new Date(dateTimeString);
+  const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
     return "";
   }
 
-  const hour = String(
-    date.getHours()
-  ).padStart(2, "0");
+  return [
+    String(
+      date.getHours()
+    ).padStart(2, "0"),
 
-  const minute = String(
-    date.getMinutes()
-  ).padStart(2, "0");
-
-  return `${hour}:${minute}`;
+    String(
+      date.getMinutes()
+    ).padStart(2, "0"),
+  ].join(":");
 }
 
-/*
-  한국 시간 기준으로 timestamptz 문자열 생성
-
-  예:
-  2026-07-10 + 09:00
-  → 2026-07-10T09:00:00+09:00
-*/
 function createDateTimeValue(
   workDate,
   timeValue
 ) {
-  if (!timeValue) {
-    return null;
-  }
+  if (!timeValue) return null;
 
-  return `${workDate}T${timeValue}:00+09:00`;
+  return (
+    `${workDate}T` +
+    `${timeValue}:00+09:00`
+  );
 }
 
-function getStatusClass(statusType) {
-  if (statusType === "late") {
+function normalizeStatus(status) {
+  const value =
+    String(status || "")
+      .trim()
+      .toLowerCase();
+
+  if (
+    value === "정상" ||
+    value === "normal" ||
+    value === "done"
+  ) {
+    return "done";
+  }
+
+  if (
+    value === "지각" ||
+    value === "late"
+  ) {
     return "late";
   }
 
-  if (statusType === "absent") {
+  if (
+    value === "결근" ||
+    value === "absent"
+  ) {
     return "absent";
   }
 
-  if (statusType === "location") {
-    return "location";
+  if (
+    value === "위치오류" ||
+    value === "위치 오류" ||
+    value === "location" ||
+    value === "location_error"
+  ) {
+    return "location_error";
   }
 
-  return "normal";
+  if (value === "working") {
+    return "working";
+  }
+
+  return "done";
 }
 
-/* =========================
-  기록 유형 판단
-========================= */
+function getAttendanceStatusText(
+  status
+) {
+  const labels = {
+    done: "정상·근무 완료",
+    normal: "정상",
+    working: "근무 중",
+    late: "지각",
+    absent: "결근",
+    location_error: "위치 오류",
+    early_leave: "조퇴",
+    정상: "정상",
+    지각: "지각",
+    결근: "결근",
+    위치오류: "위치 오류",
+  };
 
-function getEditType(record) {
+  return labels[status] ||
+    status ||
+    "기록 없음";
+}
+
+function hasEditHistory(row) {
+  if (!row.attendance_id) {
+    return false;
+  }
+
+  return editHistories.some(
+    (history) =>
+      String(
+        history.attendance_id
+      ) ===
+      String(
+        row.attendance_id
+      )
+  );
+}
+
+function isPastDate(workDate) {
+  return workDate <
+    getTodayString();
+}
+
+function getEditType(row) {
+  if (!row.has_record) {
+    return "기록 없음";
+  }
+
   if (
-    !record.check_in_time &&
-    record.check_out_time
+    Number(row.duplicate_count) > 1
+  ) {
+    return "중복 기록";
+  }
+
+  if (
+    !row.check_in_time &&
+    row.check_out_time
   ) {
     return "출근 누락";
   }
 
   if (
-    record.check_in_time &&
-    !record.check_out_time
+    row.check_in_time &&
+    !row.check_out_time
   ) {
     return "퇴근 누락";
   }
 
-  const status = String(
-    record.status || ""
-  ).toLowerCase();
+  const status =
+    normalizeStatus(
+      row.attendance_status
+    );
 
   if (
-    status === "location_error" ||
-    status === "location" ||
-    status === "위치오류" ||
-    status === "위치 오류"
+    status ===
+    "location_error"
   ) {
     return "위치 오류";
+  }
+
+  if (
+    !row.check_in_time &&
+    !row.check_out_time
+  ) {
+    return status === "absent"
+      ? "시간 조정"
+      : "출근 누락";
   }
 
   return "시간 조정";
 }
 
-function getStatusType(record) {
-  const type = getEditType(record);
-
-  if (type === "위치 오류") {
-    return "location";
+function needsEdit(row) {
+  if (!row.has_record) {
+    return true;
   }
 
   if (
-    type === "출근 누락" ||
-    type === "퇴근 누락"
+    Number(row.duplicate_count) > 1
   ) {
+    return true;
+  }
+
+  if (!row.check_in_time) {
+    return true;
+  }
+
+  if (
+    !row.check_out_time &&
+    isPastDate(row.work_date)
+  ) {
+    return true;
+  }
+
+  return normalizeStatus(
+    row.attendance_status
+  ) === "location_error";
+}
+
+function getProcessingStatus(row) {
+  if (hasEditHistory(row)) {
+    return "수정 완료";
+  }
+
+  return needsEdit(row)
+    ? "수정 필요"
+    : "정상 기록";
+}
+
+function getStatusClass(status) {
+  if (status === "수정 필요") {
     return "late";
+  }
+
+  if (status === "수정 완료") {
+    return "normal";
   }
 
   return "normal";
 }
 
-/* =========================
-  수정 완료 여부
+function getErrorMessage(error) {
+  const message =
+    error?.message || "";
 
-  해당 attendance_id의 수정 이력이 있으면
-  수정 완료로 표시한다.
-========================= */
-
-function hasEditHistory(attendanceId) {
-  return editHistories.some(
-    (history) =>
-      String(history.attendance_id) ===
-      String(attendanceId)
-  );
-}
-
-function getProcessingStatus(record) {
-  return hasEditHistory(record.id)
-    ? "수정 완료"
-    : "수정 필요";
-}
-
-/* =========================
-  관리자 이름
-
-  프로젝트 로그인 정보가 localStorage에
-  저장되어 있다면 해당 값을 사용한다.
-========================= */
-
-function getCurrentAdminName() {
-  const possibleKeys = [
-    "adminName",
-    "userName",
-    "employeeName",
-    "currentUserName",
+  const mappings = [
+    [
+      "ATTENDANCE_ALREADY_EXISTS",
+      "해당 직원의 같은 날짜 출퇴근 기록이 이미 존재합니다.",
+    ],
+    [
+      "CHECK_OUT_BEFORE_CHECK_IN",
+      "퇴근 시간은 출근 시간보다 빠를 수 없습니다.",
+    ],
+    [
+      "WORKPLACE_NOT_FOUND",
+      "선택한 근무지를 찾지 못했습니다.",
+    ],
+    [
+      "FUTURE_ATTENDANCE_NOT_ALLOWED",
+      "미래 날짜의 출퇴근 기록은 만들 수 없습니다.",
+    ],
+    [
+      "ADMIN_PERMISSION_REQUIRED",
+      "관리자 권한이 필요합니다.",
+    ],
   ];
 
-  for (const key of possibleKeys) {
-    const value = localStorage.getItem(key);
+  const matched =
+    mappings.find(
+      ([code]) =>
+        message.includes(code)
+    );
 
-    if (value) {
-      return value;
-    }
-  }
-
-  return "관리자";
+  return matched?.[1] ||
+    message ||
+    "출퇴근 기록을 저장하지 못했습니다.";
 }
 
-/* =========================
-  출퇴근 기록 조회
-========================= */
+async function fetchAttendanceRows() {
+  const { data, error } =
+    await supabase.rpc(
+      "admin_get_attendance_edit_rows",
+      {
+        p_work_date:
+          editDateFilter.value,
+      }
+    );
 
-async function fetchAttendanceRecords() {
-  const selectedDate =
-    editDateFilter?.value ||
-    getTodayString();
+  if (error) throw error;
 
-  const { data, error } = await supabase
-    .from("attendance")
-    .select(`
-      id,
-      user_id,
-      work_date,
-      check_in_time,
-      check_out_time,
-      status,
-      users (
-        id,
-        name,
-        department
-      ),
-      workplaces (
-        id,
-        name
-      )
-    `)
-    .eq("work_date", selectedDate)
-    .order("check_in_time", {
-      ascending: true,
-      nullsFirst: true,
-    });
+  attendanceRows =
+    (data || []).map(
+      (row) => ({
+        ...row,
 
-  if (error) {
-    throw error;
-  }
-
-  attendanceRecords = data || [];
+        row_key:
+          row.attendance_id
+            ? `attendance-${row.attendance_id}`
+            : `employee-${row.user_id}`,
+      })
+    );
 }
-
-/* =========================
-  수정 이력 조회
-========================= */
 
 async function fetchEditHistories() {
-  const { data, error } = await supabase
-    .from("attendance_edit_history")
-    .select(`
-      id,
-      attendance_id,
-      user_id,
-      work_date,
-      old_check_in_time,
-      new_check_in_time,
-      old_check_out_time,
-      new_check_out_time,
-      old_status,
-      new_status,
-      edit_type,
-      edit_reason,
-      memo,
-      editor_name,
-      created_at,
-      users (
-        id,
-        name,
-        department
-      )
-    `)
-    .order("created_at", {
-      ascending: false,
-    })
-    .limit(100);
+  const { data, error } =
+    await supabase.rpc(
+      "admin_get_attendance_edit_history",
+      {
+        p_limit: 100,
+      }
+    );
 
-  if (error) {
-    throw error;
-  }
+  if (error) throw error;
 
   editHistories = data || [];
 }
 
-/* =========================
-  필터
-========================= */
+async function fetchWorkplaces() {
+  const { data, error } =
+    await supabase
+      .from("workplaces")
+      .select(
+        "id, name, is_active"
+      )
+      .order("name");
 
-function filterEditRecords() {
-  const selectedType =
-    editTypeFilter?.value || "all";
+  if (error) throw error;
 
-  const selectedStatus =
-    editStatusFilter?.value || "all";
-
-  const keyword =
-    editSearchInput?.value
-      .trim()
-      .toLowerCase() || "";
-
-  filteredRecords =
-    attendanceRecords.filter((record) => {
-      const type = getEditType(record);
-      const processingStatus =
-        getProcessingStatus(record);
-
-      const employeeName = String(
-        record.users?.name || ""
-      ).toLowerCase();
-
-      const department = String(
-        record.users?.department || ""
-      ).toLowerCase();
-
-      const typeMatched =
-        selectedType === "all" ||
-        type === selectedType;
-
-      const statusMatched =
-        selectedStatus === "all" ||
-        processingStatus === selectedStatus;
-
-      const keywordMatched =
-        !keyword ||
-        employeeName.includes(keyword) ||
-        department.includes(keyword);
-
-      return (
-        typeMatched &&
-        statusMatched &&
-        keywordMatched
-      );
-    });
-
-  renderEditTable();
-  updateStats();
+  workplaces = data || [];
 }
 
-/* =========================
-  표 출력
-========================= */
+function getFilteredRows() {
+  const selectedType =
+    editTypeFilter.value;
 
-function renderEditTable() {
-  if (!editTableBody) {
-    return;
-  }
+  const selectedStatus =
+    editStatusFilter.value;
 
-  if (!filteredRecords.length) {
+  const keyword =
+    editSearchInput.value
+      .trim()
+      .toLowerCase();
+
+  return attendanceRows.filter(
+    (row) => {
+      const type =
+        getEditType(row);
+
+      const status =
+        getProcessingStatus(row);
+
+      const searchText = [
+        row.employee_name,
+        row.department,
+        row.workplace_name,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return (
+        (
+          selectedType === "all" ||
+          selectedType === type
+        ) &&
+        (
+          selectedStatus === "all" ||
+          selectedStatus === status
+        ) &&
+        (
+          !keyword ||
+          searchText.includes(keyword)
+        )
+      );
+    }
+  );
+}
+
+function renderTable() {
+  if (!editTableBody) return;
+
+  const rows = getFilteredRows();
+
+  if (!rows.length) {
     editTableBody.innerHTML = `
       <tr>
-        <td colspan="7" class="empty-row">
-          조회된 출퇴근 기록이 없습니다.
+        <td
+          colspan="7"
+          class="empty-row"
+        >
+          조회된 직원 또는 출퇴근 기록이 없습니다.
         </td>
       </tr>
     `;
@@ -493,225 +559,224 @@ function renderEditTable() {
   }
 
   editTableBody.innerHTML =
-    filteredRecords
-      .map((record) => {
-        const employeeName =
-          record.users?.name ||
-          "이름 없음";
+    rows.map((row) => {
+      const type =
+        getEditType(row);
 
-        const department =
-          record.users?.department ||
-          "부서 없음";
+      const processingStatus =
+        getProcessingStatus(row);
 
-        const type =
-          getEditType(record);
+      const employeeName =
+        row.employee_name ||
+        "이름 없음";
 
-        const processingStatus =
-          getProcessingStatus(record);
-
-        const statusType =
-          processingStatus === "수정 완료"
-            ? "normal"
-            : getStatusType(record);
-
-        return `
-          <tr>
-            <td>
-              <div class="employee">
-                <span class="avatar">
-                  ${escapeHtml(
-                    employeeName.slice(0, 1)
-                  )}
-                </span>
-
-                <div>
-                  <strong>
-                    ${escapeHtml(employeeName)}
-                  </strong>
-
-                  <p>
-                    ${escapeHtml(department)}
-                  </p>
-                </div>
-              </div>
-            </td>
-
-            <td>
-              ${escapeHtml(
-                formatDate(record.work_date)
-              )}
-            </td>
-
-            <td>
-              <span class="edit-type-badge">
-                ${escapeHtml(type)}
-              </span>
-            </td>
-
-            <td>
-              ${escapeHtml(
-                formatTime(
-                  record.check_in_time
-                )
-              )}
-            </td>
-
-            <td>
-              ${escapeHtml(
-                formatTime(
-                  record.check_out_time
-                )
-              )}
-            </td>
-
-            <td>
-              <span class="status ${getStatusClass(
-                statusType
-              )}">
+      return `
+        <tr>
+          <td>
+            <div class="employee">
+              <span class="avatar">
                 ${escapeHtml(
-                  processingStatus
+                  employeeName.slice(0, 1)
                 )}
               </span>
-            </td>
 
-            <td>
-              <button
-                class="table-action-btn"
-                type="button"
-                data-edit-id="${escapeHtml(
-                  record.id
-                )}"
-              >
-                수정
-              </button>
-            </td>
-          </tr>
-        `;
-      })
-      .join("");
+              <div>
+                <strong>
+                  ${escapeHtml(
+                    employeeName
+                  )}
+                </strong>
+
+                <p>
+                  ${escapeHtml(
+                    row.department ||
+                    "소속 없음"
+                  )}
+                </p>
+              </div>
+            </div>
+          </td>
+
+          <td>
+            ${escapeHtml(
+              formatDate(
+                row.work_date
+              )
+            )}
+          </td>
+
+          <td>
+            <span class="edit-type-badge">
+              ${escapeHtml(type)}
+            </span>
+          </td>
+
+          <td>
+            ${escapeHtml(
+              formatTime(
+                row.check_in_time
+              )
+            )}
+          </td>
+
+          <td>
+            ${escapeHtml(
+              formatTime(
+                row.check_out_time
+              )
+            )}
+          </td>
+
+          <td>
+            <span
+              class="status ${getStatusClass(
+                processingStatus
+              )}"
+              title="${escapeHtml(
+                getAttendanceStatusText(
+                  row.attendance_status
+                )
+              )}"
+            >
+              ${escapeHtml(
+                processingStatus
+              )}
+            </span>
+          </td>
+
+          <td>
+            <button
+              class="table-action-btn"
+              type="button"
+              data-row-key="${escapeHtml(
+                row.row_key
+              )}"
+            >
+              ${
+                row.has_record
+                  ? "수정"
+                  : "기록 추가"
+              }
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join("");
 
   editTableBody
-    .querySelectorAll("[data-edit-id]")
+    .querySelectorAll(
+      "[data-row-key]"
+    )
     .forEach((button) => {
       button.addEventListener(
         "click",
         () => {
           openEditModal(
-            button.dataset.editId
+            button.dataset.rowKey
           );
         }
       );
     });
 }
 
-/* =========================
-  통계
-========================= */
-
 function updateStats() {
-  const requiredRecords =
-    attendanceRecords.filter(
-      (record) =>
-        getProcessingStatus(record) ===
-        "수정 필요"
+  const requiredRows =
+    attendanceRows.filter(
+      (row) =>
+        needsEdit(row) &&
+        !hasEditHistory(row)
     );
 
-  const missingCheckOut =
-    requiredRecords.filter(
-      (record) =>
-        getEditType(record) ===
+  const missingCheckout =
+    requiredRows.filter(
+      (row) =>
+        getEditType(row) ===
         "퇴근 누락"
     ).length;
 
   const locationErrors =
-    requiredRecords.filter(
-      (record) =>
-        getEditType(record) ===
+    requiredRows.filter(
+      (row) =>
+        getEditType(row) ===
         "위치 오류"
     ).length;
 
-  const today = getTodayString();
+  const today =
+    getTodayString();
 
-  const completedToday =
-    editHistories.filter((history) => {
-      if (!history.created_at) {
-        return false;
+  const editedToday =
+    editHistories.filter(
+      (history) => {
+        if (!history.created_at) {
+          return false;
+        }
+
+        const date =
+          new Date(
+            history.created_at
+          );
+
+        const dateKey = [
+          date.getFullYear(),
+
+          String(
+            date.getMonth() + 1
+          ).padStart(2, "0"),
+
+          String(
+            date.getDate()
+          ).padStart(2, "0"),
+        ].join("-");
+
+        return dateKey === today;
       }
+    ).length;
 
-      const createdDate = new Date(
-        history.created_at
-      );
+  editRequiredCount.textContent =
+    requiredRows.length;
 
-      const localDate = [
-        createdDate.getFullYear(),
-        String(
-          createdDate.getMonth() + 1
-        ).padStart(2, "0"),
-        String(
-          createdDate.getDate()
-        ).padStart(2, "0"),
-      ].join("-");
+  missingCheckOutCount.textContent =
+    missingCheckout;
 
-      return localDate === today;
-    }).length;
+  locationErrorCount.textContent =
+    locationErrors;
 
-  if (editRequiredCount) {
-    editRequiredCount.textContent =
-      requiredRecords.length;
-  }
-
-  if (missingCheckOutCount) {
-    missingCheckOutCount.textContent =
-      missingCheckOut;
-  }
-
-  if (locationErrorCount) {
-    locationErrorCount.textContent =
-      locationErrors;
-  }
-
-  if (todayEditedCount) {
-    todayEditedCount.textContent =
-      completedToday;
-  }
+  todayEditedCount.textContent =
+    editedToday;
 }
-
-/* =========================
-  수정 이력 변경 내용
-========================= */
 
 function getChangedText(history) {
   const changes = [];
 
-  const oldCheckIn =
+  const oldIn =
     formatTime(
       history.old_check_in_time
     );
 
-  const newCheckIn =
+  const newIn =
     formatTime(
       history.new_check_in_time
     );
 
-  const oldCheckOut =
+  const oldOut =
     formatTime(
       history.old_check_out_time
     );
 
-  const newCheckOut =
+  const newOut =
     formatTime(
       history.new_check_out_time
     );
 
-  if (oldCheckIn !== newCheckIn) {
+  if (oldIn !== newIn) {
     changes.push(
-      `출근 ${oldCheckIn} → ${newCheckIn}`
+      `출근 ${oldIn} → ${newIn}`
     );
   }
 
-  if (oldCheckOut !== newCheckOut) {
+  if (oldOut !== newOut) {
     changes.push(
-      `퇴근 ${oldCheckOut} → ${newCheckOut}`
+      `퇴근 ${oldOut} → ${newOut}`
     );
   }
 
@@ -728,21 +793,13 @@ function getChangedText(history) {
     );
   }
 
-  if (!changes.length) {
-    return "기록 확인 및 수정 완료";
-  }
-
-  return changes.join(" / ");
+  return changes.length
+    ? changes.join(" / ")
+    : "기록 확인";
 }
 
-/* =========================
-  최근 수정 이력 출력
-========================= */
-
-function renderEditHistories() {
-  if (!editHistoryList) {
-    return;
-  }
+function renderHistories() {
+  if (!editHistoryList) return;
 
   if (!editHistories.length) {
     editHistoryList.innerHTML = `
@@ -757,185 +814,271 @@ function renderEditHistories() {
   editHistoryList.innerHTML =
     editHistories
       .slice(0, 10)
-      .map((history) => {
-        const employeeName =
-          history.users?.name ||
-          "직원 정보 없음";
+      .map((history) => `
+        <div class="edit-history-item">
+          <strong>
+            ${escapeHtml(
+              history.employee_name ||
+              "직원 정보 없음"
+            )}
+          </strong>
 
-        return `
-          <div class="edit-history-item">
-            <strong>
-              ${escapeHtml(employeeName)}
-            </strong>
+          <p>
+            ${escapeHtml(
+              getChangedText(history)
+            )}
+          </p>
 
-            <p>
-              ${escapeHtml(
-                getChangedText(history)
-              )}
-            </p>
+          <span>
+            ${escapeHtml(
+              history.edit_reason ||
+              history.edit_type
+            )}
+          </span>
 
-            <span>
-              ${escapeHtml(
-                history.edit_reason ||
-                history.edit_type ||
-                "-"
-              )}
-            </span>
+          ${
+            history.memo
+              ? `
+                <p>
+                  ${escapeHtml(
+                    history.memo
+                  )}
+                </p>
+              `
+              : ""
+          }
 
-            ${
-              history.memo
-                ? `
-                  <p>
-                    ${escapeHtml(
-                      history.memo
-                    )}
-                  </p>
-                `
-                : ""
-            }
+          <p>
+            수정자:
+            ${escapeHtml(
+              history.editor_name ||
+              "관리자"
+            )}
+          </p>
 
-            <p>
-              수정자:
-              ${escapeHtml(
-                history.editor_name ||
-                "관리자"
-              )}
-            </p>
-
-            <small>
-              ${escapeHtml(
-                formatDateTime(
-                  history.created_at
-                )
-              )}
-            </small>
-          </div>
-        `;
-      })
+          <small>
+            ${escapeHtml(
+              formatDateTime(
+                history.created_at
+              )
+            )}
+          </small>
+        </div>
+      `)
       .join("");
 }
 
-/* =========================
-  모달 열기
-========================= */
+function renderWorkplaceOptions(
+  selectedWorkplaceId
+) {
+  editWorkplaceSelect.innerHTML = `
+    <option value="">
+      미배정
+    </option>
 
-function openEditModal(recordId) {
-  const record =
-    attendanceRecords.find(
+    ${workplaces.map(
+      (workplace) => `
+        <option
+          value="${escapeHtml(
+            workplace.id
+          )}"
+        >
+          ${escapeHtml(
+            workplace.name
+          )}
+          ${
+            workplace.is_active
+              ? ""
+              : " (비활성)"
+          }
+        </option>
+      `
+    ).join("")}
+  `;
+
+  editWorkplaceSelect.value =
+    selectedWorkplaceId
+      ? String(
+          selectedWorkplaceId
+        )
+      : "";
+}
+
+function openEditModal(rowKey) {
+  const row =
+    attendanceRows.find(
       (item) =>
-        String(item.id) ===
-        String(recordId)
+        item.row_key === rowKey
     );
 
-  if (!record || !editModal) {
-    return;
-  }
+  if (!row) return;
 
-  selectedRecordId = record.id;
-
-  const employeeName =
-    record.users?.name ||
-    "이름 없음";
-
-  const department =
-    record.users?.department ||
-    "부서 없음";
-
-  const workplace =
-    record.workplaces?.name ||
-    "미배정";
-
-  const type = getEditType(record);
+  selectedRow = row;
 
   editModalEmployeeName.textContent =
-    employeeName;
+    row.employee_name ||
+    "직원명";
 
   editModalEmployeeInfo.textContent =
-    `${formatDate(
-      record.work_date
-    )} · ${type} · ${department} · ${workplace}`;
+    [
+      formatDate(
+        row.work_date
+      ),
+
+      getEditType(row),
+
+      row.department ||
+        "소속 없음",
+
+      row.workplace_name ||
+        "근무지 미배정",
+    ].join(" · ");
 
   editCheckInInput.value =
     getTimeInputValue(
-      record.check_in_time
+      row.check_in_time
     );
 
   editCheckOutInput.value =
     getTimeInputValue(
-      record.check_out_time
+      row.check_out_time
     );
 
-  editRecordStatusSelect.value =
-    getProcessingStatus(record);
+  renderWorkplaceOptions(
+    row.workplace_id
+  );
 
-  const defaultReasonMap = {
-    "퇴근 누락": "직원 퇴근 누락",
-    "출근 누락": "직원 출근 누락",
-    "위치 오류": "GPS 오류",
-    "시간 조정": "근무시간 조정",
+  editRecordStatusSelect.value =
+    normalizeStatus(
+      row.attendance_status
+    );
+
+  const reasonMap = {
+    "기록 없음":
+      "직원 출근 누락",
+
+    "출근 누락":
+      "직원 출근 누락",
+
+    "퇴근 누락":
+      "직원 퇴근 누락",
+
+    "위치 오류":
+      "GPS 오류",
+
+    "중복 기록":
+      "관리자 확인 완료",
+
+    "시간 조정":
+      "근무시간 조정",
   };
 
   editReasonSelect.value =
-    defaultReasonMap[type] ||
-    "기타";
+    reasonMap[
+      getEditType(row)
+    ] || "기타";
 
   editMemoInput.value = "";
 
-  editModal.classList.add("active");
-  editModal.style.display = "flex";
+  const title =
+    editModal.querySelector(
+      ".edit-modal-header h3"
+    );
+
+  if (title) {
+    title.textContent =
+      row.has_record
+        ? "출퇴근 기록 수정"
+        : "출퇴근 기록 추가";
+  }
+
+  editModal.classList.add(
+    "active"
+  );
+
+  editModal.style.display =
+    "flex";
 
   document.body.style.overflow =
     "hidden";
 }
 
-/* =========================
-  모달 닫기
-========================= */
-
 function closeEditModal() {
-  if (!editModal) {
-    return;
-  }
+  editModal.classList.remove(
+    "active"
+  );
 
-  editModal.classList.remove("active");
-  editModal.style.display = "none";
+  editModal.style.display =
+    "none";
 
-  document.body.style.overflow = "";
+  document.body.style.overflow =
+    "";
 
-  selectedRecordId = null;
+  selectedRow = null;
 }
 
-/* =========================
-  저장값 검증
-========================= */
-
-function validateEditValues(
-  workDate,
+function validateValues(
+  status,
   checkInValue,
   checkOutValue
 ) {
   if (
+    checkOutValue &&
+    !checkInValue
+  ) {
+    alert(
+      "퇴근 시간을 입력하려면 출근 시간도 입력해야 합니다."
+    );
+
+    return false;
+  }
+
+  if (
+    status === "done" &&
+    (
+      !checkInValue ||
+      !checkOutValue
+    )
+  ) {
+    alert(
+      "근무 완료 상태는 출근·퇴근 시간을 모두 입력해야 합니다."
+    );
+
+    return false;
+  }
+
+  if (
+    status === "working" &&
+    !checkInValue
+  ) {
+    alert(
+      "근무 중 상태는 출근 시간을 입력해야 합니다."
+    );
+
+    return false;
+  }
+
+  if (
     checkInValue &&
     checkOutValue
   ) {
-    const checkInDate = new Date(
-      createDateTimeValue(
-        workDate,
-        checkInValue
-      )
-    );
+    const checkIn =
+      new Date(
+        createDateTimeValue(
+          selectedRow.work_date,
+          checkInValue
+        )
+      );
 
-    const checkOutDate = new Date(
-      createDateTimeValue(
-        workDate,
-        checkOutValue
-      )
-    );
+    const checkOut =
+      new Date(
+        createDateTimeValue(
+          selectedRow.work_date,
+          checkOutValue
+        )
+      );
 
-    if (
-      checkOutDate.getTime() <
-      checkInDate.getTime()
-    ) {
+    if (checkOut < checkIn) {
       alert(
         "퇴근 시간은 출근 시간보다 빠를 수 없습니다."
       );
@@ -945,18 +1088,12 @@ function validateEditValues(
   }
 
   if (
-    !editReasonSelect.value
-  ) {
-    alert("수정 사유를 선택해 주세요.");
-    return false;
-  }
-
-  if (
-    editReasonSelect.value === "기타" &&
+    editReasonSelect.value ===
+      "기타" &&
     !editMemoInput.value.trim()
   ) {
     alert(
-      "수정 사유가 기타인 경우 상세 메모를 입력해 주세요."
+      "수정 사유가 기타인 경우 상세 메모를 입력해주세요."
     );
 
     return false;
@@ -965,82 +1102,25 @@ function validateEditValues(
   return true;
 }
 
-/* =========================
-  attendance 상태 결정
-
-  시간을 정상적으로 입력하면
-  위치 오류 상태를 정상 상태로 변경한다.
-========================= */
-
-function getUpdatedAttendanceStatus(
-  record,
-  processingStatus
-) {
-  if (
-    processingStatus === "수정 필요"
-  ) {
-    return record.status;
-  }
-
-  const currentStatus = String(
-    record.status || ""
-  ).toLowerCase();
-
-  if (
-    currentStatus ===
-      "location_error" ||
-    currentStatus === "location" ||
-    currentStatus === "위치오류" ||
-    currentStatus === "위치 오류"
-  ) {
-    return "normal";
-  }
-
-  return record.status || "normal";
-}
-
-/* =========================
-  출퇴근 기록 저장
-========================= */
-
 async function saveAttendanceEdit() {
-  if (!selectedRecordId) {
-    return;
-  }
+  if (!selectedRow) return;
 
-  const record =
-    attendanceRecords.find(
-      (item) =>
-        String(item.id) ===
-        String(selectedRecordId)
-    );
-
-  if (!record) {
-    alert(
-      "수정할 출퇴근 기록을 찾지 못했습니다."
-    );
-
-    return;
-  }
-
-  const checkInValue =
-    editCheckInInput.value;
-
-  const checkOutValue =
-    editCheckOutInput.value;
-
-  const processingStatus =
+  const status =
     editRecordStatusSelect.value;
 
-  const editReason =
-    editReasonSelect.value;
+  const checkInValue =
+    status === "absent"
+      ? ""
+      : editCheckInInput.value;
 
-  const memo =
-    editMemoInput.value.trim();
+  const checkOutValue =
+    status === "absent"
+      ? ""
+      : editCheckOutInput.value;
 
   if (
-    !validateEditValues(
-      record.work_date,
+    !validateValues(
+      status,
       checkInValue,
       checkOutValue
     )
@@ -1048,135 +1128,88 @@ async function saveAttendanceEdit() {
     return;
   }
 
-  const newCheckInTime =
-    createDateTimeValue(
-      record.work_date,
-      checkInValue
-    );
-
-  const newCheckOutTime =
-    createDateTimeValue(
-      record.work_date,
-      checkOutValue
-    );
-
-  const newStatus =
-    getUpdatedAttendanceStatus(
-      record,
-      processingStatus
-    );
-
-  const historyPayload = {
-    attendance_id: record.id,
-    user_id:
-      record.user_id ||
-      record.users?.id ||
-      null,
-
-    work_date: record.work_date,
-
-    old_check_in_time:
-      record.check_in_time,
-
-    new_check_in_time:
-      newCheckInTime,
-
-    old_check_out_time:
-      record.check_out_time,
-
-    new_check_out_time:
-      newCheckOutTime,
-
-    old_status:
-      record.status,
-
-    new_status:
-      newStatus,
-
-    edit_type:
-      getEditType(record),
-
-    edit_reason:
-      editReason,
-
-    memo:
-      memo || null,
-
-    editor_name:
-      getCurrentAdminName(),
-  };
-
   editSaveBtn.disabled = true;
-  editSaveBtn.textContent = "저장 중...";
+  editSaveBtn.textContent =
+    "저장 중...";
 
   try {
-    /*
-      1. attendance 실제 기록 수정
-    */
     const {
-      data: updatedAttendance,
-      error: updateError,
-    } = await supabase
-      .from("attendance")
-      .update({
-        check_in_time:
-          newCheckInTime,
+      data,
+      error,
+    } = await supabase.rpc(
+      "admin_save_attendance_record",
+      {
+        p_attendance_id:
+          selectedRow.attendance_id ||
+          null,
 
-        check_out_time:
-          newCheckOutTime,
+        p_user_id:
+          selectedRow.user_id,
 
-        status:
-          newStatus,
-      })
-      .eq("id", record.id)
-      .select()
-      .single();
+        p_work_date:
+          selectedRow.work_date,
 
-    if (updateError) {
-      throw updateError;
-    }
+        p_workplace_id:
+          editWorkplaceSelect.value
+            ? Number(
+                editWorkplaceSelect
+                  .value
+              )
+            : null,
 
-    /*
-      2. 수정 이력 저장
-    */
-    const {
-      error: historyError,
-    } = await supabase
-      .from(
-        "attendance_edit_history"
-      )
-      .insert(historyPayload);
+        p_check_in_time:
+          createDateTimeValue(
+            selectedRow.work_date,
+            checkInValue
+          ),
 
-    if (historyError) {
-      /*
-        출퇴근 기록은 수정됐지만
-        이력 저장만 실패한 경우
-      */
-      console.error(
-        "수정 이력 저장 실패:",
-        historyError
-      );
+        p_check_out_time:
+          createDateTimeValue(
+            selectedRow.work_date,
+            checkOutValue
+          ),
 
-      alert(
-        "출퇴근 기록은 수정되었지만 수정 이력 저장에 실패했습니다. attendance_edit_history 테이블과 RLS 정책을 확인해 주세요."
-      );
-    } else {
-      alert(
-        "출퇴근 기록이 수정되었습니다."
-      );
-    }
+        p_status: status,
 
-    closeEditModal();
+        p_edit_reason:
+          editReasonSelect.value,
 
-    await loadPageData();
+        p_memo:
+          editMemoInput.value
+            .trim(),
+      }
+    );
+
+    if (error) throw error;
+
+    alert(
+      data?.created
+        ? "출퇴근 기록이 추가되었습니다."
+        : "출퇴근 기록이 수정되었습니다."
+    );
+
+  closeEditModal();
+
+  const safeReturnUrl =
+    getSafeReturnUrl();
+
+  if (safeReturnUrl) {
+    window.location.replace(
+      safeReturnUrl
+    );
+
+    return;
+  }
+
+  await loadPageData();    
   } catch (error) {
     console.error(
-      "출퇴근 기록 수정 실패:",
+      "출퇴근 기록 저장 실패:",
       error
     );
 
     alert(
-      `수정에 실패했습니다.\n${error.message || "Supabase 설정을 확인해 주세요."}`
+      getErrorMessage(error)
     );
   } finally {
     editSaveBtn.disabled = false;
@@ -1184,167 +1217,48 @@ async function saveAttendanceEdit() {
   }
 }
 
-/* =========================
-  수정 이력 다운로드
-========================= */
-
-function downloadEditHistory() {
-  if (!editHistories.length) {
-    alert(
-      "다운로드할 수정 이력이 없습니다."
-    );
-
-    return;
-  }
-
-  if (
-    typeof XLSX === "undefined"
-  ) {
-    alert(
-      "엑셀 라이브러리를 불러오지 못했습니다."
-    );
-
-    return;
-  }
-
-  const excelRows =
-    editHistories.map(
-      (history, index) => ({
-        No: index + 1,
-
-        직원명:
-          history.users?.name ||
-          "직원 정보 없음",
-
-        근무일:
-          history.work_date,
-
-        수정유형:
-          history.edit_type,
-
-        기존출근:
-          formatTime(
-            history.old_check_in_time
-          ),
-
-        수정출근:
-          formatTime(
-            history.new_check_in_time
-          ),
-
-        기존퇴근:
-          formatTime(
-            history.old_check_out_time
-          ),
-
-        수정퇴근:
-          formatTime(
-            history.new_check_out_time
-          ),
-
-        기존상태:
-          history.old_status || "-",
-
-        수정상태:
-          history.new_status || "-",
-
-        수정사유:
-          history.edit_reason || "-",
-
-        상세메모:
-          history.memo || "-",
-
-        수정자:
-          history.editor_name ||
-          "관리자",
-
-        수정일시:
-          formatDateTime(
-            history.created_at
-          ),
-      })
-    );
-
-  const worksheet =
-    XLSX.utils.json_to_sheet(
-      excelRows
-    );
-
-  worksheet["!cols"] = [
-    { wch: 6 },
-    { wch: 12 },
-    { wch: 12 },
-    { wch: 14 },
-    { wch: 12 },
-    { wch: 12 },
-    { wch: 12 },
-    { wch: 12 },
-    { wch: 14 },
-    { wch: 14 },
-    { wch: 20 },
-    { wch: 35 },
-    { wch: 12 },
-    { wch: 20 },
-  ];
-
-  const workbook =
-    XLSX.utils.book_new();
-
-  XLSX.utils.book_append_sheet(
-    workbook,
-    worksheet,
-    "출퇴근수정이력"
-  );
-
-  XLSX.writeFile(
-    workbook,
-    `출퇴근_수정이력_${getTodayString()}.xlsx`
-  );
+function escapeCsv(value) {
+  return `"${String(
+    value ?? ""
+  ).replaceAll(
+    '"',
+    '""'
+  )}"`;
 }
-
-/* =========================
-  로딩
-========================= */
 
 function showLoading() {
-  if (editTableBody) {
-    editTableBody.innerHTML = `
-      <tr>
-        <td colspan="7" class="empty-row">
-          출퇴근 기록을 불러오는 중입니다.
-        </td>
-      </tr>
-    `;
-  }
+  editTableBody.innerHTML = `
+    <tr>
+      <td
+        colspan="7"
+        class="empty-row"
+      >
+        직원 출퇴근 기록을 불러오는 중입니다.
+      </td>
+    </tr>
+  `;
 
-  if (editHistoryList) {
-    editHistoryList.innerHTML = `
-      <div class="edit-history-item">
-        <p>수정 이력을 불러오는 중입니다.</p>
-      </div>
-    `;
-  }
+  editHistoryList.innerHTML = `
+    <div class="edit-history-item">
+      <p>
+        수정 이력을 불러오는 중입니다.
+      </p>
+    </div>
+  `;
 }
-
-/* =========================
-  전체 데이터 조회
-========================= */
 
 async function loadPageData() {
   showLoading();
 
   try {
-    /*
-      이력을 먼저 불러와야
-      각 기록의 수정 완료 여부를 판단할 수 있다.
-    */
     await Promise.all([
-      fetchAttendanceRecords(),
+      fetchAttendanceRows(),
       fetchEditHistories(),
+      fetchWorkplaces(),
     ]);
 
-    filterEditRecords();
-    renderEditHistories();
+    renderTable();
+    renderHistories();
     updateStats();
   } catch (error) {
     console.error(
@@ -1352,109 +1266,81 @@ async function loadPageData() {
       error
     );
 
-    if (editTableBody) {
-      editTableBody.innerHTML = `
-        <tr>
-          <td colspan="7" class="empty-row">
-            출퇴근 기록을 불러오지 못했습니다.
-            <br>
-            ${escapeHtml(
-              error.message ||
-              "Supabase 설정을 확인해 주세요."
-            )}
-          </td>
-        </tr>
-      `;
-    }
-
-    if (editHistoryList) {
-      editHistoryList.innerHTML = `
-        <div class="edit-history-item">
-          <p>
-            수정 이력을 불러오지 못했습니다.
-          </p>
-        </div>
-      `;
-    }
+    editTableBody.innerHTML = `
+      <tr>
+        <td
+          colspan="7"
+          class="empty-row"
+        >
+          기록을 불러오지 못했습니다.
+          <br>
+          ${escapeHtml(
+            error.message ||
+            "Supabase 설정을 확인해주세요."
+          )}
+        </td>
+      </tr>
+    `;
   }
 }
 
-/* =========================
-  필터 초기화
-========================= */
-
 function resetFilters() {
-  if (editDateFilter) {
-    editDateFilter.value =
-      getTodayString();
-  }
+  editDateFilter.value =
+    getTodayString();
 
-  if (editTypeFilter) {
-    editTypeFilter.value = "all";
-  }
+  editTypeFilter.value =
+    "all";
 
-  if (editStatusFilter) {
-    editStatusFilter.value = "all";
-  }
+  editStatusFilter.value =
+    "all";
 
-  if (editSearchInput) {
-    editSearchInput.value = "";
-  }
+  editSearchInput.value = "";
 
   loadPageData();
 }
 
-/* =========================
-  이벤트
-========================= */
-
 function bindEvents() {
-  editDateFilter?.addEventListener(
+  editDateFilter.addEventListener(
     "change",
     loadPageData
   );
 
-  editTypeFilter?.addEventListener(
+  editTypeFilter.addEventListener(
     "change",
-    filterEditRecords
+    renderTable
   );
 
-  editStatusFilter?.addEventListener(
+  editStatusFilter.addEventListener(
     "change",
-    filterEditRecords
+    renderTable
   );
 
-  editSearchInput?.addEventListener(
+  editSearchInput.addEventListener(
     "input",
-    filterEditRecords
+    renderTable
   );
 
-  editModalCloseBtn?.addEventListener(
+  editModalCloseBtn.addEventListener(
     "click",
     closeEditModal
   );
 
-  editModalCancelBtn?.addEventListener(
+  editModalCancelBtn.addEventListener(
     "click",
     closeEditModal
   );
 
-  editSaveBtn?.addEventListener(
+  editSaveBtn.addEventListener(
     "click",
     saveAttendanceEdit
   );
 
-  editHistoryDownloadBtn?.addEventListener(
-    "click",
-    downloadEditHistory
-  );
-
-  editResetFilterBtn?.addEventListener(
+  editResetFilterBtn.addEventListener(
     "click",
     resetFilters
   );
 
-  editModal?.addEventListener(
+  editModal.addEventListener(
     "click",
     (event) => {
       if (
@@ -1470,7 +1356,7 @@ function bindEvents() {
     (event) => {
       if (
         event.key === "Escape" &&
-        editModal?.classList.contains(
+        editModal.classList.contains(
           "active"
         )
       ) {
@@ -1480,18 +1366,12 @@ function bindEvents() {
   );
 }
 
-/* =========================
-  초기 실행
-========================= */
-
-async function initAttendanceEditPage() {
-  if (editDateFilter) {
-    editDateFilter.value =
-      getTodayString();
-  }
+async function init() {
+  editDateFilter.value =
+    getTodayString();
 
   bindEvents();
   await loadPageData();
 }
 
-initAttendanceEditPage();
+init();

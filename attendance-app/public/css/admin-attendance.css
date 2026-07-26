@@ -632,3 +632,30 @@
 ) {
   background: #fffbeb;
 }
+
+.detail-attendance-edit-btn {
+  min-width: 56px;
+  padding: 7px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  color: #1d4ed8;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.detail-attendance-edit-btn:hover {
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+
+@media print {
+  .attendance-edit-control {
+    display: none !important;
+  }
+}
+
+.alert-banner[hidden] {
+  display: none !important;
+}
