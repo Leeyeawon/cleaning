@@ -81,6 +81,9 @@ const presetAttendanceId =
 const presetWorkDate =
   editPageParams.get("date");
 
+const presetUserId =
+  editPageParams.get("userId");
+
 const editReturnTo =
   editPageParams.get("returnTo");
 
@@ -1217,15 +1220,6 @@ async function saveAttendanceEdit() {
   }
 }
 
-function escapeCsv(value) {
-  return `"${String(
-    value ?? ""
-  ).replaceAll(
-    '"',
-    '""'
-  )}"`;
-}
-
 function showLoading() {
   editTableBody.innerHTML = `
     <tr>
@@ -1368,10 +1362,55 @@ function bindEvents() {
 
 async function init() {
   editDateFilter.value =
+    presetWorkDate ||
     getTodayString();
 
   bindEvents();
+
   await loadPageData();
+
+  if (
+    !presetAttendanceId &&
+    !presetUserId
+  ) {
+    return;
+  }
+
+  const targetRow =
+    attendanceRows.find((row) => {
+      if (presetAttendanceId) {
+        return (
+          String(
+            row.attendance_id
+          ) ===
+          String(
+            presetAttendanceId
+          )
+        );
+      }
+
+      return (
+        String(row.user_id) ===
+        String(presetUserId)
+      );
+    });
+
+  if (!targetRow) {
+    alert(
+      "선택한 직원의 수정 정보를 찾지 못했습니다."
+    );
+
+    return;
+  }
+
+  editSearchInput.value =
+    targetRow.employee_name || "";
+
+  renderTable();
+
+  openEditModal(
+    targetRow.row_key
+  );
 }
 
 init();

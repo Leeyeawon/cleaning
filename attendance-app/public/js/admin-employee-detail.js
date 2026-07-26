@@ -580,12 +580,11 @@ function renderAttendanceTable(
       ])
     );
 
-    const lastDay =
-      new Date(
-        selectedYear,
-        selectedMonth + 1,
-        0
-      ).getDate();
+    const lastDay = new Date(
+      selectedYear,
+      selectedMonth + 1,
+      0
+    ).getDate();
 
     for (
       let day = 1;
@@ -601,40 +600,37 @@ function renderAttendanceTable(
 
       displayRows.push({
         dateKey,
-
         record:
           recordMap.get(dateKey) ||
           null,
       });
     }
   } else {
-    displayRows =
-      records
-        .map((record) => ({
-          dateKey:
-            record.work_date,
+    displayRows = records
+      .map((record) => ({
+        dateKey:
+          record.work_date,
 
-          record,
-        }))
-        .sort(
-          (a, b) =>
-            a.dateKey.localeCompare(
-              b.dateKey
-            )
-        );
+        record,
+      }))
+      .sort(
+        (a, b) =>
+          a.dateKey.localeCompare(
+            b.dateKey
+          )
+      );
   }
 
   if (!displayRows.length) {
     detailRecordTableBody.innerHTML = `
       <tr>
-        <td colspan="7" class="empty-row">
+        <td colspan="6">
           조회된 기록이 없습니다.
         </td>
       </tr>
     `;
 
     updateAttendanceToggleButton(0);
-
     return;
   }
 
@@ -646,10 +642,9 @@ function renderAttendanceTable(
   detailRecordTableBody.innerHTML =
     displayRows
       .map(({ dateKey, record }) => {
-        const date =
-          new Date(
-            `${dateKey}T00:00:00`
-          );
+        const date = new Date(
+          `${dateKey}T00:00:00`
+        );
 
         const noteData =
           dailyNotes.get(dateKey) || {
@@ -681,10 +676,12 @@ function renderAttendanceTable(
           );
         }
 
-        const dayText =
-          String(
-            date.getDate()
-          ).padStart(2, "0");
+        const dayText = String(
+          date.getDate()
+        ).padStart(2, "0");
+
+        const monthText =
+          date.getMonth() + 1;
 
         const checkIn =
           record?.check_in_time
@@ -730,29 +727,63 @@ function renderAttendanceTable(
         return `
           <tr class="${rowClasses.join(" ")}">
             <td>
-              <span style="color:${statusColor}; font-weight:bold; background:#f3f4f6; padding:3px 8px; border-radius:6px; font-size:12px;">
-                ${statusText}
-              </span>
+              <strong>
+                ${monthText}.${dayText}
+              </strong>
             </td>
 
-            <td style="color:#4b5563; font-size:13px; text-align:left;">
-              ${memoText}
+            <td>
+              ${getKoreanDayOfWeek(
+                dateKey
+              )}
+            </td>
+
+            <td>
+              ${
+                isAnnualLeave
+                  ? `
+                    <strong class="annual-leave-text">
+                      연차
+                    </strong>
+                  `
+                  : escapeHtml(
+                      workTime
+                    )
+              }
+            </td>
+
+            <td>
+              ${escapeHtml(
+                workTimeText
+              )}
+            </td>
+
+            <td class="daily-note-cell">
+              ${escapeHtml(
+                noteData.content
+              )}
             </td>
 
             <td class="attendance-edit-control">
               ${
-                item.id
-                  ? `
+                isAnnualLeave
+                  ? "—"
+                  : `
                     <button
                       type="button"
                       class="detail-attendance-edit-btn"
-                      data-attendance-edit-id="${item.id}"
-                      data-attendance-edit-date="${dateStr}"
+                      data-attendance-edit-id="${
+                        record?.id || ""
+                      }"
+                      data-attendance-edit-date="${dateKey}"
                     >
-                      수정
+                      ${
+                        record?.id
+                          ? "수정"
+                          : "기록 추가"
+                      }
                     </button>
                   `
-                  : "—"
               }
             </td>
           </tr>
@@ -761,28 +792,43 @@ function renderAttendanceTable(
       .join("");
 
   detailRecordTableBody
-    .querySelectorAll("[data-attendance-edit-id]")
+    .querySelectorAll(
+      "[data-attendance-edit-date]"
+    )
     .forEach((button) => {
-      button.addEventListener("click", () => {
-        const params = new URLSearchParams({
-          attendanceId:
-            button.dataset.attendanceEditId,
+      button.addEventListener(
+        "click",
+        () => {
+          const params =
+            new URLSearchParams({
+              date:
+                button.dataset
+                  .attendanceEditDate,
 
-          date:
-            button.dataset.attendanceEditDate,
+              userId:
+                targetUserId,
 
-          userId:
-            targetUserId,
+              returnTo:
+                `admin-employee-detail.html?id=${targetUserId}`,
+            });
 
-          returnTo:
-            `admin-employee-detail.html?id=${targetUserId}`,
-        });
+          const attendanceId =
+            button.dataset
+              .attendanceEditId;
 
-        window.location.href =
-          `admin-attendance-edit.html?${params.toString()}`;
-      });
+          if (attendanceId) {
+            params.set(
+              "attendanceId",
+              attendanceId
+            );
+          }
+
+          window.location.href =
+            `admin-attendance-edit.html?${params.toString()}`;
+        }
+      );
     });
-    
+
   updateAttendanceToggleButton(
     displayRows.length
   );
