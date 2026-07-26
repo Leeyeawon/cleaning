@@ -728,14 +728,12 @@ function renderAttendanceTable(
           <tr class="${rowClasses.join(" ")}">
             <td>
               <strong>
-                ${monthText}.${dayText}
+                ${date.getMonth() + 1}.${dayText}
               </strong>
             </td>
 
             <td>
-              ${getKoreanDayOfWeek(
-                dateKey
-              )}
+              ${getKoreanDayOfWeek(dateKey)}
             </td>
 
             <td>
@@ -746,22 +744,16 @@ function renderAttendanceTable(
                       연차
                     </strong>
                   `
-                  : escapeHtml(
-                      workTime
-                    )
+                  : escapeHtml(workTime)
               }
             </td>
 
             <td>
-              ${escapeHtml(
-                workTimeText
-              )}
+              ${escapeHtml(workTimeText)}
             </td>
 
             <td class="daily-note-cell">
-              ${escapeHtml(
-                noteData.content
-              )}
+              ${escapeHtml(noteData.content)}
             </td>
 
             <td class="attendance-edit-control">
@@ -772,16 +764,10 @@ function renderAttendanceTable(
                     <button
                       type="button"
                       class="detail-attendance-edit-btn"
-                      data-attendance-edit-id="${
-                        record?.id || ""
-                      }"
+                      data-attendance-edit-id="${record?.id || ""}"
                       data-attendance-edit-date="${dateKey}"
                     >
-                      ${
-                        record?.id
-                          ? "수정"
-                          : "기록 추가"
-                      }
+                      ${record?.id ? "수정" : "기록 추가"}
                     </button>
                   `
               }
