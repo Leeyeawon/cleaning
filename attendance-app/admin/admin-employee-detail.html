@@ -511,15 +511,6 @@
             정보 수정
           </button>
         </div>
-        <tr>
-          <th>일자</th>
-          <th>요일</th>
-          <th>근무시간</th>
-          <th>시간합계</th>
-          <th>기타사항</th>
-          <th>비고</th>
-          <th class="attendance-edit-control">관리</th>
-        </tr>
       </header>
 
       <section class="content">
@@ -639,16 +630,6 @@
 
           <div class="attendance-table-wrap employee-attendance-table-scroll">
             <table class="attendance-table">
-              <thead>
-                <tr>
-                  <th>일자</th>
-                  <th>요일</th>
-                  <th>근무시간</th>
-                  <th>시간합계</th>
-                  <th>기타사항</th>
-                  <th class="attendance-edit-control">관리</th>
-                </tr>
-              </thead>
               <tbody id="detailRecordTableBody"></tbody>
             </table>
           </div>
@@ -724,6 +705,16 @@
         <button id="employeeEditCloseBtn" type="button">
           ×
         </button>
+        <thead>
+          <tr>
+            <th>일자</th>
+            <th>요일</th>
+            <th>근무시간</th>
+            <th>시간합계</th>
+            <th>기타사항</th>
+            <th class="attendance-edit-control">관리</th>
+          </tr>
+        </thead>
       </header>
 
       <form id="employeeEditForm" class="detail-modal-form">
@@ -817,6 +808,135 @@
           class="detail-modal-save"
         >
           지역 배정 저장
+        </button>
+      </footer>
+    </div>
+  </div>
+
+  <div
+  class="detail-modal"
+  id="attendanceEditModal"
+  hidden
+  >
+    <div class="detail-modal-card attendance-edit-modal-card">
+      <header class="detail-modal-header">
+        <div>
+          <h3 id="attendanceEditModalTitle">
+            출퇴근 기록 수정
+          </h3>
+
+          <p id="attendanceEditModalInfo">
+            직원명 · 근무일
+          </p>
+        </div>
+
+        <button
+          id="attendanceEditCloseBtn"
+          type="button"
+          aria-label="닫기"
+        >
+          ×
+        </button>
+      </header>
+
+      <div class="attendance-edit-form">
+        <div class="attendance-edit-time-grid">
+          <label>
+            출근 시간
+            <input
+              id="detailEditCheckIn"
+              type="time"
+            />
+          </label>
+
+          <label>
+            퇴근 시간
+            <input
+              id="detailEditCheckOut"
+              type="time"
+            />
+          </label>
+        </div>
+
+        <label>
+          근무 상태
+          <select id="detailEditStatus">
+            <option value="working">
+              근무중
+            </option>
+
+            <option value="completed">
+              퇴근완료
+            </option>
+
+            <option value="late">
+              지각
+            </option>
+
+            <option value="absent">
+              미출근
+            </option>
+
+            <option value="location_error">
+              위치오류
+            </option>
+          </select>
+        </label>
+
+        <label>
+          수정 사유
+          <select id="detailEditReason">
+            <option value="직원 출근 누락">
+              직원 출근 누락
+            </option>
+
+            <option value="직원 퇴근 누락">
+              직원 퇴근 누락
+            </option>
+
+            <option value="GPS 오류">
+              GPS 오류
+            </option>
+
+            <option value="근무시간 조정">
+              근무시간 조정
+            </option>
+
+            <option value="관리자 확인 완료">
+              관리자 확인 완료
+            </option>
+
+            <option value="기타">
+              기타
+            </option>
+          </select>
+        </label>
+
+        <label>
+          상세 메모
+          <textarea
+            id="detailEditMemo"
+            rows="4"
+            placeholder="수정한 이유나 확인 내용을 입력하세요."
+          ></textarea>
+        </label>
+      </div>
+
+      <footer class="detail-modal-actions">
+        <button
+          id="attendanceEditCancelBtn"
+          type="button"
+          class="detail-modal-cancel"
+        >
+          취소
+        </button>
+
+        <button
+          id="attendanceEditSaveBtn"
+          type="button"
+          class="detail-modal-save"
+        >
+          저장
         </button>
       </footer>
     </div>

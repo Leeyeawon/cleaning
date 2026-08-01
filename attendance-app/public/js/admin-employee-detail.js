@@ -62,6 +62,61 @@ const regionEditSaveBtn = document.getElementById("regionEditSaveBtn");
 const dailyNoteType = document.getElementById("dailyNoteType");
 const toggleAttendanceRowsBtn = document.getElementById( "toggleAttendanceRowsBtn" );
 
+const attendanceEditModal =
+  document.getElementById(
+    "attendanceEditModal"
+  );
+
+const attendanceEditModalTitle =
+  document.getElementById(
+    "attendanceEditModalTitle"
+  );
+
+const attendanceEditModalInfo =
+  document.getElementById(
+    "attendanceEditModalInfo"
+  );
+
+const attendanceEditCloseBtn =
+  document.getElementById(
+    "attendanceEditCloseBtn"
+  );
+
+const attendanceEditCancelBtn =
+  document.getElementById(
+    "attendanceEditCancelBtn"
+  );
+
+const attendanceEditSaveBtn =
+  document.getElementById(
+    "attendanceEditSaveBtn"
+  );
+
+const detailEditCheckIn =
+  document.getElementById(
+    "detailEditCheckIn"
+  );
+
+const detailEditCheckOut =
+  document.getElementById(
+    "detailEditCheckOut"
+  );
+
+const detailEditStatus =
+  document.getElementById(
+    "detailEditStatus"
+  );
+
+const detailEditReason =
+  document.getElementById(
+    "detailEditReason"
+  );
+
+const detailEditMemo =
+  document.getElementById(
+    "detailEditMemo"
+  );
+
 let currentEmployeeData = null;
 let viewMode = "monthly"; 
 let selectedYear = new Date().getFullYear();
@@ -69,6 +124,8 @@ let selectedMonth = new Date().getMonth();
 let currentAttendanceRecords = [];
 let dailyNotes = new Map();
 let attendanceExpanded = false;
+let selectedDetailAttendance = null;
+let selectedDetailAttendanceDate = null;
 
 function formatTimeOnly(timeString) {
   if (!timeString) return "00:00";
@@ -781,43 +838,331 @@ function renderAttendanceTable(
     .querySelectorAll(
       "[data-attendance-edit-date]"
     )
-    .forEach((button) => {
-      button.addEventListener(
-        "click",
-        () => {
-          const params =
-            new URLSearchParams({
-              date:
-                button.dataset
-                  .attendanceEditDate,
+  .forEach((button) => {
+    button.addEventListener(
+      "click",
+      () => {
+        openDetailAttendanceModal(
+          button.dataset
+            .attendanceEditDate,
 
-              userId:
-                targetUserId,
-
-              returnTo:
-                `admin-employee-detail.html?id=${targetUserId}`,
-            });
-
-          const attendanceId =
-            button.dataset
-              .attendanceEditId;
-
-          if (attendanceId) {
-            params.set(
-              "attendanceId",
-              attendanceId
-            );
-          }
-
-          window.location.href =
-            `admin-attendance-edit.html?${params.toString()}`;
-        }
-      );
-    });
+          button.dataset
+            .attendanceEditId
+        );
+      }
+    );
+  });
 
   updateAttendanceToggleButton(
     displayRows.length
   );
+}
+
+function getAttendanceInputTime(
+  value
+) {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return [
+    String(
+      date.getHours()
+    ).padStart(2, "0"),
+
+    String(
+      date.getMinutes()
+    ).padStart(2, "0"),
+  ].join(":");
+}
+
+attendanceEditCloseBtn
+  ?.addEventListener(
+    "click",
+    closeDetailAttendanceModal
+  );
+
+attendanceEditCancelBtn
+  ?.addEventListener(
+    "click",
+    closeDetailAttendanceModal
+  );
+
+attendanceEditSaveBtn
+  ?.addEventListener(
+    "click",
+    saveDetailAttendance
+  );
+
+attendanceEditModal
+  ?.addEventListener(
+    "click",
+    (event) => {
+      if (
+        event.target ===
+        attendanceEditModal
+      ) {
+        closeDetailAttendanceModal();
+      }
+    }
+  );
+  
+function normalizeDetailStatus(
+  status
+) {
+  const statusMap = {
+    정상: "completed",
+    퇴근완료: "completed",
+    근무중: "working",
+    지각: "late",
+    미출근: "absent",
+    위치오류: "location_error",
+  };
+
+  return (
+    statusMap[status] ||
+    status ||
+    "working"
+  );
+}
+
+function createDetailDateTime(
+  dateValue,
+  timeValue
+) {
+  if (!dateValue || !timeValue) {
+    return null;
+  }
+
+  const date = new Date(
+    `${dateValue}T${timeValue}:00`
+  );
+
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return date.toISOString();
+}
+
+function openDetailAttendanceModal(
+  dateValue,
+  attendanceId
+) {
+  selectedDetailAttendanceDate =
+    dateValue;
+
+  selectedDetailAttendance =
+    currentAttendanceRecords.find(
+      (record) =>
+        String(record.id) ===
+        String(attendanceId)
+    ) || null;
+
+  const employeeName =
+    currentEmployeeData?.name ||
+    "직원";
+
+  attendanceEditModalTitle.textContent =
+    selectedDetailAttendance
+      ? "출퇴근 기록 수정"
+      : "출퇴근 기록 추가";
+
+  attendanceEditModalInfo.textContent =
+    `${employeeName} · ${dateValue}`;
+
+  detailEditCheckIn.value =
+    getAttendanceInputTime(
+      selectedDetailAttendance
+        ?.check_in_time
+    );
+
+  detailEditCheckOut.value =
+    getAttendanceInputTime(
+      selectedDetailAttendance
+        ?.check_out_time
+    );
+
+  detailEditStatus.value =
+    normalizeDetailStatus(
+      selectedDetailAttendance
+        ?.status
+    );
+
+  detailEditReason.value =
+    selectedDetailAttendance
+      ? "근무시간 조정"
+      : "직원 출근 누락";
+
+  detailEditMemo.value = "";
+
+  attendanceEditModal.hidden = false;
+  attendanceEditModal.classList.add(
+    "active"
+  );
+
+  document.body.style.overflow =
+    "hidden";
+}
+
+function closeDetailAttendanceModal() {
+  attendanceEditModal.classList.remove(
+    "active"
+  );
+
+  attendanceEditModal.hidden = true;
+
+  selectedDetailAttendance = null;
+  selectedDetailAttendanceDate = null;
+
+  document.body.style.overflow = "";
+}
+
+async function saveDetailAttendance() {
+  if (
+    !selectedDetailAttendanceDate
+  ) {
+    return;
+  }
+
+  const status =
+    detailEditStatus.value;
+
+  let checkIn =
+    detailEditCheckIn.value;
+
+  let checkOut =
+    detailEditCheckOut.value;
+
+  if (status === "absent") {
+    checkIn = "";
+    checkOut = "";
+  }
+
+  if (
+    checkOut &&
+    !checkIn
+  ) {
+    alert(
+      "퇴근 시간을 입력하려면 출근 시간도 입력해야 합니다."
+    );
+
+    return;
+  }
+
+  if (
+    checkIn &&
+    checkOut &&
+    checkOut < checkIn
+  ) {
+    alert(
+      "퇴근 시간은 출근 시간보다 빠를 수 없습니다."
+    );
+
+    return;
+  }
+
+  if (
+    detailEditReason.value ===
+      "기타" &&
+    !detailEditMemo.value.trim()
+  ) {
+    alert(
+      "수정 사유가 기타인 경우 상세 메모를 입력해주세요."
+    );
+
+    return;
+  }
+
+  attendanceEditSaveBtn.disabled =
+    true;
+
+  attendanceEditSaveBtn.textContent =
+    "저장 중...";
+
+  try {
+    const { data, error } =
+      await supabase.rpc(
+        "admin_save_attendance_record",
+        {
+          p_attendance_id:
+            selectedDetailAttendance
+              ?.id || null,
+
+          p_user_id:
+            targetUserId,
+
+          p_work_date:
+            selectedDetailAttendanceDate,
+
+          p_workplace_id:
+            selectedDetailAttendance
+              ?.workplace_id ??
+            currentEmployeeData
+              ?.workplace_id ??
+            null,
+
+          p_check_in_time:
+            createDetailDateTime(
+              selectedDetailAttendanceDate,
+              checkIn
+            ),
+
+          p_check_out_time:
+            createDetailDateTime(
+              selectedDetailAttendanceDate,
+              checkOut
+            ),
+
+          p_status:
+            status,
+
+          p_edit_reason:
+            detailEditReason.value,
+
+          p_memo:
+            detailEditMemo.value.trim(),
+        }
+      );
+
+    if (error) {
+      throw error;
+    }
+
+    alert(
+      data?.created
+        ? "출퇴근 기록이 추가되었습니다."
+        : "출퇴근 기록이 수정되었습니다."
+    );
+
+    closeDetailAttendanceModal();
+
+    await fetchAndRenderAttendance();
+  } catch (error) {
+    console.error(
+      "직원 상세 출퇴근 저장 실패:",
+      error
+    );
+
+    alert(
+      `저장하지 못했습니다.\n${
+        error.message ||
+        "Supabase 설정을 확인해주세요."
+      }`
+    );
+  } finally {
+    attendanceEditSaveBtn.disabled =
+      false;
+
+    attendanceEditSaveBtn.textContent =
+      "저장";
+  }
 }
 
 function renderMemoHistory() {
