@@ -578,14 +578,6 @@
 
         <section class="panel employee-attendance-panel">
           <div class="panel-header employee-attendance-panel-header">
-            <div class="attendance-panel-title">
-              <h3>최근 출근 기록</h3>
-
-              <p>
-                기본적으로 최근 5일만 표시됩니다.
-              </p>
-            </div>
-
             <div class="attendance-panel-actions attendance-print-actions">
               <button
                 id="toggleAttendanceRowsBtn"
@@ -630,6 +622,19 @@
 
           <div class="attendance-table-wrap employee-attendance-table-scroll">
             <table class="attendance-table">
+              <thead>
+                <tr>
+                  <th>일자</th>
+                  <th>요일</th>
+                  <th>근무시간</th>
+                  <th>시간합계</th>
+                  <th>기타사항</th>
+                  <th class="attendance-edit-control">
+                    관리
+                  </th>
+                </tr>
+              </thead>
+
               <tbody id="detailRecordTableBody"></tbody>
             </table>
           </div>
@@ -705,16 +710,6 @@
         <button id="employeeEditCloseBtn" type="button">
           ×
         </button>
-        <thead>
-          <tr>
-            <th>일자</th>
-            <th>요일</th>
-            <th>근무시간</th>
-            <th>시간합계</th>
-            <th>기타사항</th>
-            <th class="attendance-edit-control">관리</th>
-          </tr>
-        </thead>
       </header>
 
       <form id="employeeEditForm" class="detail-modal-form">
@@ -944,6 +939,6 @@
 
   <script src="../public/js/common.js"></script>
   <script type="module" src="../public/js/pc.js"></script>
-  <script type="module" src="../public/js/admin-employee-detail.js"></script>
+  <script type="module" src="../public/js/admin-employee-detail.js?v=26"></script>
 </body>
 </html>
