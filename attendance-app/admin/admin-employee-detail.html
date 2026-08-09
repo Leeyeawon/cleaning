@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="../public/css/common.css" />
   <link rel="stylesheet" href="../public/css/pc.css" />
   <link rel="stylesheet" href="../public/css/admin.css" />
+  <link rel="stylesheet" href="../public/css/admin-attendance-edit.css"/>
   <style>
     /* =========================================
        💻 일반 웹 화면 디자인 (디테일 보정 완료)
@@ -771,8 +772,10 @@
     <div class="detail-modal-panel">
       <header class="detail-modal-header">
         <div>
-          <h2>배정 지역 수정</h2>
-          <p>여러 근무지를 선택할 수 있습니다.</p>
+          <h2>근무지 및 근무 요일 설정</h2>
+          <p>
+            근무지별 배정 기간과 출근 가능한 요일을 설정합니다.
+          </p>
         </div>
 
         <button
@@ -802,7 +805,7 @@
           type="button"
           class="detail-modal-save"
         >
-          지역 배정 저장
+          근무지 배정 저장
         </button>
       </footer>
     </div>
@@ -813,8 +816,7 @@
   id="attendanceEditModal"
   hidden
   >
-    <div class="detail-modal-card attendance-edit-modal-card">
-      <header class="detail-modal-header">
+      <div class="detail-modal-panel attendance-edit-modal-card">      <header class="detail-modal-header">
         <div>
           <h3 id="attendanceEditModalTitle">
             출퇴근 기록 수정

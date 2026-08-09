@@ -41,6 +41,7 @@ const dailyNoteDate = document.getElementById("dailyNoteDate");
 const dailyNoteInput = document.getElementById("dailyNoteInput");
 const saveDailyNoteBtn = document.getElementById("saveDailyNoteBtn");
 const deleteDailyNoteBtn = document.getElementById("deleteDailyNoteBtn");
+const printTitle = document.getElementById("printTitle");
 const printSubtitle = document.getElementById("printSubtitle");
 
 const editEmployeeBtn = document.getElementById("editEmployeeBtn");
@@ -1004,7 +1005,7 @@ function openDetailAttendanceModal(
 
   attendanceEditModal.hidden = false;
   attendanceEditModal.classList.add(
-    "active"
+    "open"
   );
 
   document.body.style.overflow =
@@ -1013,7 +1014,7 @@ function openDetailAttendanceModal(
 
 function closeDetailAttendanceModal() {
   attendanceEditModal.classList.remove(
-    "active"
+    "open"
   );
 
   attendanceEditModal.hidden = true;
@@ -1509,7 +1510,7 @@ async function openRegionEditModal() {
   }
 
   regionEditList.innerHTML =
-    "근무지역을 불러오는 중입니다.";
+    "근무지 정보를 불러오는 중입니다.";
 
   regionEditModal.classList.add(
     "open"
@@ -1520,65 +1521,361 @@ async function openRegionEditModal() {
     "false"
   );
 
-  const { data, error } =
-    await supabase
-      .from("workplaces")
-      .select("id, name")
-      .order("name", {
-        ascending: true,
-      });
+  try {
+    const [
+      workplaceResult,
+      assignmentResult,
+    ] = await Promise.all([
+      supabase
+        .from("workplaces")
+        .select(`
+          id,
+          name,
+          address,
+          is_active
+        `)
+        .eq("is_active", true)
+        .order("name", {
+          ascending: true,
+        }),
 
-  if (error) {
-    regionEditList.textContent =
-      "근무지역을 불러오지 못했습니다.";
+      supabase
+        .from("workplace_users")
+        .select(`
+          workplace_id,
+          start_date,
+          end_date,
+          days_of_week
+        `)
+        .eq(
+          "user_id",
+          targetUserId
+        ),
+    ]);
 
-    console.error(error);
-    return;
-  }
+    if (workplaceResult.error) {
+      throw workplaceResult.error;
+    }
 
-  const currentIds =
-    Array.isArray(
-      currentEmployeeData.workplaceIds
-    )
-      ? currentEmployeeData
-          .workplaceIds
-          .map(String)
-      : [];
+    if (assignmentResult.error) {
+      throw assignmentResult.error;
+    }
 
-  regionEditList.innerHTML =
-    (data || [])
-      .map(
-        (workplace, index) => {
-          const workplaceId =
-            String(workplace.id);
+    const workplaces =
+      workplaceResult.data || [];
 
-          return `
-            <div class="detail-region-option">
-              <input
-                id="detailRegion${index}"
-                type="checkbox"
-                name="detailRegion"
-                value="${workplaceId}"
-                ${
-                  currentIds.includes(
-                    workplaceId
-                  )
-                    ? "checked"
+    const assignmentMap =
+      new Map(
+        (
+          assignmentResult.data || []
+        ).map((assignment) => [
+          String(
+            assignment.workplace_id
+          ),
+          assignment,
+        ])
+      );
+
+    if (!workplaces.length) {
+      regionEditList.innerHTML = `
+        <div class="detail-workplace-empty">
+          등록된 활성 근무지가 없습니다.
+        </div>
+      `;
+
+      return;
+    }
+
+    const weekDays = [
+      "월",
+      "화",
+      "수",
+      "목",
+      "금",
+      "토",
+      "일",
+    ];
+
+    regionEditList.innerHTML =
+      workplaces
+        .map(
+          (
+            workplace,
+            workplaceIndex
+          ) => {
+            const workplaceId =
+              String(workplace.id);
+
+            const assignment =
+              assignmentMap.get(
+                workplaceId
+              );
+
+            const isAssigned =
+              Boolean(assignment);
+
+            const savedDays =
+              Array.isArray(
+                assignment
+                  ?.days_of_week
+              )
+                ? assignment
+                    .days_of_week
+                : [];
+
+            const isEveryDay =
+              savedDays.length === 0;
+
+            return `
+              <article
+                class="detail-workplace-card ${
+                  isAssigned
+                    ? "selected"
                     : ""
-                }
-              />
+                }"
+                data-workplace-id="${escapeHtml(
+                  workplaceId
+                )}"
+              >
+                <div class="detail-workplace-card-top">
+                  <input
+                    id="detailWorkplace${workplaceIndex}"
+                    class="detail-workplace-select"
+                    type="checkbox"
+                    ${
+                      isAssigned
+                        ? "checked"
+                        : ""
+                    }
+                  />
 
-              <label for="detailRegion${index}">
-                ${workplace.name}
-              </label>
-            </div>
-          `;
-        }
+                  <label
+                    for="detailWorkplace${workplaceIndex}"
+                    class="detail-workplace-main-label"
+                  >
+                    <span class="detail-workplace-check"></span>
+
+                    <span>
+                      <strong>
+                        ${escapeHtml(
+                          workplace.name
+                        )}
+                      </strong>
+
+                      <small>
+                        ${escapeHtml(
+                          workplace.address ||
+                          "주소 미등록"
+                        )}
+                      </small>
+                    </span>
+                  </label>
+                </div>
+
+                <div class="detail-workplace-schedule">
+                  <div class="detail-workplace-period">
+                    <label>
+                      배정 시작일
+
+                      <input
+                        class="detail-workplace-start-date"
+                        type="date"
+                        value="${escapeHtml(
+                          assignment
+                            ?.start_date ||
+                          ""
+                        )}"
+                      />
+                    </label>
+
+                    <label>
+                      배정 종료일
+
+                      <input
+                        class="detail-workplace-end-date"
+                        type="date"
+                        value="${escapeHtml(
+                          assignment
+                            ?.end_date ||
+                          ""
+                        )}"
+                      />
+                    </label>
+                  </div>
+
+                  <div class="detail-workplace-days">
+                    <span class="detail-workplace-days-title">
+                      출근 가능 요일
+                    </span>
+
+                    <div class="detail-workplace-day-list">
+                      <label class="detail-day-option every-day">
+                        <input
+                          class="detail-every-day-check"
+                          type="checkbox"
+                          ${
+                            isEveryDay
+                              ? "checked"
+                              : ""
+                          }
+                        />
+
+                        <span>
+                          매일
+                        </span>
+                      </label>
+
+                      ${weekDays
+                        .map(
+                          (
+                            day,
+                            dayIndex
+                          ) => `
+                            <label class="detail-day-option">
+                              <input
+                                class="detail-weekday-check"
+                                type="checkbox"
+                                value="${day}"
+                                ${
+                                  savedDays.includes(
+                                    day
+                                  )
+                                    ? "checked"
+                                    : ""
+                                }
+                                ${
+                                  isEveryDay
+                                    ? "disabled"
+                                    : ""
+                                }
+                              />
+
+                              <span>
+                                ${day}
+                              </span>
+                            </label>
+                          `
+                        )
+                        .join("")}
+                    </div>
+                  </div>
+                </div>
+              </article>
+            `;
+          }
+        )
+        .join("");
+
+    regionEditList
+      .querySelectorAll(
+        ".detail-workplace-card"
       )
-      .join("");
+      .forEach((card) => {
+        const workplaceCheck =
+          card.querySelector(
+            ".detail-workplace-select"
+          );
 
-  regionEditModal.dataset.workplaces =
-    JSON.stringify(data || []);
+        const everyDayCheck =
+          card.querySelector(
+            ".detail-every-day-check"
+          );
+
+        const weekdayChecks = [
+          ...card.querySelectorAll(
+            ".detail-weekday-check"
+          ),
+        ];
+
+        const dateInputs = [
+          ...card.querySelectorAll(
+            'input[type="date"]'
+          ),
+        ];
+
+        function syncCardState() {
+          const assigned =
+            workplaceCheck.checked;
+
+          card.classList.toggle(
+            "selected",
+            assigned
+          );
+
+          everyDayCheck.disabled =
+            !assigned;
+
+          dateInputs.forEach(
+            (input) => {
+              input.disabled =
+                !assigned;
+            }
+          );
+
+          weekdayChecks.forEach(
+            (input) => {
+              input.disabled =
+                !assigned ||
+                everyDayCheck.checked;
+            }
+          );
+        }
+
+        workplaceCheck.addEventListener(
+          "change",
+          syncCardState
+        );
+
+        everyDayCheck.addEventListener(
+          "change",
+          () => {
+            if (
+              everyDayCheck.checked
+            ) {
+              weekdayChecks.forEach(
+                (input) => {
+                  input.checked =
+                    false;
+                }
+              );
+            }
+
+            syncCardState();
+          }
+        );
+
+        weekdayChecks.forEach(
+          (weekdayCheck) => {
+            weekdayCheck
+              .addEventListener(
+                "change",
+                () => {
+                  const hasSelectedDay =
+                    weekdayChecks.some(
+                      (input) =>
+                        input.checked
+                    );
+
+                  everyDayCheck.checked =
+                    !hasSelectedDay;
+
+                  syncCardState();
+                }
+              );
+          }
+        );
+
+        syncCardState();
+      });
+  } catch (error) {
+    console.error(
+      "근무지 배정 정보 조회 실패:",
+      error
+    );
+
+    regionEditList.textContent =
+      "근무지 정보를 불러오지 못했습니다.";
+  }
 }
 
 function closeRegionEditModal() {
@@ -1593,24 +1890,95 @@ function closeRegionEditModal() {
 }
 
 async function saveEmployeeRegions() {
-  const selectedIds = [
-    ...regionEditList.querySelectorAll(
-      'input[name="detailRegion"]:checked'
-    ),
-  ].map((input) => input.value);
+  const selectedCards = [
+    ...regionEditList
+      .querySelectorAll(
+        ".detail-workplace-card"
+      ),
+  ].filter((card) =>
+    card.querySelector(
+      ".detail-workplace-select"
+    )?.checked
+  );
 
-  regionEditSaveBtn.disabled = true;
+  const assignments = [];
+
+  for (
+    const card of selectedCards
+  ) {
+    const workplaceId =
+      card.dataset.workplaceId;
+
+    const startDate =
+      card.querySelector(
+        ".detail-workplace-start-date"
+      )?.value || null;
+
+    const endDate =
+      card.querySelector(
+        ".detail-workplace-end-date"
+      )?.value || null;
+
+    if (
+      startDate &&
+      endDate &&
+      endDate < startDate
+    ) {
+      alert(
+        "배정 종료일은 시작일보다 빠를 수 없습니다."
+      );
+
+      return;
+    }
+
+    const everyDay =
+      card.querySelector(
+        ".detail-every-day-check"
+      )?.checked;
+
+    const daysOfWeek =
+      everyDay
+        ? []
+        : [
+            ...card.querySelectorAll(
+              ".detail-weekday-check:checked"
+            ),
+          ].map(
+            (input) =>
+              input.value
+          );
+
+    assignments.push({
+      workplace_id:
+        Number(workplaceId),
+
+      start_date:
+        startDate,
+
+      end_date:
+        endDate,
+
+      days_of_week:
+        daysOfWeek,
+    });
+  }
+
+  regionEditSaveBtn.disabled =
+    true;
+
   regionEditSaveBtn.textContent =
     "저장 중...";
 
   try {
-    const { error } =
+    const { data, error } =
       await supabase.rpc(
-        "admin_set_user_workplaces",
+        "admin_set_user_workplace_schedules",
         {
-          p_user_id: targetUserId,
-          p_workplace_ids:
-            selectedIds,
+          p_user_id:
+            targetUserId,
+
+          p_assignments:
+            assignments,
         }
       );
 
@@ -1618,53 +1986,59 @@ async function saveEmployeeRegions() {
       throw error;
     }
 
-    const workplaces = JSON.parse(
-      regionEditModal.dataset
-        .workplaces || "[]"
-    );
+    const refreshedEmployee =
+      await fetchEmployeeProfile();
 
-    currentEmployeeData.workplaceIds =
-      selectedIds;
+    if (refreshedEmployee) {
+      currentEmployeeData =
+        refreshedEmployee;
 
-    currentEmployeeData.workplaceNames =
-      workplaces
-        .filter((workplace) =>
-          selectedIds.includes(
-            String(workplace.id)
-          )
-        )
-        .map(
-          (workplace) =>
-            workplace.name
-        );
-
-    renderEmployeeWorkplaces(
-      currentEmployeeData
-        .workplaceNames
-    );
+      renderProfileUI(
+        currentEmployeeData
+      );
+    }
 
     closeRegionEditModal();
 
     alert(
-      "배정 지역이 수정되었습니다."
+      `${data?.saved_count ?? assignments.length}개 근무지 배정이 저장되었습니다.`
     );
   } catch (error) {
     console.error(
-      "지역 배정 저장 실패:",
+      "근무지 배정 저장 실패:",
       error
     );
 
-    alert(
-      `지역 배정에 실패했습니다.\n${
-        error.message || ""
-      }`
-    );
+    const message =
+      error.message || "";
+
+    if (
+      message.includes(
+        "INVALID_ASSIGNMENT_PERIOD"
+      )
+    ) {
+      alert(
+        "배정 시작일과 종료일을 확인해주세요."
+      );
+    } else if (
+      message.includes(
+        "WORKPLACE_NOT_FOUND_OR_INACTIVE"
+      )
+    ) {
+      alert(
+        "삭제되었거나 비활성화된 근무지가 포함되어 있습니다."
+      );
+    } else {
+      alert(
+        `근무지 배정에 실패했습니다.\n${message}`
+      );
+    }
   } finally {
     regionEditSaveBtn.disabled =
       false;
 
     regionEditSaveBtn.textContent =
-      "지역 배정 저장";
+      "근무지 배정 저장";
   }
 }
 

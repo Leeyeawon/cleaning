@@ -659,3 +659,313 @@
 .alert-banner[hidden] {
   display: none !important;
 }
+
+.monthly-search-label {
+  min-width: 260px;
+}
+
+.monthly-view-tabs {
+  display: flex;
+  gap: 8px;
+
+  margin-bottom: 16px;
+}
+
+.monthly-view-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  min-height: 42px;
+  padding: 0 16px;
+
+  border:
+    1px solid #dbe1e8;
+
+  border-radius: 10px;
+
+  background: #ffffff;
+  color: #475569;
+
+  font-size: 13px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.monthly-view-tab span {
+  display: grid;
+  place-items: center;
+
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+
+  border-radius: 999px;
+
+  background: #f1f5f9;
+  color: #475569;
+
+  font-size: 11px;
+}
+
+.monthly-view-tab.active {
+  border-color: #1f2937;
+  background: #1f2937;
+  color: #ffffff;
+}
+
+.monthly-view-tab.active span {
+  background:
+    rgb(255 255 255 / 18%);
+
+  color: #ffffff;
+}
+
+.monthly-print-panel {
+  margin-bottom: 18px;
+  padding: 20px;
+
+  border:
+    1px solid #e2e8f0;
+
+  border-radius: 14px;
+
+  background: #ffffff;
+}
+
+.monthly-print-heading h3,
+.monthly-print-heading p {
+  margin: 0;
+}
+
+.monthly-print-heading h3 {
+  color: #111827;
+  font-size: 16px;
+}
+
+.monthly-print-heading p {
+  margin-top: 5px;
+
+  color: #64748b;
+  font-size: 12px;
+}
+
+.monthly-print-options {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 12px;
+
+  margin-top: 16px;
+}
+
+.monthly-print-option {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr) auto;
+
+  gap: 10px;
+  align-items: end;
+
+  padding: 14px;
+
+  border:
+    1px solid #e5e7eb;
+
+  border-radius: 12px;
+
+  background: #f8fafc;
+}
+
+.monthly-print-option label {
+  display: grid;
+  gap: 7px;
+
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.monthly-print-option select {
+  width: 100%;
+  min-height: 40px;
+
+  padding: 0 10px;
+
+  border:
+    1px solid #cbd5e1;
+
+  border-radius: 8px;
+
+  background: #ffffff;
+}
+
+.monthly-print-option button {
+  min-height: 40px;
+  padding: 0 14px;
+
+  border: 0;
+  border-radius: 8px;
+
+  background: #1f2937;
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.monthly-print-option button:hover {
+  background: #111827;
+}
+
+.monthly-employee-panel {
+  overflow: hidden;
+}
+
+.monthly-employee-heading p {
+  margin: 5px 0 0;
+
+  color: #64748b;
+  font-size: 12px;
+}
+
+.monthly-employee-heading
+> span {
+  color: #475569;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.monthly-employee-table-wrap {
+  overflow-x: auto;
+}
+
+.monthly-employee-table {
+  min-width: 1050px;
+}
+
+.monthly-employee-table td {
+  vertical-align: middle;
+}
+
+.monthly-employee-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.monthly-employee-avatar {
+  display: grid;
+  place-items: center;
+
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+
+  border-radius: 10px;
+
+  background: #eef2ff;
+  color: #4338ca;
+
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.monthly-workplace-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.monthly-workplace-chip {
+  padding: 4px 7px;
+
+  border:
+    1px solid #dbeafe;
+
+  border-radius: 999px;
+
+  background: #eff6ff;
+  color: #1d4ed8;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.monthly-leave-count {
+  color: #a16207;
+  font-weight: 800;
+}
+
+.monthly-table-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.monthly-table-actions a,
+.monthly-table-actions button {
+  min-height: 32px;
+  padding: 0 10px;
+
+  border:
+    1px solid #cbd5e1;
+
+  border-radius: 7px;
+
+  background: #ffffff;
+  color: #334155;
+
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: none;
+
+  cursor: pointer;
+}
+
+.monthly-table-actions
+.monthly-personal-print {
+  border-color: #2563eb;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.annual-leave-stat {
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+@media (max-width: 900px) {
+  .monthly-print-options {
+    grid-template-columns: 1fr;
+  }
+
+  .monthly-filter-group {
+    grid-template-columns: 1fr;
+  }
+
+  .monthly-search-label {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .monthly-view-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .monthly-view-tab {
+    justify-content: center;
+    padding: 0 10px;
+  }
+
+  .monthly-print-option {
+    grid-template-columns: 1fr;
+  }
+}
