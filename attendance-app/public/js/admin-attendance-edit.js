@@ -983,6 +983,7 @@ function openEditModal(rowKey) {
 
   editMemoInput.value = "";
 
+  
   const title =
     editModal.querySelector(
       ".edit-modal-header h3"
