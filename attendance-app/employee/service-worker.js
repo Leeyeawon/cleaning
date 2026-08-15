@@ -1,18 +1,52 @@
 const CACHE_NAME =
-  "employee-pwa-v30";
+  "employee-pwa-v32";
 
 const CACHE_PREFIX =
   "employee-pwa-";
 
 const APP_SHELL = [
   "./login.html",
+  "./pending.html",
   "./index.html",
+  "./request.html",
+  "./my-submissions.html",
+  "./cleaning-checklist.html",
+  "./request-supply.html",
+  "./request-general.html",
+  "./request-leave.html",
+  "./notices.html",
+  "./mypage.html",
+  "./attendancesheet.html",
+
   "./manifest.json",
   "./icons/app-icon.svg",
+
   "../public/css/common.css",
   "../public/css/mobile.css",
   "../public/css/login.css",
   "../public/css/index.css",
+  "../public/css/request.css?v=30",
+  "../public/css/cleaning-checklist.css?v=30",
+  "../public/css/notices.css",
+  "../public/css/mypage.css?v=31",
+  "../public/css/attendancesheet.css",
+
+  "../public/js/supabase.js",
+  "../public/js/employeeAuth.js",
+  "../public/js/common.js",
+  "../public/js/mobile.js",
+  "../public/js/login.js",
+  "../public/js/index.js",
+  "../public/js/request-menu.js?v=31",
+  "../public/js/request.js?v=30",
+  "../public/js/cleaning-checklist.js?v=30",
+  "../public/js/request-simple.js",
+  "../public/js/request-leave.js",
+  "../public/js/notices.js",
+  "../public/js/mypage.js?v=31",
+  "../public/js/attendancesheet.js",
+  "../public/js/photo-upload.js",
+  "../public/js/pwa-register.js?v=31",
 ];
 
 self.addEventListener(
