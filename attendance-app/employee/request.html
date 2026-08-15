@@ -9,7 +9,7 @@
   <link rel="manifest" href="./manifest.json" />
   <link rel="stylesheet" href="../public/css/common.css" />
   <link rel="stylesheet" href="../public/css/mobile.css" />
-  <link rel="stylesheet" href="../public/css/request.css?v=29" />
+  <link rel="stylesheet" href="../public/css/request.css?v=30" />
 </head>
 
 <body data-page="request">
@@ -112,128 +112,37 @@
         </button>
       </section>
 
-      <section class="my-history-section">
-        <div class="my-history-heading">
-          <div>
-            <p>MY HISTORY</p>
-            <h2>내 제출내역</h2>
-          </div>
+      <button
+        class="request-history-link"
+        data-href="my-submissions.html"
+        type="button"
+      >
+        <span class="request-history-icon">
+          ≡
+        </span>
 
-          <button
-            id="historyRefreshBtn"
-            type="button"
-          >
-            새로고침
-          </button>
-        </div>
+        <span class="request-history-text">
+          <strong>
+            내 제출내역
+          </strong>
 
-        <div class="my-history-tabs">
-          <button
-            id="requestHistoryTab"
-            class="my-history-tab active"
-            type="button"
-          >
-            요청내역
-            <span id="requestHistoryCount">
-              0
-            </span>
-          </button>
+          <small>
+            요청 및 청소 점검표 처리 결과 확인
+          </small>
+        </span>
 
-          <button
-            id="checklistHistoryTab"
-            class="my-history-tab"
-            type="button"
-            hidden
-          >
-            청소점검표
-            <span id="checklistHistoryCount">
-              0
-            </span>
-          </button>
-        </div>
-
-        <div
-          id="requestHistoryPanel"
-          class="my-history-panel"
-        >
-          <div
-            id="myRequestList"
-            class="my-history-list"
-          >
-            <p class="my-history-empty">
-              요청내역을 불러오는 중입니다.
-            </p>
-          </div>
-        </div>
-
-        <div
-          id="checklistHistoryPanel"
-          class="my-history-panel"
-          hidden
-        >
-          <div
-            id="myChecklistList"
-            class="my-history-list"
-          >
-            <p class="my-history-empty">
-              점검표 내역을 불러오는 중입니다.
-            </p>
-          </div>
-        </div>
-      </section>
+        <span class="request-history-arrow">
+          ›
+        </span>
+      </button>
     </main>
 
     <div id="bottomNav"></div>
 
-    <div
-      id="myHistoryModal"
-      class="my-history-modal"
-      aria-hidden="true"
-    >
-      <div
-        class="my-history-modal-panel"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="myHistoryModalTitle"
-      >
-        <header class="my-history-modal-header">
-          <div>
-            <small id="myHistoryModalType">
-              제출내역
-            </small>
-
-            <h2 id="myHistoryModalTitle">
-              상세보기
-            </h2>
-          </div>
-
-          <button
-            id="myHistoryModalCloseBtn"
-            type="button"
-            aria-label="닫기"
-          >
-            ×
-          </button>
-        </header>
-
-        <div
-          id="myHistoryModalContent"
-          class="my-history-modal-content"
-        ></div>
-
-        <button
-          id="myHistoryModalConfirmBtn"
-          class="my-history-modal-confirm"
-          type="button"
-        >
-          확인
-        </button>
-      </div>
-    </div>
   </div>
 
   <script src="../public/js/common.js"></script>
   <script src="../public/js/mobile.js"></script>
-  <script type="module" src="../public/js/request.js?v=28" ></script>
+  <script type="module" src="../public/js/request.js?v=30" ></script>
 </body>
 </html>
