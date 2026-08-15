@@ -2,13 +2,33 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
 
   <title>요청</title>
 
-  <link rel="stylesheet" href="../public/css/common.css" />
-  <link rel="stylesheet" href="../public/css/mobile.css" />
-  <link rel="stylesheet" href="../public/css/request.css" />
+  <link
+    rel="manifest"
+    href="./manifest.json"
+  />
+
+  <link
+    rel="stylesheet"
+    href="../public/css/common.css"
+  />
+
+  <link
+    rel="stylesheet"
+    href="../public/css/mobile.css"
+  />
+
+  <link
+    rel="stylesheet"
+    href="../public/css/request.css"
+  />
 </head>
 
 <body data-page="request">
@@ -19,7 +39,11 @@
         <h1>요청</h1>
       </div>
 
-      <button id="fontToggleBtn" class="font-size-btn" type="button">
+      <button
+        id="fontToggleBtn"
+        class="font-size-btn"
+        type="button"
+      >
         A+ 글자 크게
       </button>
     </header>
@@ -30,39 +54,213 @@
       </p>
 
       <section class="request-grid">
-        <button class="request-menu-card lead-only" data-href="cleaning-checklist.html" type="button">
-          <span class="request-menu-icon">✓</span>
-          <strong>청소 점검표</strong>
-          <p>현장별 점검 항목을 확인하고 완료 항목을 제출합니다.</p>
-          <small>팀장 전용</small>
+        <button
+          class="request-menu-card lead-only"
+          data-href="cleaning-checklist.html"
+          type="button"
+        >
+          <span class="request-menu-icon">
+            ✓
+          </span>
+
+          <strong>
+            청소 점검표
+          </strong>
+
+          <p>
+            항목별 상태를 불량·보통·양호로 평가합니다.
+          </p>
+
+          <small>
+            팀장 전용
+          </small>
         </button>
 
-        <button class="request-menu-card lead-only" data-href="request-supply.html" type="button">
-          <span class="request-menu-icon">▣</span>
-          <strong>비품 요청</strong>
-          <p>현장에 필요한 비품과 수량을 관리자에게 요청합니다.</p>
-          <small>팀장 전용</small>
+        <button
+          class="request-menu-card lead-only"
+          data-href="request-supply.html"
+          type="button"
+        >
+          <span class="request-menu-icon">
+            ▣
+          </span>
+
+          <strong>
+            비품 요청
+          </strong>
+
+          <p>
+            현장에 필요한 비품과 수량을 요청합니다.
+          </p>
+
+          <small>
+            팀장 전용
+          </small>
         </button>
 
-        <button class="request-menu-card" data-href="request-general.html" type="button">
-          <span class="request-menu-icon">✎</span>
-          <strong>요청 사항</strong>
-          <p>관리자에게 일반 요청이나 건의사항을 전달합니다.</p>
+        <button
+          class="request-menu-card"
+          data-href="request-general.html"
+          type="button"
+        >
+          <span class="request-menu-icon">
+            ✎
+          </span>
+
+          <strong>
+            요청 사항
+          </strong>
+
+          <p>
+            관리자에게 요청이나 건의사항을 전달합니다.
+          </p>
         </button>
 
-        <button class="request-menu-card" data-href="request-leave.html" type="button">
-          <span class="request-menu-icon">○</span>
-          <strong>연차 신청</strong>
-          <p>연차 사용 날짜와 신청 사유를 작성합니다.</p>
+        <button
+          class="request-menu-card"
+          data-href="request-leave.html"
+          type="button"
+        >
+          <span class="request-menu-icon">
+            ○
+          </span>
+
+          <strong>
+            연차 신청
+          </strong>
+
+          <p>
+            연차 날짜와 신청 사유를 작성합니다.
+          </p>
         </button>
+      </section>
+
+      <section class="my-history-section">
+        <div class="my-history-heading">
+          <div>
+            <p>MY HISTORY</p>
+            <h2>내 제출내역</h2>
+          </div>
+
+          <button
+            id="historyRefreshBtn"
+            type="button"
+          >
+            새로고침
+          </button>
+        </div>
+
+        <div class="my-history-tabs">
+          <button
+            id="requestHistoryTab"
+            class="my-history-tab active"
+            type="button"
+          >
+            요청내역
+            <span id="requestHistoryCount">
+              0
+            </span>
+          </button>
+
+          <button
+            id="checklistHistoryTab"
+            class="my-history-tab"
+            type="button"
+            hidden
+          >
+            청소점검표
+            <span id="checklistHistoryCount">
+              0
+            </span>
+          </button>
+        </div>
+
+        <div
+          id="requestHistoryPanel"
+          class="my-history-panel"
+        >
+          <div
+            id="myRequestList"
+            class="my-history-list"
+          >
+            <p class="my-history-empty">
+              요청내역을 불러오는 중입니다.
+            </p>
+          </div>
+        </div>
+
+        <div
+          id="checklistHistoryPanel"
+          class="my-history-panel"
+          hidden
+        >
+          <div
+            id="myChecklistList"
+            class="my-history-list"
+          >
+            <p class="my-history-empty">
+              점검표 내역을 불러오는 중입니다.
+            </p>
+          </div>
+        </div>
       </section>
     </main>
 
     <div id="bottomNav"></div>
+
+    <div
+      id="myHistoryModal"
+      class="my-history-modal"
+      aria-hidden="true"
+    >
+      <div
+        class="my-history-modal-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="myHistoryModalTitle"
+      >
+        <header class="my-history-modal-header">
+          <div>
+            <small id="myHistoryModalType">
+              제출내역
+            </small>
+
+            <h2 id="myHistoryModalTitle">
+              상세보기
+            </h2>
+          </div>
+
+          <button
+            id="myHistoryModalCloseBtn"
+            type="button"
+            aria-label="닫기"
+          >
+            ×
+          </button>
+        </header>
+
+        <div
+          id="myHistoryModalContent"
+          class="my-history-modal-content"
+        ></div>
+
+        <button
+          id="myHistoryModalConfirmBtn"
+          class="my-history-modal-confirm"
+          type="button"
+        >
+          확인
+        </button>
+      </div>
+    </div>
   </div>
 
   <script src="../public/js/common.js"></script>
   <script src="../public/js/mobile.js"></script>
-  <script type="module" src="../public/js/request.js"></script>
+
+  <script
+    type="module"
+    src="../public/js/request.js?v=28"
+  ></script>
 </body>
 </html>

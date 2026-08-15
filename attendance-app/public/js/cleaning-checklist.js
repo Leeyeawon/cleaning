@@ -286,6 +286,12 @@ async function loadItems() {
     return;
   }
 
+  checklistList.innerHTML = `
+    <p class="checklist-loading">
+      점검 항목을 불러오는 중입니다.
+    </p>
+  `;
+
   const {
     data,
     error,
@@ -306,17 +312,25 @@ async function loadItems() {
       error
     );
 
-    checklistList.innerHTML =
-      "<p>점검 항목을 불러오지 못했습니다.</p>";
+    checklistList.innerHTML = `
+      <p class="checklist-error">
+        점검 항목을 불러오지 못했습니다.
+      </p>
+    `;
 
     return;
   }
 
-  const items = data || [];
+  const items =
+    data || [];
 
   if (!items.length) {
-    checklistList.innerHTML =
-      "<p>등록된 항목이 없습니다. 위에서 항목을 추가해 주세요.</p>";
+    checklistList.innerHTML = `
+      <p class="checklist-empty">
+        등록된 항목이 없습니다.
+        위에서 항목을 추가해 주세요.
+      </p>
+    `;
 
     return;
   }
@@ -324,24 +338,152 @@ async function loadItems() {
   checklistList.innerHTML =
     items
       .map(
-        (item) => `
-          <label class="checklist-row">
-            <input
-              type="checkbox"
-              value="${escapeHtml(
-                item.id
-              )}"
-            >
+        (
+          item,
+          index
+        ) => `
+          <article
+            class="checklist-rating-row"
+            data-checklist-id="${escapeHtml(
+              item.id
+            )}"
+            data-checklist-source="${escapeHtml(
+              item.source
+            )}"
+            data-checklist-rating=""
+          >
+            <div class="checklist-rating-title">
+              <span>
+                ${index + 1}
+              </span>
 
-            <span>
-              ${escapeHtml(
+              <strong>
+                ${escapeHtml(
+                  item.label
+                )}
+              </strong>
+            </div>
+
+            <div
+              class="checklist-rating-buttons"
+              role="group"
+              aria-label="${escapeHtml(
                 item.label
-              )}
-            </span>
-          </label>
+              )} 상태 선택"
+            >
+              <button
+                type="button"
+                class="rating-button poor"
+                data-rating="poor"
+              >
+                불량
+              </button>
+
+              <button
+                type="button"
+                class="rating-button fair"
+                data-rating="fair"
+              >
+                보통
+              </button>
+
+              <button
+                type="button"
+                class="rating-button good"
+                data-rating="good"
+              >
+                양호
+              </button>
+            </div>
+
+            <p class="checklist-rating-message">
+              상태를 선택해 주세요.
+            </p>
+          </article>
         `
       )
       .join("");
+
+  checklistList
+    .querySelectorAll(
+      ".checklist-rating-row"
+    )
+    .forEach(
+      (row) => {
+        row
+          .querySelectorAll(
+            "[data-rating]"
+          )
+          .forEach(
+            (button) => {
+              button.addEventListener(
+                "click",
+                () => {
+                  const rating =
+                    button.dataset
+                      .rating;
+
+                  row.dataset
+                    .checklistRating =
+                    rating;
+
+                  row.classList.remove(
+                    "rating-missing"
+                  );
+
+                  row
+                    .querySelectorAll(
+                      "[data-rating]"
+                    )
+                    .forEach(
+                      (
+                        currentButton
+                      ) => {
+                        const selected =
+                          currentButton ===
+                          button;
+
+                        currentButton
+                          .classList
+                          .toggle(
+                            "selected",
+                            selected
+                          );
+
+                        currentButton
+                          .setAttribute(
+                            "aria-pressed",
+                            String(
+                              selected
+                            )
+                          );
+                      }
+                    );
+
+                  const message =
+                    row.querySelector(
+                      ".checklist-rating-message"
+                    );
+
+                  if (message) {
+                    const labels = {
+                      poor: "불량으로 선택됨",
+                      fair: "보통으로 선택됨",
+                      good: "양호로 선택됨",
+                    };
+
+                    message.textContent =
+                      labels[rating];
+
+                    message.className =
+                      `checklist-rating-message ${rating}`;
+                  }
+                }
+              );
+            }
+          );
+      }
+    );
 }
 
 
@@ -422,24 +564,66 @@ async function submitChecklist() {
     return;
   }
 
-  const checkedItems = [
+  const checklistRows = [
     ...checklistList
       .querySelectorAll(
-        'input[type="checkbox"]:checked'
+        ".checklist-rating-row"
       ),
-  ].map(
-    (input) =>
-      input.value
-  );
+  ];
 
-  if (
-    checkedItems.length === 0 &&
-    !confirm(
-      "선택된 점검 항목이 없습니다. 그대로 제출할까요?"
-    )
-  ) {
+  if (!checklistRows.length) {
+    alert(
+      "제출할 점검 항목이 없습니다."
+    );
+
     return;
   }
+
+  const missingRows =
+    checklistRows.filter(
+      (row) =>
+        !row.dataset
+          .checklistRating
+    );
+
+  if (missingRows.length) {
+    missingRows.forEach(
+      (row) => {
+        row.classList.add(
+          "rating-missing"
+        );
+      }
+    );
+
+    missingRows[0]
+      .scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+
+    alert(
+      `선택하지 않은 점검 항목이 ${missingRows.length}개 있습니다.`
+    );
+
+    return;
+  }
+
+  const checkedItems =
+    checklistRows.map(
+      (row) => ({
+        id:
+          row.dataset
+            .checklistId,
+
+        source:
+          row.dataset
+            .checklistSource,
+
+        rating:
+          row.dataset
+            .checklistRating,
+      })
+    );
 
   submitButton.disabled = true;
 
@@ -591,7 +775,7 @@ async function submitChecklist() {
       )
     ) {
       submitButton.textContent =
-        "점검 완료 제출";
+        "점검 결 제출";
     }
   }
 }

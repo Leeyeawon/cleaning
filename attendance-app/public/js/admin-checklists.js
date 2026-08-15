@@ -1255,7 +1255,11 @@ function getWorkplaceName(workplaceId) {
 function getSubmissionItemResults(
   checkedItems
 ) {
-  if (!Array.isArray(checkedItems)) {
+  if (
+    !Array.isArray(
+      checkedItems
+    )
+  ) {
     return [];
   }
 
@@ -1275,9 +1279,19 @@ function getSubmissionItemResults(
         item &&
         typeof item === "object"
       ) {
+        const rating =
+          item.rating ||
+          (
+            item.checked === false
+              ? "incomplete"
+              : "completed"
+          );
+
         return {
           id:
-            String(item.id || ""),
+            String(
+              item.id || ""
+            ),
 
           label:
             item.label ||
@@ -1289,12 +1303,14 @@ function getSubmissionItemResults(
             ) ||
             "삭제된 항목",
 
+          rating,
+
           /*
-            기존 제출 데이터에는 checked 값이 없다.
-            기존 데이터는 모두 완료 항목으로 처리한다.
+            기존 코드 호환용
           */
           checked:
-            item.checked !== false,
+            rating !==
+            "incomplete",
         };
       }
 
@@ -1309,7 +1325,10 @@ function getSubmissionItemResults(
           customItemMap.get(
             String(item)
           ) ||
-          "삭제된 항목",
+          "기존 점검 항목",
+
+        rating:
+          "completed",
 
         checked: true,
       };
@@ -1324,10 +1343,13 @@ function getSubmittedItemLabels(
     checkedItems
   )
     .filter(
-      (item) => item.checked
+      (item) =>
+        item.rating !==
+        "incomplete"
     )
     .map(
-      (item) => item.label
+      (item) =>
+        item.label
     );
 }
 
@@ -1975,10 +1997,23 @@ async function openChecklistSubmissionDetail(
       submission.checked_items
     );
 
-  const completedResults =
+  const poorCount =
     results.filter(
-      (item) => item.checked
-    );
+      (item) =>
+        item.rating === "poor"
+    ).length;
+
+  const fairCount =
+    results.filter(
+      (item) =>
+        item.rating === "fair"
+    ).length;
+
+  const goodCount =
+    results.filter(
+      (item) =>
+        item.rating === "good"
+    ).length;
 
   const employeeName =
     submission.users?.name ||
@@ -2027,7 +2062,13 @@ async function openChecklistSubmissionDetail(
     );
 
   checklistDetailProgress.textContent =
-    `${completedResults.length} / ${results.length}`;
+    (
+      poorCount +
+      fairCount +
+      goodCount
+    ) > 0
+      ? `불량 ${poorCount} · 보통 ${fairCount} · 양호 ${goodCount}`
+      : `${results.length}개 항목`;
 
   checklistDetailNote.textContent =
     submission.note ||
@@ -2048,36 +2089,50 @@ async function openChecklistSubmissionDetail(
     checklistDetailTableBody.innerHTML =
       results
         .map(
-          (item, index) => `
-            <tr>
-              <td>
-                ${index + 1}
-              </td>
+          (
+            item,
+            index
+          ) => {
+            const ratingLabels = {
+              poor: "불량",
+              fair: "보통",
+              good: "양호",
+              completed: "기존 완료",
+              incomplete: "미완료",
+            };
 
-              <td>
-                ${escapeHtml(
-                  item.label
-                )}
-              </td>
+            return `
+              <tr>
+                <td>
+                  ${index + 1}
+                </td>
 
-              <td>
-                <span class="checklist-result ${
-                  item.checked
-                    ? "completed"
-                    : "incomplete"
-                }">
-                  ${
-                    item.checked
-                      ? "완료"
-                      : "미완료"
-                  }
-                </span>
-              </td>
-            </tr>
-          `
+                <td>
+                  ${escapeHtml(
+                    item.label
+                  )}
+                </td>
+
+                <td>
+                  <span
+                    class="checklist-result ${escapeHtml(
+                      item.rating
+                    )}"
+                  >
+                    ${escapeHtml(
+                      ratingLabels[
+                        item.rating
+                      ] ||
+                      item.rating
+                    )}
+                  </span>
+                </td>
+              </tr>
+            `;
+          }
         )
         .join("");
-  }
+    }
 
   checklistDetailModal.classList.add(
     "open"
@@ -2300,8 +2355,28 @@ function renderSubmissions() {
 
         const completedResults =
           results.filter(
-            (item) => item.checked
+            (item) =>
+              item.rating !==
+              "incomplete"
           );
+
+        const poorCount =
+          results.filter(
+            (item) =>
+              item.rating === "poor"
+          ).length;
+
+        const fairCount =
+          results.filter(
+            (item) =>
+              item.rating === "fair"
+          ).length;
+
+        const goodCount =
+          results.filter(
+            (item) =>
+              item.rating === "good"
+          ).length;
 
         const employeeName =
           submission.users?.name ||
@@ -2340,11 +2415,35 @@ function renderSubmissions() {
             </td>
 
             <td>
-              <strong>
-                ${completedResults.length}
-                /
-                ${results.length}
-              </strong>
+              <div class="admin-rating-summary">
+                ${
+                  (
+                    poorCount +
+                    fairCount +
+                    goodCount
+                  ) > 0
+                    ? `
+                      <span class="poor">
+                        불량 ${poorCount}
+                      </span>
+
+                      <span class="fair">
+                        보통 ${fairCount}
+                      </span>
+
+                      <span class="good">
+                        양호 ${goodCount}
+                      </span>
+                    `
+                    : `
+                      <span class="legacy">
+                        ${completedResults.length}
+                        /
+                        ${results.length}
+                      </span>
+                    `
+                }
+              </div>
             </td>
 
             <td>

@@ -1253,3 +1253,77 @@ body[data-admin-page="requests"]
   cursor: wait;
   opacity: 0.6;
 }
+
+/* 청소 점검표 3단계 평가 */
+
+.checklist-result {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 58px;
+  padding: 5px 9px;
+
+  border-radius: 8px;
+
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.checklist-result.poor {
+  color: #b42318;
+  background: #fee4e2;
+}
+
+.checklist-result.fair {
+  color: #8a5a00;
+  background: #fff2cc;
+}
+
+.checklist-result.good {
+  color: #067647;
+  background: #d1fadf;
+}
+
+.checklist-result.completed,
+.checklist-result.incomplete {
+  color: #475467;
+  background: #eaecf0;
+}
+
+.admin-rating-summary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+}
+
+.admin-rating-summary span {
+  padding: 4px 6px;
+
+  border-radius: 7px;
+
+  white-space: nowrap;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.admin-rating-summary .poor {
+  color: #b42318;
+  background: #fee4e2;
+}
+
+.admin-rating-summary .fair {
+  color: #8a5a00;
+  background: #fff2cc;
+}
+
+.admin-rating-summary .good {
+  color: #067647;
+  background: #d1fadf;
+}
+
+.admin-rating-summary .legacy {
+  color: #475467;
+  background: #eaecf0;
+}
