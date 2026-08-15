@@ -997,7 +997,7 @@ async function saveWorkplace() {
   if (!address) {
     alert("주소를 입력해 주세요.");
 
-    zoneAddressFormInput.focus();
+    zoneAddressSearchBtn.focus();
     return;
   }
 
