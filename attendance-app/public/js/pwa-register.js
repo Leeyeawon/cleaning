@@ -1,3 +1,28 @@
+window.employeePwaInstallPrompt =
+  null;
+
+
+window.addEventListener(
+  "beforeinstallprompt",
+  (event) => {
+    event.preventDefault();
+
+    window.employeePwaInstallPrompt =
+      event;
+
+    window.dispatchEvent(
+      new CustomEvent(
+        "employee-pwa-install-ready"
+      )
+    );
+
+    console.log(
+      "PWA 설치 준비 완료"
+    );
+  }
+);
+
+
 function addPwaMetadata() {
   if (
     !document.querySelector(
@@ -55,16 +80,17 @@ function addPwaMetadata() {
       "icon";
 
     iconLink.type =
-      "image/svg+xml";
+      "image/png";
 
     iconLink.href =
-      "./icons/app-icon.svg";
+      "./icons/app-icon-192.png";
 
     document.head.appendChild(
       iconLink
     );
   }
 }
+
 
 async function registerEmployeePwa() {
   addPwaMetadata();
@@ -75,20 +101,21 @@ async function registerEmployeePwa() {
       navigator
     )
   ) {
+    console.warn(
+      "서비스워커를 지원하지 않는 브라우저입니다."
+    );
+
     return;
   }
 
   const isSecure =
-    location.protocol ===
-      "https:" ||
-    location.hostname ===
-      "localhost" ||
-    location.hostname ===
-      "127.0.0.1";
+    location.protocol === "https:" ||
+    location.hostname === "localhost" ||
+    location.hostname === "127.0.0.1";
 
   if (!isSecure) {
     console.warn(
-      "PWA 서비스 워커는 HTTPS 환경에서만 등록됩니다."
+      "PWA는 HTTPS에서만 설치할 수 있습니다."
     );
 
     return;
@@ -108,15 +135,16 @@ async function registerEmployeePwa() {
     await registration.update();
 
     console.log(
-      "PWA 서비스 워커 등록 완료:",
+      "PWA 서비스워커 등록 완료:",
       registration.scope
     );
   } catch (error) {
     console.error(
-      "PWA 서비스 워커 등록 실패:",
+      "PWA 서비스워커 등록 실패:",
       error
     );
   }
 }
+
 
 registerEmployeePwa();
