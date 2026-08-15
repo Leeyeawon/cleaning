@@ -1,5 +1,5 @@
 const CACHE_NAME =
-  "employee-pwa-v37";
+  "employee-pwa-v38";
 
 const CACHE_PREFIX =
   "employee-pwa-";
@@ -37,12 +37,13 @@ const APP_SHELL = [
   "../public/js/employeeAuth.js",
   "../public/js/common.js",
   "../public/js/mobile.js",
+  "../public/js/my-submissions.js?v=38",
   "../public/js/login.js?v=37",
   "../public/js/index.js",
   "../public/js/request-menu.js?v=31",
   "../public/js/request.js?v=30",
   "../public/js/cleaning-checklist.js?v=30",
-  "../public/js/request-simple.js",
+  "../public/js/request-simple.js?v=38",
   "../public/js/request-leave.js",
   "../public/js/notices.js",
   "../public/js/mypage.js?v=31",
