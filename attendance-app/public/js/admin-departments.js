@@ -653,7 +653,7 @@ function initZoneMap() {
       strokeColor: "#2563eb",
       strokeOpacity: 0.9,
       fillColor: "#60a5fa",
-      fillOpacity: 0.2,
+      fillOpacity: 0.12,
       map: zoneMap,
     });
 }
