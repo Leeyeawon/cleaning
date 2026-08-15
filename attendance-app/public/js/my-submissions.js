@@ -140,9 +140,17 @@ function getRequestTitle(request) {
     request.request_type ===
     "annual_leave"
   ) {
-    return `${request.start_date || "-"} ~ ${
-      request.end_date || "-"
-    }`;
+    const startDate =
+      request.start_date || "-";
+
+    const endDate =
+      request.end_date || "-";
+
+    if (startDate === endDate) {
+      return startDate;
+    }
+
+    return `${startDate} ~ ${endDate}`;
   }
 
   return request.title || "제목 없음";

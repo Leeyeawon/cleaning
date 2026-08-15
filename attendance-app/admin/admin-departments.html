@@ -192,7 +192,7 @@
     class="zone-modal"
     id="zoneModal"
   >
-    <div class="zone-modal-content">
+    <div class="zone-modal-content zone-map-modal">
       <div class="zone-modal-header">
         <h3 id="zoneModalTitle">
           근무지역 등록
@@ -204,36 +204,109 @@
       </div>
 
       <div class="zone-modal-body">
-        <div class="zone-form-grid">
-          <label class="full">
-            근무지명
-            <input type="text" id="zoneNameInput" placeholder="예: 서면지점" />
-          </label>
+        <div class="zone-editor-layout">
+          <div class="zone-form-grid">
+            <label class="full">
+              근무지명
 
-          <label class="full">
-            주소
-            <input type="text" id="zoneAddressFormInput" placeholder="근무지 주소" />
-          </label>
+              <input
+                type="text"
+                id="zoneNameInput"
+                placeholder="예: 서면지점"
+              />
+            </label>
 
-          <label>
-            위도
-            <input type="number" id="zoneLatInput" step="any" placeholder="35.1577" />
-          </label>
+            <label class="full">
+              주소
 
-          <label>
-            경도
-            <input type="number" id="zoneLngInput" step="any" placeholder="129.0592" />
-          </label>
+              <div class="zone-address-row">
+                <input
+                  type="text"
+                  id="zoneAddressFormInput"
+                  placeholder="주소 검색 버튼을 눌러주세요."
+                  readonly
+                />
 
-          <label>
-            출근 허용 반경
-            <input type="number" id="zoneRadiusInput" min="1" placeholder="100" />
-          </label>
+                <button
+                  id="zoneAddressSearchBtn"
+                  class="zone-address-search-btn"
+                  type="button"
+                >
+                  주소 검색
+                </button>
+              </div>
 
-          <label>
-            단위
-            <input type="text" value="m" disabled />
-          </label>
+              <small id="zoneAddressGuide">
+                검색한 주소에 맞춰 위치가 자동으로 설정됩니다.
+              </small>
+            </label>
+
+            <label>
+              위도
+
+              <input
+                type="number"
+                id="zoneLatInput"
+                step="any"
+                readonly
+                placeholder="주소 검색 후 자동 입력"
+              />
+            </label>
+
+            <label>
+              경도
+
+              <input
+                type="number"
+                id="zoneLngInput"
+                step="any"
+                readonly
+                placeholder="주소 검색 후 자동 입력"
+              />
+            </label>
+
+            <label>
+              출근 허용 반경
+
+              <input
+                type="number"
+                id="zoneRadiusInput"
+                min="1"
+                max="5000"
+                value="100"
+                placeholder="100"
+              />
+            </label>
+
+            <label>
+              단위
+
+              <input
+                type="text"
+                value="m"
+                disabled
+              />
+            </label>
+          </div>
+
+          <section class="zone-map-section">
+            <div class="zone-map-heading">
+              <strong>출근 허용 위치</strong>
+
+              <small>
+                원 안에서만 출퇴근할 수 있습니다.
+              </small>
+            </div>
+
+            <div
+              id="zoneMap"
+              class="zone-map"
+            ></div>
+
+            <p id="zoneMapStatus">
+              주소를 검색하면 지도에 위치가 표시됩니다.
+            </p>
+          </section>
         </div>
       </div>
 
@@ -302,8 +375,17 @@
     </div>
   </div>
 
+  <script
+    src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"
+  ></script>
+  <script
+    src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=173e77598d2030bf540832f84c688bd3&libraries=services"
+  ></script>
+
+
   <script src="../public/js/common.js"></script>
   <script type="module" src="../public/js/pc.js" ></script>
-  <script type="module" src="../public/js/admin-departments.js" ></script>
+  <script type="module" src="../public/js/admin-departments.js?v=39" ></script>
+
 </body>
 </html>

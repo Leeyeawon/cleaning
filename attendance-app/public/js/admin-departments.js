@@ -109,6 +109,32 @@ const zoneRadiusInput =
     "zoneRadiusInput"
   );
 
+const zoneAddressSearchBtn =
+  document.getElementById(
+    "zoneAddressSearchBtn"
+  );
+
+const zoneAddressGuide =
+  document.getElementById(
+    "zoneAddressGuide"
+  );
+
+const zoneMapElement =
+  document.getElementById(
+    "zoneMap"
+  );
+
+const zoneMapStatus =
+  document.getElementById(
+    "zoneMapStatus"
+  );
+
+let zoneMap = null;
+let zoneMapMarker = null;
+let zoneRadiusCircle = null;
+let zoneGeocoder = null;
+let zoneAddressVerified = false;
+
 const assignModal =
   document.getElementById(
     "assignModal"
@@ -153,6 +179,7 @@ const clearAllEmployeesBtn =
   document.getElementById(
     "clearAllEmployeesBtn"
   );
+
 
 let workplaces = [];
 let employees = [];
@@ -563,12 +590,285 @@ async function loadData() {
   renderWorkplaceTable();
 }
 
+const DEFAULT_MAP_POSITION = {
+  latitude: 35.1796,
+  longitude: 129.0756,
+};
+
+function isKakaoMapReady() {
+  return Boolean(
+    window.kakao?.maps &&
+    window.kakao.maps.services
+  );
+}
+
+function initZoneMap() {
+  if (
+    zoneMap ||
+    !zoneMapElement
+  ) {
+    return;
+  }
+
+  if (!isKakaoMapReady()) {
+    zoneMapStatus.textContent =
+      "카카오 지도를 불러오지 못했습니다.";
+
+    zoneMapStatus.classList.add(
+      "error"
+    );
+
+    return;
+  }
+
+  const center =
+    new kakao.maps.LatLng(
+      DEFAULT_MAP_POSITION.latitude,
+      DEFAULT_MAP_POSITION.longitude
+    );
+
+  zoneMap =
+    new kakao.maps.Map(
+      zoneMapElement,
+      {
+        center,
+        level: 4,
+      }
+    );
+
+  zoneGeocoder =
+    new kakao.maps.services.Geocoder();
+
+  zoneMapMarker =
+    new kakao.maps.Marker({
+      position: center,
+      map: zoneMap,
+    });
+
+  zoneRadiusCircle =
+    new kakao.maps.Circle({
+      center,
+      radius: 100,
+      strokeWeight: 2,
+      strokeColor: "#2563eb",
+      strokeOpacity: 0.9,
+      fillColor: "#60a5fa",
+      fillOpacity: 0.2,
+      map: zoneMap,
+    });
+}
+
+function updateZoneMap(
+  latitude,
+  longitude,
+  radius = 100
+) {
+  initZoneMap();
+
+  if (!zoneMap) {
+    return;
+  }
+
+  const lat = Number(latitude);
+  const lng = Number(longitude);
+  const safeRadius =
+    Math.max(
+      1,
+      Number(radius) || 100
+    );
+
+  if (
+    !Number.isFinite(lat) ||
+    !Number.isFinite(lng)
+  ) {
+    return;
+  }
+
+  const position =
+    new kakao.maps.LatLng(
+      lat,
+      lng
+    );
+
+  zoneMapMarker.setPosition(
+    position
+  );
+
+  zoneRadiusCircle.setPosition(
+    position
+  );
+
+  zoneRadiusCircle.setRadius(
+    safeRadius
+  );
+
+  zoneMap.setCenter(position);
+
+  if (safeRadius <= 100) {
+    zoneMap.setLevel(3);
+  } else if (safeRadius <= 300) {
+    zoneMap.setLevel(4);
+  } else if (safeRadius <= 700) {
+    zoneMap.setLevel(5);
+  } else {
+    zoneMap.setLevel(6);
+  }
+
+  zoneMapStatus.textContent =
+    `출근 허용 반경: ${safeRadius}m`;
+
+  zoneMapStatus.classList.remove(
+    "error"
+  );
+
+  setTimeout(() => {
+    zoneMap.relayout();
+    zoneMap.setCenter(position);
+  }, 50);
+}
+
+function geocodeZoneAddress(address) {
+  initZoneMap();
+
+  if (!zoneGeocoder) {
+    alert(
+      "주소 좌표 변환 기능을 불러오지 못했습니다."
+    );
+
+    return;
+  }
+
+  zoneAddressSearchBtn.disabled = true;
+  zoneAddressSearchBtn.textContent =
+    "위치 확인 중...";
+
+  zoneGeocoder.addressSearch(
+    address,
+    (result, status) => {
+      zoneAddressSearchBtn.disabled =
+        false;
+
+      zoneAddressSearchBtn.textContent =
+        "주소 검색";
+
+      if (
+        status !==
+          kakao.maps.services.Status.OK ||
+        !result.length
+      ) {
+        zoneAddressVerified = false;
+
+        zoneAddressGuide.textContent =
+          "주소의 지도 위치를 찾지 못했습니다.";
+
+        zoneAddressGuide.classList.add(
+          "error"
+        );
+
+        alert(
+          "주소에 맞는 지도 위치를 찾지 못했습니다."
+        );
+
+        return;
+      }
+
+      const latitude =
+        Number(result[0].y);
+
+      const longitude =
+        Number(result[0].x);
+
+      zoneAddressFormInput.value =
+        address;
+
+      zoneLatInput.value =
+        latitude.toFixed(7);
+
+      zoneLngInput.value =
+        longitude.toFixed(7);
+
+      zoneAddressVerified = true;
+
+      zoneAddressGuide.textContent =
+        "주소와 지도 위치가 확인되었습니다.";
+
+      zoneAddressGuide.classList.remove(
+        "error"
+      );
+
+      updateZoneMap(
+        latitude,
+        longitude,
+        zoneRadiusInput.value
+      );
+    }
+  );
+}
+
+function openZoneAddressSearch() {
+  if (!window.daum?.Postcode) {
+    alert(
+      "주소 검색 기능을 불러오지 못했습니다."
+    );
+
+    return;
+  }
+
+  new daum.Postcode({
+    oncomplete(data) {
+      const selectedAddress =
+        data.roadAddress ||
+        data.jibunAddress;
+
+      if (!selectedAddress) {
+        alert(
+          "선택한 주소를 확인하지 못했습니다."
+        );
+
+        return;
+      }
+
+      zoneAddressVerified = false;
+
+      zoneAddressFormInput.value =
+        selectedAddress;
+
+      zoneAddressGuide.textContent =
+        "주소의 지도 위치를 확인하고 있습니다.";
+
+      zoneAddressGuide.classList.remove(
+        "error"
+      );
+
+      geocodeZoneAddress(
+        selectedAddress
+      );
+    },
+  }).open();
+}
+
 function resetZoneForm() {
   zoneNameInput.value = "";
   zoneAddressFormInput.value = "";
   zoneLatInput.value = "";
   zoneLngInput.value = "";
   zoneRadiusInput.value = "100";
+
+  zoneAddressVerified = false;
+
+  zoneAddressGuide.textContent =
+    "검색한 주소에 맞춰 위치가 자동으로 설정됩니다.";
+
+  zoneAddressGuide.classList.remove(
+    "error"
+  );
+
+  zoneMapStatus.textContent =
+    "주소를 검색하면 지도에 위치가 표시됩니다.";
+
+  zoneMapStatus.classList.remove(
+    "error"
+  );
 }
 
 function openZoneModal(
@@ -614,12 +914,48 @@ function openZoneModal(
 
     zoneRadiusInput.value =
       workplace.radius_m || 100;
+
+    zoneAddressVerified =
+      Boolean(
+        workplace.address &&
+        workplace.latitude != null &&
+        workplace.longitude != null
+      );
+      
   } else {
     zoneModalTitle.textContent =
       "근무지역 등록";
   }
 
   zoneModal.classList.add("open");
+
+  setTimeout(() => {
+    initZoneMap();
+
+    if (
+      editingWorkplaceId &&
+      zoneLatInput.value &&
+      zoneLngInput.value
+    ) {
+      updateZoneMap(
+        zoneLatInput.value,
+        zoneLngInput.value,
+        zoneRadiusInput.value
+      );
+    } else if (zoneMap) {
+      const defaultPosition =
+        new kakao.maps.LatLng(
+          DEFAULT_MAP_POSITION.latitude,
+          DEFAULT_MAP_POSITION.longitude
+        );
+
+      zoneMap.relayout();
+      zoneMap.setCenter(
+        defaultPosition
+      );
+    }
+  }, 80);
+
 
   setTimeout(() => {
     zoneNameInput.focus();
@@ -662,6 +998,15 @@ async function saveWorkplace() {
     alert("주소를 입력해 주세요.");
 
     zoneAddressFormInput.focus();
+    return;
+  }
+
+  if (!zoneAddressVerified) {
+    alert(
+      "주소 검색을 통해 근무지 위치를 확인해 주세요."
+    );
+
+    zoneAddressSearchBtn.focus();
     return;
   }
 
@@ -1298,6 +1643,27 @@ async function initPage() {
   }
 
   await loadData();
+
+  zoneAddressSearchBtn.addEventListener(
+    "click",
+    openZoneAddressSearch
+  );
+
+  zoneRadiusInput.addEventListener(
+    "input",
+    () => {
+      if (
+        zoneLatInput.value &&
+        zoneLngInput.value
+      ) {
+        updateZoneMap(
+          zoneLatInput.value,
+          zoneLngInput.value,
+          zoneRadiusInput.value
+        );
+      }
+    }
+  );
 }
 
 initPage();
