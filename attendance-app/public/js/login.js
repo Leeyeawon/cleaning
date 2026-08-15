@@ -89,51 +89,156 @@ function goByStatus(status) {
 }
 
 function getLoginErrorMessage(error) {
-const errorMessage =
-  error.message || "";
+  const errorMessage =
+    error.message || "";
 
-let message =
-  "로그인에 실패했습니다. 잠시 후 다시 시도해주세요.";
+  let message =
+    "로그인에 실패했습니다. 잠시 후 다시 시도해주세요.";
 
-if (
-  errorMessage.includes(
-    "EMPLOYEE_NOT_FOUND"
-  )
-) {
-  message =
-    "등록된 직원 정보를 찾지 못했습니다. 이름과 전화번호를 확인해주세요.";
-} else if (
-  errorMessage.includes(
-    "DUPLICATE_EMPLOYEE"
-  )
-) {
-  message =
-    "같은 이름과 전화번호가 중복 등록되어 있습니다. 관리자에게 문의해주세요.";
-} else if (
-  errorMessage.includes(
-    "ACCOUNT_INACTIVE"
-  )
-) {
-  message =
-    "비활성화된 계정입니다. 관리자에게 문의해주세요.";
-} else if (
-  errorMessage.includes(
-    "ACCOUNT_RESIGNED"
-  ) ||
-  errorMessage.includes(
-    "ACCOUNT_DELETED"
-  )
-) {
-  message =
-    "사용이 종료된 계정입니다. 관리자에게 문의해주세요.";
-} else if (
-  errorMessage.includes(
-    "ACCOUNT_NOT_ACTIVE"
-  )
-) {
-  message =
-    "아직 활성화되지 않은 계정입니다. 관리자에게 문의해주세요.";
+  if (
+    errorMessage.includes(
+      "EMPLOYEE_NOT_FOUND"
+    )
+  ) {
+    message =
+      "등록된 직원 정보를 찾지 못했습니다. 이름과 전화번호를 확인해주세요.";
+  } else if (
+    errorMessage.includes(
+      "DUPLICATE_EMPLOYEE"
+    )
+  ) {
+    message =
+      "같은 이름과 전화번호가 중복 등록되어 있습니다. 관리자에게 문의해주세요.";
+  } else if (
+    errorMessage.includes(
+      "ACCOUNT_INACTIVE"
+    )
+  ) {
+    message =
+      "비활성화된 계정입니다. 관리자에게 문의해주세요.";
+  } else if (
+    errorMessage.includes(
+      "ACCOUNT_RESIGNED"
+    ) ||
+    errorMessage.includes(
+      "ACCOUNT_DELETED"
+    )
+  ) {
+    message =
+      "사용이 종료된 계정입니다. 관리자에게 문의해주세요.";
+  } else if (
+    errorMessage.includes(
+      "ACCOUNT_NOT_ACTIVE"
+    )
+  ) {
+    message =
+      "아직 활성화되지 않은 계정입니다. 관리자에게 문의해주세요.";
+  }
+  return message;
 }
+
+async function resumeExistingSession() {
+  const sessionToken =
+    localStorage.getItem(
+      "employeeSessionToken"
+    );
+
+  if (!sessionToken) {
+    return;
+  }
+
+  if (loginSubmitBtn) {
+    loginSubmitBtn.disabled = true;
+
+    loginSubmitBtn.textContent =
+      "로그인 상태 확인 중...";
+  }
+
+  try {
+    const {
+      data,
+      error,
+    } = await supabase.rpc(
+      "get_employee_by_session",
+      {
+        p_session_token:
+          sessionToken,
+      }
+    );
+
+    if (error) {
+      console.error(
+        "기존 로그인 확인 실패:",
+        error
+      );
+
+      return;
+    }
+
+    const employee =
+      Array.isArray(data)
+        ? data[0]
+        : data;
+
+    if (!employee) {
+      localStorage.removeItem(
+        "employeeSessionToken"
+      );
+
+      return;
+    }
+
+    if (
+      employee.status ===
+      "active"
+    ) {
+      location.replace(
+        "../employee/index.html"
+      );
+
+      return;
+    }
+
+    if (
+      employee.status ===
+      "pending"
+    ) {
+      location.replace(
+        "../employee/pending.html"
+      );
+
+      return;
+    }
+
+    localStorage.removeItem(
+      "employeeSessionToken"
+    );
+
+    localStorage.removeItem(
+      "employeeName"
+    );
+
+    localStorage.removeItem(
+      "employeeRole"
+    );
+
+    localStorage.removeItem(
+      "employeeLoginType"
+    );
+  } catch (error) {
+    console.error(
+      "기존 세션 복구 오류:",
+      error
+    );
+  } finally {
+    if (loginSubmitBtn) {
+      loginSubmitBtn.disabled =
+        false;
+
+      loginSubmitBtn.textContent =
+        "로그인";
+    }
+  }
 }
 
 phoneLoginForm?.addEventListener(
@@ -231,3 +336,5 @@ phoneLoginForm?.addEventListener(
     }
   }
 );
+
+resumeExistingSession();

@@ -1,5 +1,5 @@
 const CACHE_NAME =
-  "employee-pwa-v35";
+  "employee-pwa-v37";
 
 const CACHE_PREFIX =
   "employee-pwa-";
@@ -24,7 +24,7 @@ const APP_SHELL = [
   "./icons/app-icon-512.png",
 
   "../public/css/common.css",
-  "../public/css/mobile.css",
+  "../public/css/mobile.css?v=36",
   "../public/css/login.css",
   "../public/css/index.css",
   "../public/css/request.css?v=30",
@@ -37,7 +37,7 @@ const APP_SHELL = [
   "../public/js/employeeAuth.js",
   "../public/js/common.js",
   "../public/js/mobile.js",
-  "../public/js/login.js",
+  "../public/js/login.js?v=37",
   "../public/js/index.js",
   "../public/js/request-menu.js?v=31",
   "../public/js/request.js?v=30",
