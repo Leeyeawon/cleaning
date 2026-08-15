@@ -775,7 +775,7 @@ async function submitChecklist() {
       )
     ) {
       submitButton.textContent =
-        "점검 결 제출";
+        "점검 결과 제출";
     }
   }
 }
@@ -829,22 +829,55 @@ async function init() {
     return;
   }
 
+  const assignedWorkplaces =
+    Array.isArray(workplaces)
+      ? workplaces
+      : [];
+
   workplaceSelect.innerHTML =
-    (workplaces || [])
-      .map(
-        (workplace) => `
+    assignedWorkplaces
+      .map((workplace) => {
+        const workplaceId =
+          workplace.workplace_id ??
+          workplace.workplaceId ??
+          workplace.id;
+
+        const workplaceName =
+          workplace.workplace_name ??
+          workplace.workplaceName ??
+          workplace.name ??
+          "이름 없는 현장";
+
+        return `
           <option
-            value="${escapeHtml(
-              workplace.workplace_id
-            )}"
+            value="${escapeHtml(workplaceId)}"
           >
-            ${escapeHtml(
-              workplace.workplace_name
-            )}
+            ${escapeHtml(workplaceName)}
           </option>
-        `
-      )
+        `;
+      })
       .join("");
+
+  if (!assignedWorkplaces.length) {
+    workplaceSelect.innerHTML = `
+      <option value="">
+        배정된 현장이 없습니다
+      </option>
+    `;
+
+    workplaceSelect.disabled = true;
+
+    checklistList.innerHTML = `
+      <p class="checklist-empty">
+        관리자 웹의 직원 관리에서
+        이 계정에 근무지를 먼저 배정해 주세요.
+      </p>
+    `;
+
+    return;
+  }
+
+  workplaceSelect.disabled = false;
 
   workplaceSelect.addEventListener(
     "change",

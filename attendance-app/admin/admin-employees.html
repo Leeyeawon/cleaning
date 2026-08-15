@@ -60,6 +60,31 @@
           </article>
         </section>
 
+        <section class="employee-app-approval-card">
+          <div class="section-title-row">
+            <div>
+              <h2>앱 승인 대기</h2>
+
+              <p>
+                직원이 앱에서 처음 로그인하면 이곳에 표시됩니다.
+              </p>
+            </div>
+
+            <span id="appApprovalPendingCount">
+              0명
+            </span>
+          </div>
+
+          <div
+            id="appApprovalPendingList"
+            class="app-approval-pending-list"
+          >
+            <p class="app-approval-empty">
+              승인 대기 직원을 불러오는 중입니다.
+            </p>
+          </div>
+        </section>
+
         <section class="employee-filter-card">
           <input
             id="employeeSearchInput"
@@ -90,31 +115,6 @@
             <input id="unassignedOnlyCheck" type="checkbox" />
             미배정만 보기
           </label>
-        </section>
-
-        <section class="employee-app-approval-card">
-          <div class="section-title-row">
-            <div>
-              <h2>앱 승인 대기</h2>
-
-              <p>
-                직원이 앱에서 처음 로그인하면 이곳에 표시됩니다.
-              </p>
-            </div>
-
-            <span id="appApprovalPendingCount">
-              0명
-            </span>
-          </div>
-
-          <div
-            id="appApprovalPendingList"
-            class="app-approval-pending-list"
-          >
-            <p class="app-approval-empty">
-              승인 대기 직원을 불러오는 중입니다.
-            </p>
-          </div>
         </section>
 
         <section class="employee-list-card">

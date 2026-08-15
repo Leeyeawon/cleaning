@@ -353,20 +353,26 @@ async function fetchEmployees() {
 
       workplaceIds:
         Array.isArray(
-          employee.workplaceIds
+          employee.workplaceIds ||
+          employee.workplace_ids
         )
-          ? employee.workplaceIds.map(
-              String
-            )
+          ? (
+              employee.workplaceIds ||
+              employee.workplace_ids
+            ).map(String)
           : [],
 
       workplaceNames:
         Array.isArray(
-          employee.workplaceNames
+          employee.workplaceNames ||
+          employee.workplace_names
         )
-          ? employee.workplaceNames
+          ? (
+              employee.workplaceNames ||
+              employee.workplace_names
+            )
           : [],
-    })
+      })
   );
 }
 
@@ -613,7 +619,6 @@ function filterEmployees() {
 
       const unassignedMatched =
         !unassignedOnly ||
-        !department ||
         workplaceIds.length === 0;
 
       return (
