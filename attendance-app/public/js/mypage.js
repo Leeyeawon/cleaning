@@ -467,25 +467,25 @@ async function installEmployeePwa() {
     return;
   }
 
-  if (
-    deferredInstallPrompt
-  ) {
-    deferredInstallPrompt
+  deferredInstallPrompt =
+  deferredInstallPrompt ||
+  window.employeePwaInstallPrompt;
+
+  if (deferredInstallPrompt) {
+    await deferredInstallPrompt
       .prompt();
 
     const choice =
       await deferredInstallPrompt
         .userChoice;
 
-    deferredInstallPrompt =
-      null;
+    deferredInstallPrompt = null;
 
     if (
       choice.outcome ===
       "accepted"
     ) {
-      installAppStatus
-        .textContent =
+      installAppStatus.textContent =
         "설치 중";
     } else {
       updateInstallSetting();
@@ -499,7 +499,7 @@ async function installEmployeePwa() {
       "iPhone 앱 설치 방법\n\n" +
       "1. Safari로 현재 페이지를 엽니다.\n" +
       "2. 화면 아래의 공유 버튼을 누릅니다.\n" +
-      "3. '홈 화면에 추가'를 누릅니다.\n" +
+      "3. '홈 화면에 추가'를 선택합니다.\n" +
       "4. 오른쪽 위의 '추가'를 누릅니다."
     );
 
@@ -507,15 +507,18 @@ async function installEmployeePwa() {
   }
 
   alert(
-    "앱 설치 방법\n\n" +
-    "1. 브라우저 오른쪽 위의 메뉴(⋮)를 누릅니다.\n" +
-    "2. '앱 설치' 또는 '홈 화면에 추가'를 누릅니다.\n" +
-    "3. 설치를 선택합니다."
+    "설치 준비 중입니다.\n\n" +
+    "페이지를 새로고침한 뒤 설치 버튼을 다시 눌러주세요.\n" +
+    "Chrome 또는 Samsung Internet에서 접속해야 합니다."
   );
 }
 
 
 function initPwaInstallSetting() {
+  deferredInstallPrompt =
+    window.employeePwaInstallPrompt ||
+    null;
+
   updateInstallSetting();
 
   installAppBtn?.addEventListener(
@@ -525,12 +528,10 @@ function initPwaInstallSetting() {
 }
 
 window.addEventListener(
-  "beforeinstallprompt",
-  (event) => {
-    event.preventDefault();
-
+  "employee-pwa-install-ready",
+  () => {
     deferredInstallPrompt =
-      event;
+      window.employeePwaInstallPrompt;
 
     updateInstallSetting();
   }
