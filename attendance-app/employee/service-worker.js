@@ -1,5 +1,5 @@
 const CACHE_NAME =
-  "employee-pwa-v32";
+  "employee-pwa-v33";
 
 const CACHE_PREFIX =
   "employee-pwa-";
@@ -20,6 +20,8 @@ const APP_SHELL = [
 
   "./manifest.json",
   "./icons/app-icon.svg",
+  "./icons/app-icon-192.png",
+  "./icons/app-icon-512.png",
 
   "../public/css/common.css",
   "../public/css/mobile.css",
