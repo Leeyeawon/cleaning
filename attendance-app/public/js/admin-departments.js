@@ -633,8 +633,14 @@ function initZoneMap() {
       {
         center,
         level: 4,
+        mapTypeId:
+          kakao.maps.MapTypeId.ROADMAP,
       }
     );
+
+  zoneMap.setMapTypeId(
+    kakao.maps.MapTypeId.ROADMAP
+  );
 
   zoneGeocoder =
     new kakao.maps.services.Geocoder();
@@ -723,8 +729,13 @@ function updateZoneMap(
 
   setTimeout(() => {
     zoneMap.relayout();
+
+    zoneMap.setMapTypeId(
+      kakao.maps.MapTypeId.ROADMAP
+    );
+
     zoneMap.setCenter(position);
-  }, 50);
+  }, 100);
 }
 
 function geocodeZoneAddress(address) {
