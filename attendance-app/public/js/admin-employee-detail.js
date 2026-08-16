@@ -1545,7 +1545,9 @@ async function openRegionEditModal() {
           workplace_id,
           start_date,
           end_date,
-          days_of_week
+          days_of_week,
+          work_start_time,
+          work_end_time
         `)
         .eq(
           "user_id",
@@ -1703,6 +1705,40 @@ async function openRegionEditModal() {
                     </label>
                   </div>
 
+                  <div class="detail-workplace-time">
+                    <label>
+                      근무 시작시간
+
+                      <input
+                        class="detail-workplace-start-time"
+                        type="time"
+                        value="${escapeHtml(
+                          String(
+                            assignment
+                              ?.work_start_time ||
+                            ""
+                          ).slice(0, 5)
+                        )}"
+                      />
+                    </label>
+
+                    <label>
+                      근무 종료시간
+
+                      <input
+                        class="detail-workplace-end-time"
+                        type="time"
+                        value="${escapeHtml(
+                          String(
+                            assignment
+                              ?.work_end_time ||
+                            ""
+                          ).slice(0, 5)
+                        )}"
+                      />
+                    </label>
+                  </div>
+
                   <div class="detail-workplace-days">
                     <span class="detail-workplace-days-title">
                       출근 가능 요일
@@ -1787,9 +1823,9 @@ async function openRegionEditModal() {
           ),
         ];
 
-        const dateInputs = [
+        const scheduleInputs = [
           ...card.querySelectorAll(
-            'input[type="date"]'
+            'input[type="date"], input[type="time"]'
           ),
         ];
 
@@ -1805,7 +1841,7 @@ async function openRegionEditModal() {
           everyDayCheck.disabled =
             !assigned;
 
-          dateInputs.forEach(
+          scheduleInputs.forEach(
             (input) => {
               input.disabled =
                 !assigned;
@@ -1919,6 +1955,16 @@ async function saveEmployeeRegions() {
         ".detail-workplace-end-date"
       )?.value || null;
 
+    const workStartTime =
+      card.querySelector(
+        ".detail-workplace-start-time"
+      )?.value || null;
+
+    const workEndTime =
+      card.querySelector(
+        ".detail-workplace-end-time"
+      )?.value || null;
+
     if (
       startDate &&
       endDate &&
@@ -1926,6 +1972,17 @@ async function saveEmployeeRegions() {
     ) {
       alert(
         "배정 종료일은 시작일보다 빠를 수 없습니다."
+      );
+
+      return;
+    }
+
+    if (
+      Boolean(workStartTime) !==
+      Boolean(workEndTime)
+    ) {
+      alert(
+        "근무 시작시간과 종료시간을 모두 입력해 주세요."
       );
 
       return;
@@ -1960,6 +2017,12 @@ async function saveEmployeeRegions() {
 
       days_of_week:
         daysOfWeek,
+
+      work_start_time:
+        workStartTime,
+
+      work_end_time:
+        workEndTime,
     });
   }
 

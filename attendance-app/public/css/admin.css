@@ -2854,7 +2854,8 @@ body[data-admin-page] .content {
   opacity: 0.5;
 }
 
-.detail-workplace-period {
+.detail-workplace-period,
+.detail-workplace-time {
   display: grid;
 
   grid-template-columns:
@@ -2863,7 +2864,8 @@ body[data-admin-page] .content {
   gap: 10px;
 }
 
-.detail-workplace-period label {
+.detail-workplace-period label,
+.detail-workplace-time label {
   display: grid;
   gap: 6px;
 
@@ -2872,7 +2874,8 @@ body[data-admin-page] .content {
   font-weight: 700;
 }
 
-.detail-workplace-period input {
+.detail-workplace-period input,
+.detail-workplace-time input {
   width: 100%;
   box-sizing: border-box;
 
@@ -2952,7 +2955,8 @@ input:disabled + span {
 }
 
 @media (max-width: 650px) {
-  .detail-workplace-period {
+  .detail-workplace-period,
+  .detail-workplace-time {
     grid-template-columns: 1fr;
   }
 }

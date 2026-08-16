@@ -47,6 +47,7 @@ const statusLabels = {
   pending: "승인 대기",
   approved: "승인 완료",
   rejected: "반려",
+  revoked: "승인 철회",
 };
 
 function escapeHtml(value) {
@@ -207,6 +208,12 @@ function renderRequests() {
         const canResolve =
           request.status === "pending";
 
+        const canRevoke =
+          request.request_type ===
+            "annual_leave" &&
+          request.status ===
+            "approved";
+        
         return `
           <tr>
             <td>
@@ -290,11 +297,25 @@ function renderRequests() {
                       </button>
                     </div>
                   `
-                  : `
-                    <span class="workflow-completed">
-                      처리 완료
-                    </span>
-                  `
+                  : canRevoke
+                    ? `
+                      <div class="workflow-actions">
+                        <button
+                          type="button"
+                          class="revoke"
+                          data-revoke-leave-id="${escapeHtml(
+                            request.id
+                          )}"
+                        >
+                          승인 철회
+                        </button>
+                      </div>
+                    `
+                    : `
+                      <span class="workflow-completed">
+                        처리 완료
+                      </span>
+                    `
               }
             </td>
           </tr>
@@ -318,6 +339,113 @@ function renderRequests() {
         }
       );
     });
+
+    tableBody
+      .querySelectorAll(
+        "[data-revoke-leave-id]"
+      )
+      .forEach((button) => {
+        button.addEventListener(
+          "click",
+          () => {
+            revokeAnnualLeave(
+              button.dataset
+                .revokeLeaveId,
+              button
+            );
+          }
+        );
+      });
+}
+
+async function revokeAnnualLeave(
+  requestId,
+  clickedButton
+) {
+  const firstConfirmed =
+    confirm(
+      "이미 승인된 연차를 철회하시겠습니까?\n철회하면 직원 출근부의 연차 표시도 삭제됩니다."
+    );
+
+  if (!firstConfirmed) {
+    return;
+  }
+
+  const confirmation =
+    prompt(
+      '철회를 계속하려면 "철회"라고 입력해 주세요.',
+      ""
+    );
+
+  if (confirmation === null) {
+    return;
+  }
+
+  if (
+    confirmation.trim() !==
+    "철회"
+  ) {
+    alert(
+      '"철회"를 정확하게 입력해야 합니다.'
+    );
+
+    return;
+  }
+
+  const adminNote =
+    prompt(
+      "직원에게 표시할 철회 사유를 입력해 주세요.\n사유가 없다면 비워두고 확인을 누르세요.",
+      ""
+    );
+
+  if (adminNote === null) {
+    return;
+  }
+
+  clickedButton.disabled = true;
+  clickedButton.textContent =
+    "철회 중...";
+
+  const { error } =
+    await supabase.rpc(
+      "admin_revoke_annual_leave",
+      {
+        p_request_id:
+          requestId,
+
+        p_confirmation:
+          confirmation.trim(),
+
+        p_admin_note:
+          adminNote.trim(),
+      }
+    );
+
+  if (error) {
+    console.error(
+      "연차 철회 실패:",
+      error
+    );
+
+    alert(
+      `연차 철회에 실패했습니다.\n${
+        error.message ||
+        "잠시 후 다시 시도해 주세요."
+      }`
+    );
+
+    clickedButton.disabled = false;
+    clickedButton.textContent =
+      "승인 철회";
+
+    return;
+  }
+
+  alert(
+    "연차 승인이 철회되었습니다."
+  );
+
+  await loadRequests();
 }
 
 async function resolveRequest(

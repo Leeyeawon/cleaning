@@ -919,3 +919,8 @@
   margin-top: 0;
   padding-bottom: 0;
 }
+
+.my-history-status.revoked {
+  color: #7c3aed;
+  background: #ede9fe;
+}

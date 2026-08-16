@@ -1327,3 +1327,13 @@ body[data-admin-page="requests"]
   color: #475467;
   background: #eaecf0;
 }
+
+.workflow-status.revoked {
+  color: #7c3aed;
+  background: #ede9fe;
+}
+
+.workflow-actions button.revoke {
+  color: #7c3aed;
+  background: #ede9fe;
+}

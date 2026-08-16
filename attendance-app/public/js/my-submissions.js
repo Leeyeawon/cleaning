@@ -95,6 +95,7 @@ const statusLabels = {
   pending: "승인 대기",
   approved: "승인 완료",
   rejected: "반려",
+  revoked: "승인 철회",
 };
 
 const ratingLabels = {
