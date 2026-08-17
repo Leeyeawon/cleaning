@@ -448,26 +448,6 @@ function updateAttendanceUI() {
   }
 }
 
-  checkInTime.textContent = formatTime(todayAttendance.check_in_time);
-  checkOutTime.textContent = formatTime(todayAttendance.check_out_time);
-  updateTotalWorkTime();
-
-  if (todayAttendance.check_in_time && !todayAttendance.check_out_time) {
-    workStatus.textContent = "근무 중";
-    buttonText.textContent = "퇴근하기";
-
-    if (attendanceBtn) attendanceBtn.disabled = false;
-    return;
-  }
-
-  if (todayAttendance.check_in_time && todayAttendance.check_out_time) {
-    workStatus.textContent = "근무 완료";
-    buttonText.textContent = "퇴근 완료";
-
-    if (attendanceBtn) attendanceBtn.disabled = true;
-  }
-}
-
 // 에러 메시지 한글화
 function getErrorMessage(error) {
   const message = error?.message || "";
