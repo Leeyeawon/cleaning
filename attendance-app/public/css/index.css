@@ -353,10 +353,6 @@ body.large-mode .font-size-btn .font-icon {
     padding: 16px 14px;
   }
   
-  .attendance-button {
-    height: 54px;
-    font-size: 16px;
-  }
 }
 
 #homeNoticeList {
@@ -395,4 +391,21 @@ body.large-mode .font-size-btn .font-icon {
 .status-badge.danger {
   background: #feecec;
   color: #dc2626;
+}
+
+/* 출근 버튼 높이 고정 */
+#attendanceBtn,
+body.large-mode #attendanceBtn {
+  height: 72px !important;
+  min-height: 72px !important;
+  max-height: 72px !important;
+  flex: 0 0 72px !important;
+
+  font-size: 19px !important;
+  border-radius: 20px;
+
+  transition:
+    transform 0.15s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
