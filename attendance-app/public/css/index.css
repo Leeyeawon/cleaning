@@ -202,11 +202,8 @@ body.large-mode .font-size-btn .font-icon {
 
 /* 시간 그리드 (더 큼직하고 시원하게) */
 .time-grid {
-  margin: auto 0; /* 위아래 여백을 자동으로 나누어 중앙 정렬 */
-  padding: 14px 0;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
 }
 
 .time-box {
@@ -411,10 +408,6 @@ body.large-mode .font-size-btn .font-icon {
   white-space: nowrap;
 }
 
-body.large-mode .time-box strong {
-  font-size: 21px !important;
-}
-
 @media (max-width: 360px) {
   .time-grid {
     gap: 7px;
@@ -427,9 +420,5 @@ body.large-mode .time-box strong {
 
   .time-box strong {
     font-size: 17px;
-  }
-
-  body.large-mode .time-box strong {
-    font-size: 18px !important;
   }
 }

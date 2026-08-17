@@ -13,7 +13,6 @@ const workStatus = document.getElementById("workStatus");
 const checkInTime = document.getElementById("checkInTime");
 const checkOutTime = document.getElementById("checkOutTime");
 
-const totalWorkTime = document.getElementById( "totalWorkTime" );
 const locationStatusText = document.getElementById( "locationStatusText" );
 const locationStatusBadge = document.getElementById( "locationStatusBadge" );
 const homeNoticeList = document.getElementById("homeNoticeList");
@@ -48,52 +47,6 @@ function formatTime(dateString) {
     hour: "2-digit",
     minute: "2-digit",
   });
-}
-
-function formatWorkHours(
-  checkInValue,
-  checkOutValue
-) {
-  if (!checkInValue) {
-    return "0.0시간";
-  }
-
-  const checkInDate =
-    new Date(checkInValue);
-
-  const checkOutDate =
-    checkOutValue
-      ? new Date(checkOutValue)
-      : new Date();
-
-  if (
-    Number.isNaN(checkInDate.getTime()) ||
-    Number.isNaN(checkOutDate.getTime())
-  ) {
-    return "0.0시간";
-  }
-
-  const milliseconds =
-    Math.max(
-      0,
-      checkOutDate.getTime() -
-      checkInDate.getTime()
-    );
-
-  const hours =
-    milliseconds / (1000 * 60 * 60);
-
-  return `${hours.toFixed(1)}시간`;
-}
-
-function updateTotalWorkTime() {
-  if (!totalWorkTime) return;
-
-  totalWorkTime.textContent =
-    formatWorkHours(
-      todayAttendance?.check_in_time,
-      todayAttendance?.check_out_time
-    );
 }
 
 // 브라우저/스마트폰 GPS 위치 가져오기
@@ -394,8 +347,6 @@ function updateAttendanceUI() {
     checkOutTime.textContent =
       "--:--";
 
-    updateTotalWorkTime();
-
     if (attendanceBtn) {
       attendanceBtn.disabled = false;
     }
@@ -412,8 +363,6 @@ function updateAttendanceUI() {
     formatTime(
       todayAttendance.check_out_time
     );
-
-  updateTotalWorkTime();
 
   if (
     todayAttendance.check_in_time &&
@@ -819,10 +768,6 @@ async function init() {
   await loadTodayAttendance();
 
   await loadLocationStatus();
-
-  setInterval(() => {
-    updateTotalWorkTime();
-  }, 60000);
 
   noticeMoreBtn?.addEventListener(
     "click",
