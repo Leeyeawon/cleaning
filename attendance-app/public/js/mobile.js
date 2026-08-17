@@ -1,13 +1,19 @@
 /* =========================
-  직원 앱 모바일 공통 하단바
+  직원 앱 모바일 공통 기능
 ========================= */
 
 document.addEventListener("DOMContentLoaded", () => {
   renderBottomNav();
+  initTextSizeMode();
 });
 
+/* =========================
+  하단 메뉴
+========================= */
+
 function renderBottomNav() {
-  const bottomNav = document.getElementById("bottomNav");
+  const bottomNav =
+    document.getElementById("bottomNav");
 
   if (!bottomNav) return;
 
@@ -44,12 +50,23 @@ function renderBottomNav() {
     <nav class="bottom-nav">
       ${navItems
         .map((item) => {
-          const isActive = currentPage === item.page;
+          const isActive =
+            currentPage === item.page;
 
           return `
-            <a href="${item.href}" class="nav-item ${isActive ? "active" : ""}">
-              <span class="nav-icon">${item.icon}</span>
-              <span class="nav-label">${item.label}</span>
+            <a
+              href="${item.href}"
+              class="nav-item ${
+                isActive ? "active" : ""
+              }"
+            >
+              <span class="nav-icon">
+                ${item.icon}
+              </span>
+
+              <span class="nav-label">
+                ${item.label}
+              </span>
             </a>
           `;
         })
@@ -60,36 +77,97 @@ function renderBottomNav() {
 
 function getCurrentPageName() {
   const path = window.location.pathname;
-  const pageName = path.substring(path.lastIndexOf("/") + 1);
+
+  const pageName =
+    path.substring(
+      path.lastIndexOf("/") + 1
+    );
 
   return pageName || "index.html";
 }
 
-// <!-- 큰 글자 모드  -->
+/* =========================
+  큰글자 모드
+========================= */
 
-// 1. 페이지가 열릴 때 기존에 설정한 글자 크기 불러오기
-const savedSizeMode = localStorage.getItem("textSizeMode");
-const fontToggleBtn = document.getElementById("fontToggleBtn");
+function initTextSizeMode() {
+  const fontToggleBtn =
+    document.getElementById("fontToggleBtn");
 
-if (savedSizeMode === "large") {
-  document.body.classList.add("large-mode");
-  if (fontToggleBtn) fontToggleBtn.textContent = "🔍 기본 글자";
+  /*
+    설정한 적이 없는 사용자는
+    큰글자 모드를 기본값으로 사용
+  */
+  const savedMode =
+    localStorage.getItem("textSizeMode");
+
+  const initialMode =
+    savedMode === "normal"
+      ? "normal"
+      : "large";
+
+  applyTextSizeMode(
+    initialMode,
+    fontToggleBtn
+  );
+
+  fontToggleBtn?.addEventListener(
+    "click",
+    () => {
+      const nextMode =
+        document.body.classList.contains(
+          "large-mode"
+        )
+          ? "normal"
+          : "large";
+
+      localStorage.setItem(
+        "textSizeMode",
+        nextMode
+      );
+
+      applyTextSizeMode(
+        nextMode,
+        fontToggleBtn
+      );
+    }
+  );
 }
 
-// 2. 버튼 클릭 시 토글 기능
-if (fontToggleBtn) {
-  fontToggleBtn.addEventListener("click", () => {
-    document.body.classList.toggle("large-mode");
-    
-    const isLarge = document.body.classList.contains("large-mode");
-    if (isLarge) {
-      localStorage.setItem("textSizeMode", "large");
-      fontToggleBtn.textContent = "🔍 기본 글자";
-      alert(" 큰글자 모드가 켜졌습니다.");
-    } else {
-      localStorage.setItem("textSizeMode", "normal");
-      fontToggleBtn.textContent = "🔍 글자 크게";
-      alert("기본 글자 크기로 변경되었습니다.");
-    }
-  });
+function applyTextSizeMode(
+  mode,
+  fontToggleBtn
+) {
+  const isLarge = mode === "large";
+
+  document.body.classList.toggle(
+    "large-mode",
+    isLarge
+  );
+
+  if (!fontToggleBtn) return;
+
+  const fontText =
+    fontToggleBtn.querySelector(
+      ".font-text"
+    );
+
+  const buttonLabel =
+    isLarge
+      ? "기본글자"
+      : "큰글자";
+
+  if (fontText) {
+    fontText.textContent = buttonLabel;
+  } else {
+    fontToggleBtn.textContent =
+      buttonLabel;
+  }
+
+  fontToggleBtn.setAttribute(
+    "aria-label",
+    isLarge
+      ? "기본 글자로 변경"
+      : "큰글자로 변경"
+  );
 }

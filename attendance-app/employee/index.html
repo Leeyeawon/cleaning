@@ -36,10 +36,18 @@
 
         <div class="location-info">
           <p>위치 확인 상태</p>
-          <strong>회사 근처 확인됨</strong>
+
+          <strong id="locationStatusText">
+            현재 위치를 확인하고 있습니다.
+          </strong>
         </div>
 
-        <span class="status-badge success">확인됨</span>
+        <span
+          id="locationStatusBadge"
+          class="status-badge neutral"
+        >
+          확인 중
+        </span>
       </section>
 
       <section class="work-card">
@@ -61,6 +69,11 @@
           <div class="time-box">
             <p>퇴근 시간</p>
             <strong id="checkOutTime">--:--</strong>
+          </div>
+
+          <div class="time-box">
+            <p>총 근무시간</p>
+            <strong id="totalWorkTime">0.0시간</strong>
           </div>
         </div>
 

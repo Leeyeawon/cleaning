@@ -49,6 +49,52 @@ function formatTime(timeString) {
   return date.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
 }
 
+function formatWorkHours(
+  checkInValue,
+  checkOutValue
+) {
+  if (!checkInValue) {
+    return "0.0시간";
+  }
+
+  const checkInDate =
+    new Date(checkInValue);
+
+  const checkOutDate =
+    checkOutValue
+      ? new Date(checkOutValue)
+      : new Date();
+
+  if (
+    Number.isNaN(checkInDate.getTime()) ||
+    Number.isNaN(checkOutDate.getTime())
+  ) {
+    return "0.0시간";
+  }
+
+  const milliseconds =
+    Math.max(
+      0,
+      checkOutDate.getTime() -
+      checkInDate.getTime()
+    );
+
+  const hours =
+    milliseconds / (1000 * 60 * 60);
+
+  return `${hours.toFixed(1)}시간`;
+}
+
+function updateTotalWorkTime() {
+  if (!totalWorkTime) return;
+
+  totalWorkTime.textContent =
+    formatWorkHours(
+      todayAttendance?.check_in_time,
+      todayAttendance?.check_out_time
+    );
+}
+
 // 3. 총 근무시간 계산
 function calcWorkTime(checkIn, checkOut) {
   if (!checkIn || !checkOut) return "근무중";

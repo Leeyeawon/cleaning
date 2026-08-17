@@ -13,6 +13,9 @@ const workStatus = document.getElementById("workStatus");
 const checkInTime = document.getElementById("checkInTime");
 const checkOutTime = document.getElementById("checkOutTime");
 
+const totalWorkTime = document.getElementById( "totalWorkTime" );
+const locationStatusText = document.getElementById( "locationStatusText" );
+const locationStatusBadge = document.getElementById( "locationStatusBadge" );
 const homeNoticeList = document.getElementById("homeNoticeList");
 const noticeMoreBtn = document.getElementById("noticeMoreBtn");
 
@@ -47,6 +50,52 @@ function formatTime(dateString) {
   });
 }
 
+function formatWorkHours(
+  checkInValue,
+  checkOutValue
+) {
+  if (!checkInValue) {
+    return "0.0시간";
+  }
+
+  const checkInDate =
+    new Date(checkInValue);
+
+  const checkOutDate =
+    checkOutValue
+      ? new Date(checkOutValue)
+      : new Date();
+
+  if (
+    Number.isNaN(checkInDate.getTime()) ||
+    Number.isNaN(checkOutDate.getTime())
+  ) {
+    return "0.0시간";
+  }
+
+  const milliseconds =
+    Math.max(
+      0,
+      checkOutDate.getTime() -
+      checkInDate.getTime()
+    );
+
+  const hours =
+    milliseconds / (1000 * 60 * 60);
+
+  return `${hours.toFixed(1)}시간`;
+}
+
+function updateTotalWorkTime() {
+  if (!totalWorkTime) return;
+
+  totalWorkTime.textContent =
+    formatWorkHours(
+      todayAttendance?.check_in_time,
+      todayAttendance?.check_out_time
+    );
+}
+
 // 브라우저/스마트폰 GPS 위치 가져오기
 function getCurrentPosition() {
   return new Promise((resolve, reject) => {
@@ -75,6 +124,252 @@ function getCurrentPosition() {
   });
 }
 
+function calculateDistanceMeters(
+  lat1,
+  lng1,
+  lat2,
+  lng2
+) {
+  const earthRadius = 6371000;
+
+  const toRadians = (value) =>
+    value * (Math.PI / 180);
+
+  const latitudeDifference =
+    toRadians(lat2 - lat1);
+
+  const longitudeDifference =
+    toRadians(lng2 - lng1);
+
+  const firstLatitude =
+    toRadians(lat1);
+
+  const secondLatitude =
+    toRadians(lat2);
+
+  const value =
+    Math.sin(
+      latitudeDifference / 2
+    ) ** 2 +
+    Math.cos(firstLatitude) *
+      Math.cos(secondLatitude) *
+      Math.sin(
+        longitudeDifference / 2
+      ) ** 2;
+
+  const angle =
+    2 *
+    Math.atan2(
+      Math.sqrt(value),
+      Math.sqrt(1 - value)
+    );
+
+  return earthRadius * angle;
+}
+
+function setLocationStatus(
+  text,
+  badgeText,
+  statusClass
+) {
+  if (locationStatusText) {
+    locationStatusText.textContent = text;
+  }
+
+  if (locationStatusBadge) {
+    locationStatusBadge.textContent =
+      badgeText;
+
+    locationStatusBadge.className =
+      `status-badge ${statusClass}`;
+  }
+}
+
+async function loadLocationStatus() {
+  const token =
+    getEmployeeSessionToken();
+
+  if (!token) return;
+
+  setLocationStatus(
+    "현재 위치를 확인하고 있습니다.",
+    "확인 중",
+    "neutral"
+  );
+
+  const workplaceResult =
+    await supabase.rpc(
+      "get_my_workplaces",
+      {
+        p_session_token: token,
+      }
+    );
+
+  if (workplaceResult.error) {
+    console.error(
+      "배정 근무지 조회 실패:",
+      workplaceResult.error
+    );
+
+    setLocationStatus(
+      "근무지 정보를 불러오지 못했습니다.",
+      "확인 실패",
+      "danger"
+    );
+
+    return;
+  }
+
+  const workplaces =
+    workplaceResult.data || [];
+
+  if (workplaces.length === 0) {
+    setLocationStatus(
+      "현재 배정된 근무지가 없습니다.",
+      "미배정",
+      "warning"
+    );
+
+    return;
+  }
+
+  try {
+    const position =
+      await getCurrentPosition();
+
+    const workplaceDistances =
+      workplaces
+        .map((workplace) => {
+          const latitude =
+            Number(workplace.latitude);
+
+          const longitude =
+            Number(workplace.longitude);
+
+          const radius =
+            Math.max(
+              Number(
+                workplace.radius_m
+              ) || 100,
+              1
+            );
+
+          if (
+            !Number.isFinite(latitude) ||
+            !Number.isFinite(longitude)
+          ) {
+            return null;
+          }
+
+          const distance =
+            calculateDistanceMeters(
+              position.latitude,
+              position.longitude,
+              latitude,
+              longitude
+            );
+
+          return {
+            ...workplace,
+            distance,
+            radius,
+          };
+        })
+        .filter(Boolean)
+        .sort(
+          (a, b) =>
+            a.distance - b.distance
+        );
+
+    const nearestWorkplace =
+      workplaceDistances[0];
+
+    if (!nearestWorkplace) {
+      setLocationStatus(
+        "근무지 위치가 등록되지 않았습니다.",
+        "확인 필요",
+        "warning"
+      );
+
+      return;
+    }
+
+    if (
+      nearestWorkplace.distance <=
+      nearestWorkplace.radius
+    ) {
+      setLocationStatus(
+        `${nearestWorkplace.workplace_name} 근무지 안입니다.`,
+        "확인됨",
+        "success"
+      );
+
+      return;
+    }
+
+    const distanceText =
+      nearestWorkplace.distance >= 1000
+        ? `${
+            (
+              nearestWorkplace.distance /
+              1000
+            ).toFixed(1)
+          }km`
+        : `${
+            Math.round(
+              nearestWorkplace.distance
+            )
+          }m`;
+
+    setLocationStatus(
+      `${nearestWorkplace.workplace_name}에서 ${distanceText} 떨어져 있습니다.`,
+      "범위 밖",
+      "danger"
+    );
+  } catch (error) {
+    console.error(
+      "현재 위치 확인 실패:",
+      error
+    );
+
+    if (error?.code === 1) {
+      setLocationStatus(
+        "위치 권한을 허용해 주세요.",
+        "권한 필요",
+        "warning"
+      );
+
+      return;
+    }
+
+    if (error?.code === 2) {
+      setLocationStatus(
+        "현재 위치를 확인할 수 없습니다.",
+        "확인 실패",
+        "danger"
+      );
+
+      return;
+    }
+
+    if (error?.code === 3) {
+      setLocationStatus(
+        "위치 확인 시간이 초과되었습니다.",
+        "다시 확인",
+        "warning"
+      );
+
+      return;
+    }
+
+    setLocationStatus(
+      "현재 위치를 확인하지 못했습니다.",
+      "확인 실패",
+      "danger"
+    );
+  }
+}
+
 // 화면 UI 상태 업데이트 (출근 전 / 근무 중 / 근무 완료)
 function updateAttendanceUI() {
   if (!workStatus || !buttonText || !checkInTime || !checkOutTime) return;
@@ -85,12 +380,19 @@ function updateAttendanceUI() {
     checkInTime.textContent = "--:--";
     checkOutTime.textContent = "--:--";
 
-    if (attendanceBtn) attendanceBtn.disabled = false;
+    updateTotalWorkTime();
+
+    if (attendanceBtn) {
+      attendanceBtn.disabled = false;
+    }
+
     return;
   }
+}
 
   checkInTime.textContent = formatTime(todayAttendance.check_in_time);
   checkOutTime.textContent = formatTime(todayAttendance.check_out_time);
+  updateTotalWorkTime();
 
   if (todayAttendance.check_in_time && !todayAttendance.check_out_time) {
     workStatus.textContent = "근무 중";
@@ -175,6 +477,9 @@ async function checkIn() {
   updateAttendanceUI();
 
   const workplaceName = todayAttendance?.workplace_name || "근무지";
+
+  await loadLocationStatus();
+
   alert(`${workplaceName} 출근 완료`);
 }
 
@@ -203,6 +508,9 @@ async function checkOut() {
   updateAttendanceUI();
 
   const workplaceName = todayAttendance?.workplace_name || "근무지";
+
+  await loadLocationStatus();
+  
   alert(`${workplaceName} 퇴근 완료`);
 }
 
@@ -471,6 +779,12 @@ async function init() {
 
   // 4. 오늘 출퇴근 기록 불러오기
   await loadTodayAttendance();
+
+  await loadLocationStatus();
+
+  setInterval(() => {
+    updateTotalWorkTime();
+  }, 60000);
 
   noticeMoreBtn?.addEventListener(
     "click",

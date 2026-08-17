@@ -152,3 +152,76 @@ body.large-mode .today-number {
   width: 32px !important;
   height: 32px !important;
 }
+
+/* ===============================
+   모바일 화면 하단 가림 방지
+=============================== */
+
+.phone {
+  min-height: 100dvh;
+  box-sizing: border-box;
+}
+
+.phone > main {
+  box-sizing: border-box;
+
+  /*
+    마지막 내용이 고정 하단 메뉴 위까지
+    충분히 올라오도록 여백을 확보합니다.
+  */
+  padding-bottom:
+    calc(
+      var(--bottom-nav-height) +
+      var(--safe-bottom) +
+      28px
+    ) !important;
+
+  scroll-padding-bottom:
+    calc(
+      var(--bottom-nav-height) +
+      var(--safe-bottom) +
+      28px
+    );
+}
+
+/* 기존 A+ 또는 돋보기 아이콘 숨김 */
+.font-size-btn .font-icon {
+  display: none;
+}
+
+/* 공통 글자 크기 버튼 */
+.font-size-btn {
+  min-width: 78px;
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.font-size-btn:active {
+  transform: scale(0.96);
+}
+
+body.large-mode .font-size-btn {
+  background: #111827;
+  border-color: #111827;
+  color: #ffffff;
+}
+
+/* 큰글자에서도 하단 메뉴가 과도하게 커지지 않게 유지 */
+body.large-mode .nav-label {
+  font-size: 12px !important;
+}
+
+body.large-mode .nav-icon {
+  font-size: 19px !important;
+}
