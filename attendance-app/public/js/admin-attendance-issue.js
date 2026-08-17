@@ -61,52 +61,6 @@ function formatTime(timeString) {
   });
 }
 
-function formatWorkHours(
-  checkInValue,
-  checkOutValue
-) {
-  if (!checkInValue) {
-    return "0.0시간";
-  }
-
-  const checkInDate =
-    new Date(checkInValue);
-
-  const checkOutDate =
-    checkOutValue
-      ? new Date(checkOutValue)
-      : new Date();
-
-  if (
-    Number.isNaN(checkInDate.getTime()) ||
-    Number.isNaN(checkOutDate.getTime())
-  ) {
-    return "0.0시간";
-  }
-
-  const milliseconds =
-    Math.max(
-      0,
-      checkOutDate.getTime() -
-      checkInDate.getTime()
-    );
-
-  const hours =
-    milliseconds / (1000 * 60 * 60);
-
-  return `${hours.toFixed(1)}시간`;
-}
-
-function updateTotalWorkTime() {
-  if (!totalWorkTime) return;
-
-  totalWorkTime.textContent =
-    formatWorkHours(
-      todayAttendance?.check_in_time,
-      todayAttendance?.check_out_time
-    );
-}
-
 function getMinutesLate(checkInTime) {
   if (!checkInTime) return 0;
 

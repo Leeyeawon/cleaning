@@ -372,13 +372,27 @@ async function loadLocationStatus() {
 
 // 화면 UI 상태 업데이트 (출근 전 / 근무 중 / 근무 완료)
 function updateAttendanceUI() {
-  if (!workStatus || !buttonText || !checkInTime || !checkOutTime) return;
+  if (
+    !workStatus ||
+    !buttonText ||
+    !checkInTime ||
+    !checkOutTime
+  ) {
+    return;
+  }
 
   if (!todayAttendance) {
-    workStatus.textContent = "출근 전";
-    buttonText.textContent = "출근하기";
-    checkInTime.textContent = "--:--";
-    checkOutTime.textContent = "--:--";
+    workStatus.textContent =
+      "출근 전";
+
+    buttonText.textContent =
+      "출근하기";
+
+    checkInTime.textContent =
+      "--:--";
+
+    checkOutTime.textContent =
+      "--:--";
 
     updateTotalWorkTime();
 
@@ -387,6 +401,50 @@ function updateAttendanceUI() {
     }
 
     return;
+  }
+
+  checkInTime.textContent =
+    formatTime(
+      todayAttendance.check_in_time
+    );
+
+  checkOutTime.textContent =
+    formatTime(
+      todayAttendance.check_out_time
+    );
+
+  updateTotalWorkTime();
+
+  if (
+    todayAttendance.check_in_time &&
+    !todayAttendance.check_out_time
+  ) {
+    workStatus.textContent =
+      "근무 중";
+
+    buttonText.textContent =
+      "퇴근하기";
+
+    if (attendanceBtn) {
+      attendanceBtn.disabled = false;
+    }
+
+    return;
+  }
+
+  if (
+    todayAttendance.check_in_time &&
+    todayAttendance.check_out_time
+  ) {
+    workStatus.textContent =
+      "근무 완료";
+
+    buttonText.textContent =
+      "퇴근 완료";
+
+    if (attendanceBtn) {
+      attendanceBtn.disabled = true;
+    }
   }
 }
 
@@ -510,7 +568,7 @@ async function checkOut() {
   const workplaceName = todayAttendance?.workplace_name || "근무지";
 
   await loadLocationStatus();
-  
+
   alert(`${workplaceName} 퇴근 완료`);
 }
 

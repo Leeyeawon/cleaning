@@ -91,6 +91,18 @@ function addPwaMetadata() {
   }
 }
 
+let isPwaReloading = false;
+
+navigator.serviceWorker?.addEventListener(
+  "controllerchange",
+  () => {
+    if (isPwaReloading) return;
+
+    isPwaReloading = true;
+
+    window.location.reload();
+  }
+);
 
 async function registerEmployeePwa() {
   addPwaMetadata();
