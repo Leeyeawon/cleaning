@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  />
+
+  <title>
+    출퇴근 시간 관리 | 근태관리 Admin
+  </title>
+
+  <link
+    rel="stylesheet"
+    href="../public/css/common.css"
+  />
+
+  <link
+    rel="stylesheet"
+    href="../public/css/pc.css"
+  />
+
+  <link
+    rel="stylesheet"
+    href="../public/css/admin.css"
+  />
+
+  <link
+    rel="stylesheet"
+    href="../public/css/admin-work-schedules.css?v=45"
+  />
+</head>
+
+<body data-admin-page="work-schedules">
+  <div class="admin-layout">
+    <div id="adminSidebar"></div>
+
+    <main class="main">
+      <header class="top-header">
+        <div>
+          <h2>출퇴근 시간 관리</h2>
+
+          <p>
+            현장별 근무 시간대를 등록하고 관리합니다.
+          </p>
+        </div>
+
+        <div class="header-actions">
+          <button
+            class="download-button"
+            type="button"
+            id="addWorkShiftBtn"
+          >
+            + 근무 시간대 등록
+          </button>
+        </div>
+      </header>
+
+      <section class="content">
+        <section class="stats-grid">
+          <article class="stat-card">
+            <p>전체 시간대</p>
+
+            <strong id="totalShiftCount">
+              0
+            </strong>
+
+            <span>개</span>
+          </article>
+
+          <article class="stat-card dark">
+            <p>사용 중</p>
+
+            <strong id="activeShiftCount">
+              0
+            </strong>
+
+            <span>개</span>
+          </article>
+
+          <article class="stat-card">
+            <p>등록 현장</p>
+
+            <strong id="shiftWorkplaceCount">
+              0
+            </strong>
+
+            <span>곳</span>
+          </article>
+
+          <article class="stat-card warning">
+            <p>직원 배정</p>
+
+            <strong id="shiftAssignmentCount">
+              0
+            </strong>
+
+            <span>건</span>
+          </article>
+        </section>
+
+        <section class="shift-filter-panel">
+          <div class="shift-filter-group">
+            <input
+              type="search"
+              id="shiftSearchInput"
+              placeholder="시간대명 검색"
+            />
+
+            <select id="shiftWorkplaceFilter">
+              <option value="all">
+                전체 지역
+              </option>
+            </select>
+
+            <select id="shiftStatusFilter">
+              <option value="all">
+                전체 상태
+              </option>
+
+              <option value="active">
+                사용 중
+              </option>
+
+              <option value="inactive">
+                사용 중지
+              </option>
+            </select>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h3>근무 시간대 목록</h3>
+
+              <p>
+                직원 등록 및 지역 배정 시 선택할 수 있습니다.
+              </p>
+            </div>
+
+            <span id="filteredShiftCount">
+              0개 시간대
+            </span>
+          </div>
+
+          <div class="attendance-table-wrap">
+            <table class="attendance-table">
+              <thead>
+                <tr>
+                  <th>지역</th>
+                  <th>시간대명</th>
+                  <th>출근 시간</th>
+                  <th>퇴근 시간</th>
+                  <th>휴게 시간</th>
+                  <th>배정 직원</th>
+                  <th>상태</th>
+                  <th>관리</th>
+                </tr>
+              </thead>
+
+              <tbody id="workShiftTableBody">
+                <tr>
+                  <td colspan="8">
+                    근무 시간대를 불러오는 중입니다.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div
+    class="shift-modal"
+    id="workShiftModal"
+  >
+    <div class="shift-modal-content">
+      <div class="shift-modal-header">
+        <div>
+          <h3 id="workShiftModalTitle">
+            근무 시간대 등록
+          </h3>
+
+          <p>
+            하나의 지역에 여러 시간대를 등록할 수 있습니다.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          id="workShiftModalCloseBtn"
+          aria-label="닫기"
+        >
+          ×
+        </button>
+      </div>
+
+      <form id="workShiftForm">
+        <div class="shift-modal-body">
+          <div class="shift-form-grid">
+            <label class="full">
+              근무 지역
+
+              <select
+                id="workShiftWorkplaceInput"
+                required
+              >
+                <option value="">
+                  지역을 선택해 주세요
+                </option>
+              </select>
+            </label>
+
+            <label class="full">
+              시간대명
+
+              <input
+                type="text"
+                id="workShiftNameInput"
+                placeholder="예: 주간조, 오전 근무, 야간조"
+                maxlength="50"
+                required
+              />
+
+              <small>
+                직원 등록 화면에는 이 이름으로 표시됩니다.
+              </small>
+            </label>
+
+            <label>
+              출근 시간
+
+              <input
+                type="time"
+                id="workShiftStartInput"
+                required
+              />
+            </label>
+
+            <label>
+              퇴근 시간
+
+              <input
+                type="time"
+                id="workShiftEndInput"
+                required
+              />
+            </label>
+
+            <label>
+              휴게 시간
+
+              <div class="shift-number-row">
+                <input
+                  type="number"
+                  id="workShiftBreakInput"
+                  min="0"
+                  max="720"
+                  value="0"
+                />
+
+                <span>분</span>
+              </div>
+            </label>
+
+            <label>
+              정렬 순서
+
+              <input
+                type="number"
+                id="workShiftSortInput"
+                min="0"
+                value="0"
+              />
+            </label>
+
+            <label class="shift-active-label full">
+              <input
+                type="checkbox"
+                id="workShiftActiveInput"
+                checked
+              />
+
+              <span>
+                <strong>사용 중</strong>
+
+                <small>
+                  해제하면 직원 등록 화면에서 선택할 수 없습니다.
+                </small>
+              </span>
+            </label>
+
+            <label class="full">
+              관리자 메모
+
+              <textarea
+                id="workShiftMemoInput"
+                rows="3"
+                maxlength="300"
+                placeholder="선택 사항"
+              ></textarea>
+            </label>
+          </div>
+        </div>
+
+        <div class="shift-modal-footer">
+          <button
+            type="button"
+            class="cancel-btn"
+            id="workShiftModalCancelBtn"
+          >
+            취소
+          </button>
+
+          <button
+            type="submit"
+            class="save-btn"
+            id="workShiftSaveBtn"
+          >
+            저장
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script
+    src="../public/js/common.js"
+  ></script>
+
+  <script
+    type="module"
+    src="../public/js/pc.js?v=45"
+  ></script>
+
+  <script
+    type="module"
+    src="../public/js/admin-work-schedules.js?v=45"
+  ></script>
+</body>
+</html>

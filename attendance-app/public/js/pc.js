@@ -48,6 +48,17 @@ const attendancePages = [
 
 const isAttendanceOpen = attendancePages.includes(currentAdminPage);
 
+const workManagementPages = [
+  "work-schedules",
+  "departments",
+  "work-details",
+];
+
+const isWorkManagementOpen =
+  workManagementPages.includes(
+    currentAdminPage
+  );
+
 if (adminSidebar) {
   adminSidebar.innerHTML = `
     <aside class="admin-sidebar">
@@ -115,10 +126,66 @@ if (adminSidebar) {
           <p>직원 관리</p>
         </a>
 
-        <a href="admin-departments.html" class="admin-menu-item ${currentAdminPage === "departments" ? "active" : ""}">
-          <span></span>
-          <p>근무지역 관리</p>
-        </a>
+        <div
+          class="admin-menu-group ${
+            isWorkManagementOpen
+              ? "open"
+              : ""
+          }"
+        >
+          <a
+            href="admin-work-schedules.html"
+            class="admin-menu-item admin-menu-parent ${
+              isWorkManagementOpen
+                ? "active"
+                : ""
+            }"
+          >
+            <span></span>
+
+            <p>근무 관리</p>
+
+            <b>⌄</b>
+          </a>
+
+          <div class="admin-sub-menu">
+            <a
+              href="admin-work-schedules.html"
+              class="admin-sub-menu-item ${
+                currentAdminPage ===
+                "work-schedules"
+                  ? "active"
+                  : ""
+              }"
+            >
+              출퇴근 시간 관리
+            </a>
+
+            <a
+              href="admin-departments.html"
+              class="admin-sub-menu-item ${
+                currentAdminPage ===
+                "departments"
+                  ? "active"
+                  : ""
+              }"
+            >
+              지역 관리
+            </a>
+
+            <a
+              href="admin-work-details.html"
+              class="admin-sub-menu-item ${
+                currentAdminPage ===
+                "work-details"
+                  ? "active"
+                  : ""
+              }"
+            >
+              근무 상세
+            </a>
+          </div>
+        </div>
 
         <a href="admin-notices.html" class="admin-menu-item ${currentAdminPage === "notices" ? "active" : ""}">
           <span></span>

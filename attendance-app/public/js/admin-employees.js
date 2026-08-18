@@ -25,8 +25,10 @@ const employeeStatusFilter =
 const employeeRegionFilter =
   document.getElementById("employeeRegionFilter");
 
-const employeeTeamFilter =
-  document.getElementById("employeeTeamFilter");
+const employeeShiftFilter =
+  document.getElementById(
+    "employeeShiftFilter"
+  );
 
 const unassignedOnlyCheck =
   document.getElementById("unassignedOnlyCheck");
@@ -69,11 +71,20 @@ const employeeNameInput =
 const employeePhoneInput =
   document.getElementById("employeePhoneInput");
 
-const editEmployeeRole =
-  document.getElementById("editEmployeeRole");
+const employeePositionInput =
+  document.getElementById(
+    "employeePositionInput"
+  );
 
-const employeeDepartmentInput =
-  document.getElementById("employeeDepartmentInput");
+const employeeRoleInput =
+  document.getElementById(
+    "employeeRoleInput"
+  );
+
+const employeeShiftInput =
+  document.getElementById(
+    "employeeShiftInput"
+  );
 
 const employeeStatusInput =
   document.getElementById("employeeStatusInput");
@@ -113,6 +124,9 @@ const quickAssignSaveBtn =
 
 let employees = [];
 let workplaces = [];
+let workShifts = [];
+let workplaceAssignments = [];
+let jobPositions = [];
 
 /*
   현재 소속은 users.department 문자열 컬럼을 사용한다.
@@ -120,11 +134,11 @@ let workplaces = [];
   추후 별도의 departments 테이블을 만들면
   이 배열 대신 Supabase에서 부서 목록을 가져오면 된다.
 */
-const departments = [
-  "현장팀",
-  "운영팀",
-  "디자인팀",
-];
+/*
+  quickAssignType은 현재 workplace만 사용합니다.
+*/
+let quickAssignType = null;
+let quickAssignEmployeeId = null;
 
 /*
   quickAssignType:
@@ -261,9 +275,125 @@ function getEmployeeWorkplaceText(employee) {
   return names.join(", ");
 }
 
-function isWorkplaceUnassigned(employee) {
+function getEmployeeShiftIds(
+  employee
+) {
+  return Array.isArray(
+    employee?.workShiftIds
+  )
+    ? employee.workShiftIds.map(
+        String
+      )
+    : [];
+}
+
+
+function getEmployeeShiftNames(
+  employee
+) {
+  return Array.isArray(
+    employee?.workShiftNames
+  )
+    ? employee.workShiftNames
+    : [];
+}
+
+
+function getEmployeeShiftText(
+  employee
+) {
+  const names =
+    getEmployeeShiftNames(
+      employee
+    );
+
+  if (!names.length) {
+    return "시간대 미배정";
+  }
+
+  return names.join(", ");
+}
+
+
+function isWorkShiftUnassigned(
+  employee
+) {
   return (
-    getEmployeeWorkplaceIds(employee).length === 0
+    getEmployeeShiftIds(
+      employee
+    ).length === 0
+  );
+}
+
+
+function hydrateEmployeeWorkData() {
+  employees = employees.map(
+    (employee) => {
+      const assignments =
+        workplaceAssignments.filter(
+          (assignment) =>
+            String(
+              assignment.user_id
+            ) ===
+            String(employee.id)
+        );
+
+      const shiftIds =
+        assignments
+          .map(
+            (assignment) =>
+              assignment.work_shift_id
+          )
+          .filter(
+            (shiftId) =>
+              shiftId != null
+          )
+          .map(String);
+
+      const shiftNames =
+        shiftIds
+          .map((shiftId) => {
+            const shift =
+              workShifts.find(
+                (item) =>
+                  String(item.id) ===
+                  shiftId
+              );
+
+            if (!shift) {
+              return null;
+            }
+
+            const workplace =
+              workplaces.find(
+                (item) =>
+                  String(item.id) ===
+                  String(
+                    shift.workplace_id
+                  )
+              );
+
+            const workplaceName =
+              workplace?.name ||
+              "지역";
+
+            return `${workplaceName} · ${shift.name}`;
+          })
+          .filter(Boolean);
+
+      return {
+        ...employee,
+
+        workAssignments:
+          assignments,
+
+        workShiftIds:
+          shiftIds,
+
+        workShiftNames:
+          shiftNames,
+      };
+    }
   );
 }
 
@@ -290,6 +420,108 @@ async function fetchWorkplaces() {
   }
 
   workplaces = data || [];
+}
+
+async function fetchWorkShifts() {
+  const { data, error } =
+    await supabase
+      .from("work_shifts")
+      .select(`
+        id,
+        workplace_id,
+        name,
+        start_time,
+        end_time,
+        is_active,
+        sort_order
+      `)
+      .order(
+        "sort_order",
+        {
+          ascending: true,
+        }
+      )
+      .order(
+        "start_time",
+        {
+          ascending: true,
+        }
+      );
+
+  if (error) {
+    console.error(
+      "근무 시간대 조회 실패:",
+      error
+    );
+
+    workShifts = [];
+    return;
+  }
+
+  workShifts = data || [];
+}
+
+
+async function fetchWorkplaceAssignments() {
+  const { data, error } =
+    await supabase
+      .from("workplace_users")
+      .select(`
+        id,
+        user_id,
+        workplace_id,
+        work_shift_id
+      `);
+
+  if (error) {
+    console.error(
+      "직원 근무 배정 조회 실패:",
+      error
+    );
+
+    workplaceAssignments = [];
+    return;
+  }
+
+  workplaceAssignments =
+    data || [];
+}
+
+
+async function fetchJobPositions() {
+  const { data, error } =
+    await supabase
+      .from("job_positions")
+      .select(`
+        id,
+        name,
+        sort_order,
+        is_active
+      `)
+      .order(
+        "sort_order",
+        {
+          ascending: true,
+        }
+      )
+      .order(
+        "id",
+        {
+          ascending: true,
+        }
+      );
+
+  if (error) {
+    console.error(
+      "직급 조회 실패:",
+      error
+    );
+
+    jobPositions = [];
+    return;
+  }
+
+  jobPositions = data || [];
 }
 
 async function fetchEmployees() {
@@ -433,49 +665,165 @@ function renderWorkplaceOptions() {
   }
 }
 
-function renderDepartmentOptions() {
-  if (employeeTeamFilter) {
-    const currentValue =
-      employeeTeamFilter.value || "all";
-
-    employeeTeamFilter.innerHTML = `
-      <option value="all">전체 소속</option>
-      <option value="unassigned">미배정</option>
-
-      ${departments
-        .map(
-          (department) => `
-            <option value="${escapeHtml(
-              department
-            )}">
-              ${escapeHtml(department)}
-            </option>
-          `
-        )
-        .join("")}
-    `;
-
-    employeeTeamFilter.value =
-      currentValue;
+function renderPositionOptions() {
+  if (!employeePositionInput) {
+    return;
   }
 
-  if (employeeDepartmentInput) {
-    employeeDepartmentInput.innerHTML = `
-      <option value="">미배정</option>
+  employeePositionInput.innerHTML = `
+    <option value="">
+      직급 미지정
+    </option>
 
-      ${departments
-        .map(
-          (department) => `
-            <option value="${escapeHtml(
-              department
-            )}">
-              ${escapeHtml(department)}
-            </option>
-          `
-        )
-        .join("")}
-    `;
+    ${jobPositions
+      .filter(
+        (position) =>
+          position.is_active !== false
+      )
+      .map(
+        (position) => `
+          <option value="${escapeHtml(
+            position.name
+          )}">
+            ${escapeHtml(
+              position.name
+            )}
+          </option>
+        `
+      )
+      .join("")}
+  `;
+}
+
+
+function renderShiftFilterOptions() {
+  if (!employeeShiftFilter) {
+    return;
   }
+
+  const currentValue =
+    employeeShiftFilter.value ||
+    "all";
+
+  employeeShiftFilter.innerHTML = `
+    <option value="all">
+      전체 근무 시간대
+    </option>
+
+    <option value="unassigned">
+      시간대 미배정
+    </option>
+
+    ${workShifts
+      .map((shift) => {
+        const workplace =
+          workplaces.find(
+            (item) =>
+              String(item.id) ===
+              String(
+                shift.workplace_id
+              )
+          );
+
+        return `
+          <option value="${shift.id}">
+            ${escapeHtml(
+              workplace?.name ||
+              "지역"
+            )}
+            ·
+            ${escapeHtml(
+              shift.name
+            )}
+          </option>
+        `;
+      })
+      .join("")}
+  `;
+
+  const optionExists = [
+    ...employeeShiftFilter.options,
+  ].some(
+    (option) =>
+      option.value ===
+      currentValue
+  );
+
+  employeeShiftFilter.value =
+    optionExists
+      ? currentValue
+      : "all";
+}
+
+
+function renderEmployeeShiftOptions() {
+  if (!employeeShiftInput) {
+    return;
+  }
+
+  const workplaceId =
+    employeeWorkplaceInput?.value;
+
+  if (!workplaceId) {
+    employeeShiftInput.disabled =
+      true;
+
+    employeeShiftInput.innerHTML = `
+      <option value="">
+        지역을 먼저 선택해 주세요
+      </option>
+    `;
+
+    return;
+  }
+
+  const availableShifts =
+    workShifts.filter(
+      (shift) =>
+        String(
+          shift.workplace_id
+        ) ===
+          String(workplaceId) &&
+        shift.is_active !== false
+    );
+
+  employeeShiftInput.disabled =
+    false;
+
+  if (!availableShifts.length) {
+    employeeShiftInput.innerHTML = `
+      <option value="">
+        등록된 시간대가 없습니다
+      </option>
+    `;
+
+    return;
+  }
+
+  employeeShiftInput.innerHTML = `
+    <option value="">
+      시간대 미배정
+    </option>
+
+    ${availableShifts
+      .map(
+        (shift) => `
+          <option value="${shift.id}">
+            ${escapeHtml(
+              shift.name
+            )}
+            (${String(
+              shift.start_time
+            ).slice(0, 5)}
+            ~
+            ${String(
+              shift.end_time
+            ).slice(0, 5)})
+          </option>
+        `
+      )
+      .join("")}
+  `;
 }
 
 /* 통계 */
@@ -495,8 +843,12 @@ function updateSummary() {
   */
   const unassigned = employees.filter(
     (employee) =>
-      !employee.department ||
-      isWorkplaceUnassigned(employee)
+      isWorkplaceUnassigned(
+        employee
+      ) ||
+      isWorkShiftUnassigned(
+        employee
+      )
   ).length;
 
   const inactive = employees.filter(
@@ -552,8 +904,8 @@ function filterEmployees() {
     employeeRegionFilter?.value ||
     "all";
 
-  const selectedTeam =
-    employeeTeamFilter?.value ||
+  const selectedShift =
+    employeeShiftFilter?.value ||
     "all";
 
   const unassignedOnly =
@@ -573,8 +925,10 @@ function filterEmployees() {
           employee
         );
 
-      const department =
-        employee.department || "";
+      const shiftIds =
+        getEmployeeShiftIds(
+          employee
+        );
 
       const name =
         String(
@@ -586,10 +940,16 @@ function filterEmployees() {
           employee.phone || ""
         ).toLowerCase();
 
+      const position =
+        String(
+          employee.position || ""
+        ).toLowerCase();
+
       const keywordMatched =
         !keyword ||
         name.includes(keyword) ||
-        phone.includes(keyword);
+        phone.includes(keyword) ||
+        position.includes(keyword);
 
       const statusMatched =
         selectedStatus === "all" ||
@@ -607,25 +967,27 @@ function filterEmployees() {
           String(selectedRegion)
         );
 
-      const departmentMatched =
-        selectedTeam === "all" ||
+      const shiftMatched =
+        selectedShift === "all" ||
         (
-          selectedTeam ===
+          selectedShift ===
             "unassigned" &&
-          !department
+          shiftIds.length === 0
         ) ||
-        department ===
-          selectedTeam;
+        shiftIds.includes(
+          String(selectedShift)
+        );
 
       const unassignedMatched =
         !unassignedOnly ||
-        workplaceIds.length === 0;
+        workplaceIds.length === 0 ||
+        shiftIds.length === 0;
 
       return (
         keywordMatched &&
         statusMatched &&
         regionMatched &&
-        departmentMatched &&
+        shiftMatched &&
         unassignedMatched
       );
     }
@@ -667,9 +1029,15 @@ function renderEmployeeTable() {
         const employeeName =
           employee.name || "이름 없음";
 
-        const department =
-          employee.department ||
-          "소속 미배정";
+        const shiftText =
+          getEmployeeShiftText(
+            employee
+          );
+
+        const shiftUnassigned =
+          isWorkShiftUnassigned(
+            employee
+          );
 
         const workplaceText =
           getEmployeeWorkplaceText(employee);
@@ -679,9 +1047,6 @@ function renderEmployeeTable() {
 
         const statusClass =
           getStatusClass(employee.status);
-
-        const departmentUnassigned =
-          !employee.department;
 
         const workplaceUnassigned =
           isWorkplaceUnassigned(employee);
@@ -719,17 +1084,21 @@ function renderEmployeeTable() {
             </td>
 
             <td>
-              <span class="employee-status ${
-                employee.app_role === "team_lead"
-                  ? "late"
-                  : "normal"
-              }">
-                ${
-                  employee.app_role === "team_lead"
-                    ? "팀장"
-                    : "일반 직원"
-                }
-              </span>
+              <div
+                class="employee-shift-display ${
+                  shiftUnassigned
+                    ? "is-unassigned"
+                    : ""
+                }"
+              >
+                <span class="assignment-indicator"></span>
+
+                <span class="assignment-value">
+                  ${escapeHtml(
+                    shiftText
+                  )}
+                </span>
+              </div>
             </td>
 
             <td>
@@ -883,27 +1252,14 @@ function openQuickAssignModal(
     assignType;
 
   quickAssignEmployeeName.textContent =
-    `${employee.name || "직원"}님의 ${
-      assignType === "department"
-        ? "소속"
-        : "근무지"
-    }을 선택해 주세요.`;
+    `${employee.name || "직원"}님의 근무지를 선택해 주세요.`;
 
-  if (assignType === "department") {
-    quickAssignTitle.textContent =
-      "소속 배정";
+  quickAssignTitle.textContent =
+    "근무지 배정";
 
-    renderDepartmentAssignOptions(
-      employee
-    );
-  } else {
-    quickAssignTitle.textContent =
-      "근무지 배정";
-
-    renderWorkplaceAssignOptions(
-      employee
-    );
-  }
+  renderWorkplaceAssignOptions(
+    employee
+  );
 
   quickAssignModal.classList.add("open");
 
@@ -914,60 +1270,6 @@ function openQuickAssignModal(
 
   document.body.style.overflow =
     "hidden";
-}
-
-function renderDepartmentAssignOptions(
-  employee
-) {
-  const currentDepartment =
-    employee.department || "";
-
-  quickAssignOptionList.innerHTML = `
-    <div class="quick-assign-option is-unassigned">
-      <input
-        id="assignDepartmentUnassigned"
-        type="radio"
-        name="quickAssignOption"
-        value=""
-        ${
-          !currentDepartment
-            ? "checked"
-            : ""
-        }
-      />
-
-      <label for="assignDepartmentUnassigned">
-        소속 미배정
-      </label>
-    </div>
-
-    ${departments
-      .map(
-        (department, index) => `
-          <div class="quick-assign-option">
-            <input
-              id="assignDepartment${index}"
-              type="radio"
-              name="quickAssignOption"
-              value="${escapeHtml(
-                department
-              )}"
-              ${
-                currentDepartment ===
-                department
-                  ? "checked"
-                  : ""
-              }
-            />
-
-            <label for="assignDepartment${index}">
-              ${escapeHtml(department)}
-            </label>
-          </div>
-        `
-      )
-      .join("")}
-  `;
 }
 
 function renderWorkplaceAssignOptions(
@@ -1064,11 +1366,16 @@ async function saveQuickAssignmentSafely() {
   const employee = employees.find(
     (item) =>
       String(item.id) ===
-      String(quickAssignEmployeeId)
+      String(
+        quickAssignEmployeeId
+      )
   );
 
   if (!employee) {
-    alert("직원 정보를 찾지 못했습니다.");
+    alert(
+      "직원 정보를 찾지 못했습니다."
+    );
+
     return;
   }
 
@@ -1077,83 +1384,111 @@ async function saveQuickAssignmentSafely() {
     "저장 중...";
 
   try {
-    if (quickAssignType === "department") {
-      const selectedOption =
-        quickAssignOptionList.querySelector(
-          'input[name="quickAssignOption"]:checked'
-        );
-
-      if (!selectedOption) {
-        alert("배정할 소속을 선택해 주세요.");
-        return;
-      }
-
-      const department =
-        selectedOption.value || null;
-
-      const { error } = await supabase
-        .from("users")
-        .update({
-          department,
-        })
-        .eq("id", employee.id);
-
-      if (error) {
-        throw error;
-      }
-
-      employee.department = department;
-    } else {
-      const selectedWorkplaces = [
-        ...quickAssignOptionList.querySelectorAll(
+    const selectedWorkplaces = [
+      ...quickAssignOptionList
+        .querySelectorAll(
           'input[name="quickAssignWorkplace"]:checked'
         ),
-      ];
+    ];
 
-      const workplaceIds =
-        selectedWorkplaces.map(
-          (input) => input.value
-        );
+    const workplaceIds =
+      selectedWorkplaces.map(
+        (input) =>
+          String(input.value)
+      );
 
-      const { error } = await supabase.rpc(
+    /*
+      기존에 설정된 시간대 정보를
+      근무지 저장 전에 보관합니다.
+    */
+    const previousAssignments =
+      workplaceAssignments.filter(
+        (assignment) =>
+          String(
+            assignment.user_id
+          ) ===
+          String(employee.id)
+      );
+
+    const { error } =
+      await supabase.rpc(
         "admin_set_user_workplaces",
         {
-          p_user_id: employee.id,
-          p_workplace_ids: workplaceIds,
+          p_user_id:
+            employee.id,
+
+          p_workplace_ids:
+            workplaceIds,
         }
       );
 
-      if (error) {
-        throw error;
-      }
-
-      employee.workplaceIds =
-        workplaceIds.map(String);
-
-      employee.workplaceNames =
-        workplaces
-          .filter((workplace) =>
-            employee.workplaceIds.includes(
-              String(workplace.id)
-            )
-          )
-          .map((workplace) =>
-            workplace.name
-          );
+    if (error) {
+      throw error;
     }
 
-    closeQuickAssignModal();
+    /*
+      계속 배정되어 있는 지역은
+      기존 시간대 설정을 다시 연결합니다.
+    */
+    for (
+      const assignment
+      of previousAssignments
+    ) {
+      const workplaceStillAssigned =
+        workplaceIds.includes(
+          String(
+            assignment.workplace_id
+          )
+        );
+
+      if (
+        !workplaceStillAssigned ||
+        assignment.work_shift_id ==
+          null
+      ) {
+        continue;
+      }
+
+      const {
+        error: restoreError,
+      } = await supabase
+        .from("workplace_users")
+        .update({
+          work_shift_id:
+            assignment.work_shift_id,
+        })
+        .eq(
+          "user_id",
+          employee.id
+        )
+        .eq(
+          "workplace_id",
+          assignment.workplace_id
+        );
+
+      if (restoreError) {
+        throw restoreError;
+      }
+    }
+
+    /*
+      저장된 결과를 다시 조회합니다.
+    */
+    await Promise.all([
+      fetchEmployees(),
+      fetchWorkplaceAssignments(),
+    ]);
+
+    hydrateEmployeeWorkData();
 
     updateSummary();
     renderEmployeeTable();
 
     alert(
-      `${employee.name || "직원"}님의 ${
-        quickAssignType === "department"
-          ? "소속"
-          : "근무지"
-      } 배정이 완료되었습니다.`
+      `${employee.name || "직원"}님의 근무지 배정이 완료되었습니다.`
     );
+
+    closeQuickAssignModal();
   } catch (error) {
     console.error(
       "직원 배정 저장 실패:",
@@ -1167,7 +1502,9 @@ async function saveQuickAssignmentSafely() {
       }`
     );
   } finally {
-    quickAssignSaveBtn.disabled = false;
+    quickAssignSaveBtn.disabled =
+      false;
+
     quickAssignSaveBtn.textContent =
       "배정 저장";
   }
@@ -1183,6 +1520,18 @@ function openEmployeeModal() {
   }
 
   employeeForm?.reset();
+
+  if (employeeRoleInput) {
+  employeeRoleInput.value =
+    "employee";
+  }
+
+  if (employeePositionInput) {
+    employeePositionInput.value =
+      "";
+  }
+
+  renderEmployeeShiftOptions();
 
   if (employeeStatusInput) {
     employeeStatusInput.value =
@@ -1235,27 +1584,31 @@ async function createEmployee(event) {
     employeeWorkplaceInput.value ||
     null;
 
+  const selectedInitialShiftId =
+    employeeShiftInput?.value ||
+    null;
+
   const newEmployee = {
     name,
     phone,
 
+    position:
+      employeePositionInput?.value ||
+      null,
+
     app_role:
-      editEmployeeRole?.value ||
+      employeeRoleInput?.value ||
       "employee",
 
     app_approval_status:
       "not_requested",
 
-    department:
-      employeeDepartmentInput.value ||
-      null,
-
     status:
       employeeStatusInput.value,
 
     memo:
-      employeeMemoInput.value.trim() ||
-      null,
+      employeeMemoInput.value
+        .trim() || null,
   };
 
   submitButton.disabled = true;
@@ -1326,6 +1679,34 @@ async function createEmployee(event) {
 
     submitButton.textContent =
       "저장";
+  }
+}
+
+if (
+  selectedInitialWorkplaceId &&
+  selectedInitialShiftId
+) {
+  const {
+    error: shiftAssignmentError,
+  } = await supabase
+    .from("workplace_users")
+    .update({
+      work_shift_id:
+        Number(
+          selectedInitialShiftId
+        ),
+    })
+    .eq(
+      "user_id",
+      createdEmployee.id
+    )
+    .eq(
+      "workplace_id",
+      selectedInitialWorkplaceId
+    );
+
+  if (shiftAssignmentError) {
+    throw shiftAssignmentError;
   }
 }
 
@@ -1465,9 +1846,14 @@ function bindEvents() {
     refreshEmployeeList
   );
 
-  employeeTeamFilter?.addEventListener(
+  employeeShiftFilter?.addEventListener(
     "change",
     refreshEmployeeList
+  );
+
+  employeeWorkplaceInput?.addEventListener(
+    "change",
+    renderEmployeeShiftOptions
   );
 
   unassignedOnlyCheck?.addEventListener(
@@ -1521,11 +1907,19 @@ async function initEmployeesPage() {
 
   await Promise.all([
     fetchWorkplaces(),
+    fetchWorkShifts(),
+    fetchWorkplaceAssignments(),
+    fetchJobPositions(),
     fetchEmployees(),
   ]);
 
+  hydrateEmployeeWorkData();
+
   renderWorkplaceOptions();
-  renderDepartmentOptions();
+  renderPositionOptions();
+  renderShiftFilterOptions();
+  renderEmployeeShiftOptions();
+
   updateSummary();
   renderEmployeeTable();
 }
