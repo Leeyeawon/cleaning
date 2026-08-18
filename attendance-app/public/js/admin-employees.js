@@ -1558,14 +1558,18 @@ function closeEmployeeModal() {
   직원 등록
 ========================= */
 
-async function createEmployee(event) {
+async function createEmployee(
+  event
+) {
   event.preventDefault();
 
   const name =
-    employeeNameInput.value.trim();
+    employeeNameInput.value
+      .trim();
 
   const phone =
-    employeePhoneInput.value.trim();
+    employeePhoneInput.value
+      .trim();
 
   if (!name || !phone) {
     alert(
@@ -1581,33 +1585,66 @@ async function createEmployee(event) {
     );
 
   const selectedInitialWorkplaceId =
-    employeeWorkplaceInput.value ||
-    null;
+    employeeWorkplaceInput
+      ?.value || null;
 
   const selectedInitialShiftId =
-    employeeShiftInput?.value ||
-    null;
+    employeeShiftInput
+      ?.value || null;
+
+  /*
+    선택한 시간대가 선택한 지역에
+    실제로 속하는지 다시 확인합니다.
+  */
+  if (selectedInitialShiftId) {
+    const selectedShift =
+      workShifts.find(
+        (shift) =>
+          String(shift.id) ===
+          String(
+            selectedInitialShiftId
+          )
+      );
+
+    if (
+      !selectedShift ||
+      String(
+        selectedShift.workplace_id
+      ) !==
+        String(
+          selectedInitialWorkplaceId
+        )
+    ) {
+      alert(
+        "선택한 지역과 근무 시간대가 일치하지 않습니다."
+      );
+
+      return;
+    }
+  }
 
   const newEmployee = {
     name,
     phone,
 
     position:
-      employeePositionInput?.value ||
-      null,
+      employeePositionInput
+        ?.value || null,
 
     app_role:
-      employeeRoleInput?.value ||
-      "employee",
+      employeeRoleInput
+        ?.value || "employee",
 
     app_approval_status:
       "not_requested",
 
     status:
-      employeeStatusInput.value,
+      employeeStatusInput
+        ?.value || "active",
 
     memo:
-      employeeMemoInput.value
+      employeeMemoInput
+        ?.value
         .trim() || null,
   };
 
@@ -1629,6 +1666,9 @@ async function createEmployee(event) {
       throw createError;
     }
 
+    /*
+      초기 근무지역 배정
+    */
     if (
       selectedInitialWorkplaceId
     ) {
@@ -1651,16 +1691,53 @@ async function createEmployee(event) {
       }
     }
 
-    alert(
-      "직원이 등록되었습니다."
-    );
+    /*
+      초기 근무 시간대 배정
+    */
+    if (
+      selectedInitialWorkplaceId &&
+      selectedInitialShiftId
+    ) {
+      const {
+        error:
+          shiftAssignmentError,
+      } = await supabase
+        .from("workplace_users")
+        .update({
+          work_shift_id:
+            Number(
+              selectedInitialShiftId
+            ),
+        })
+        .eq(
+          "user_id",
+          createdEmployee.id
+        )
+        .eq(
+          "workplace_id",
+          selectedInitialWorkplaceId
+        );
 
-    closeEmployeeModal();
+      if (shiftAssignmentError) {
+        throw shiftAssignmentError;
+      }
+    }
 
-    await fetchEmployees();
+    await Promise.all([
+      fetchEmployees(),
+      fetchWorkplaceAssignments(),
+    ]);
+
+    hydrateEmployeeWorkData();
 
     updateSummary();
     renderEmployeeTable();
+
+    closeEmployeeModal();
+
+    alert(
+      "직원이 등록되었습니다."
+    );
   } catch (error) {
     console.error(
       "직원 등록 실패:",
@@ -1670,7 +1747,7 @@ async function createEmployee(event) {
     alert(
       `직원 등록에 실패했습니다.\n${
         error.message ||
-        "Supabase users 컬럼과 권한을 확인해 주세요."
+        "Supabase 권한을 확인해 주세요."
       }`
     );
   } finally {
@@ -1679,34 +1756,6 @@ async function createEmployee(event) {
 
     submitButton.textContent =
       "저장";
-  }
-}
-
-if (
-  selectedInitialWorkplaceId &&
-  selectedInitialShiftId
-) {
-  const {
-    error: shiftAssignmentError,
-  } = await supabase
-    .from("workplace_users")
-    .update({
-      work_shift_id:
-        Number(
-          selectedInitialShiftId
-        ),
-    })
-    .eq(
-      "user_id",
-      createdEmployee.id
-    )
-    .eq(
-      "workplace_id",
-      selectedInitialWorkplaceId
-    );
-
-  if (shiftAssignmentError) {
-    throw shiftAssignmentError;
   }
 }
 
