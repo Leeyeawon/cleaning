@@ -128,22 +128,6 @@ let workShifts = [];
 let workplaceAssignments = [];
 let jobPositions = [];
 
-/*
-  현재 소속은 users.department 문자열 컬럼을 사용한다.
-
-  추후 별도의 departments 테이블을 만들면
-  이 배열 대신 Supabase에서 부서 목록을 가져오면 된다.
-*/
-/*
-  quickAssignType은 현재 workplace만 사용합니다.
-*/
-let quickAssignType = null;
-let quickAssignEmployeeId = null;
-
-/*
-  quickAssignType:
-  department 또는 workplace
-*/
 let quickAssignType = null;
 let quickAssignEmployeeId = null;
 
