@@ -236,27 +236,50 @@ function formatPhone(phone) {
   return phone;
 }
 
-function getEmployeeWorkplaceIds(employee) {
-  return Array.isArray(employee?.workplaceIds)
+function getEmployeeWorkplaceIds(
+  employee
+) {
+  return Array.isArray(
+    employee?.workplaceIds
+  )
     ? employee.workplaceIds
+        .map(String)
     : [];
 }
 
-function getEmployeeWorkplaceNames(employee) {
-  return Array.isArray(employee?.workplaceNames)
+function getEmployeeWorkplaceNames(
+  employee
+) {
+  return Array.isArray(
+    employee?.workplaceNames
+  )
     ? employee.workplaceNames
     : [];
 }
 
-function getEmployeeWorkplaceText(employee) {
+function getEmployeeWorkplaceText(
+  employee
+) {
   const names =
-    getEmployeeWorkplaceNames(employee);
+    getEmployeeWorkplaceNames(
+      employee
+    );
 
   if (!names.length) {
     return "근무지 미배정";
   }
 
   return names.join(", ");
+}
+
+function isWorkplaceUnassigned(
+  employee
+) {
+  return (
+    getEmployeeWorkplaceIds(
+      employee
+    ).length === 0
+  );
 }
 
 function getEmployeeShiftIds(
