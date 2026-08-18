@@ -327,6 +327,22 @@ function isWorkShiftUnassigned(
 
 
 function hydrateEmployeeWorkData() {
+  if (!Array.isArray(employees)) {
+    employees = [];
+  }
+
+  if (
+    !Array.isArray(
+      workplaceAssignments
+    )
+  ) {
+    workplaceAssignments = [];
+  }
+
+  if (!Array.isArray(workShifts)) {
+    workShifts = [];
+  }
+
   employees = employees.map(
     (employee) => {
       const assignments =
@@ -1898,30 +1914,58 @@ async function initEmployeesPage() {
   if (employeeTableBody) {
     employeeTableBody.innerHTML = `
       <tr>
-        <td colspan="7" class="empty-table">
+        <td
+          colspan="7"
+          class="empty-table"
+        >
           직원 정보를 불러오는 중입니다.
         </td>
       </tr>
     `;
   }
 
-  await Promise.all([
-    fetchWorkplaces(),
-    fetchWorkShifts(),
-    fetchWorkplaceAssignments(),
-    fetchJobPositions(),
-    fetchEmployees(),
-  ]);
+  try {
+    await Promise.all([
+      fetchWorkplaces(),
+      fetchWorkShifts(),
+      fetchWorkplaceAssignments(),
+      fetchJobPositions(),
+      fetchEmployees(),
+    ]);
 
-  hydrateEmployeeWorkData();
+    hydrateEmployeeWorkData();
 
-  renderWorkplaceOptions();
-  renderPositionOptions();
-  renderShiftFilterOptions();
-  renderEmployeeShiftOptions();
+    renderWorkplaceOptions();
+    renderPositionOptions();
+    renderShiftFilterOptions();
+    renderEmployeeShiftOptions();
 
-  updateSummary();
-  renderEmployeeTable();
+    updateSummary();
+    renderEmployeeTable();
+  } catch (error) {
+    console.error(
+      "직원 관리 초기화 실패:",
+      error
+    );
+
+    if (employeeTableBody) {
+      employeeTableBody.innerHTML = `
+        <tr>
+          <td
+            colspan="7"
+            class="empty-table"
+          >
+            직원 정보를 불러오지 못했습니다.
+            <br>
+            ${escapeHtml(
+              error.message ||
+              "알 수 없는 오류"
+            )}
+          </td>
+        </tr>
+      `;
+    }
+  }
 }
 
 initEmployeesPage();
