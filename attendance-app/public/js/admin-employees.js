@@ -164,6 +164,7 @@ async function fetchEmployeeDepartments() {
       .select(`
         id,
         name,
+        description,
         is_active,
         sort_order
       `)
@@ -181,12 +182,40 @@ async function fetchEmployeeDepartments() {
       );
 
   if (error) {
-    throw error;
+    console.error(
+      "소속 목록 조회 실패:",
+      error
+    );
+
+    /*
+      소속 테이블 조회가 실패하더라도
+      직원 목록 전체가 중단되지 않게 합니다.
+    */
+    employeeDepartments = [
+      ...new Set(
+        employees
+          .map((employee) =>
+            String(
+              employee.department || ""
+            ).trim()
+          )
+          .filter(Boolean)
+      ),
+    ].map((name, index) => ({
+      id: `legacy-${index}`,
+      name,
+      description: null,
+      is_active: true,
+      sort_order: index,
+    }));
+
+    return;
   }
 
   employeeDepartments =
     data || [];
 }
+
 function renderEmployeePositionFilter() {
   employeePositionFilter.innerHTML = `
     <option value="all">

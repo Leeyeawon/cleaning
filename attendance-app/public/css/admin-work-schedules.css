@@ -1,346 +1,364 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8" />
+.shift-filter-panel {
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #fff;
+}
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, viewport-fit=cover"
-  />
+.shift-filter-group {
+  display: grid;
+  grid-template-columns:
+    minmax(240px, 1fr)
+    minmax(160px, 220px)
+    minmax(140px, 190px);
+  gap: 10px;
+}
 
-  <title>
-    출퇴근 시간 관리 | 근태관리 Admin
-  </title>
+.shift-filter-group input,
+.shift-filter-group select {
+  width: 100%;
+  height: 44px;
+  padding: 0 13px;
+  border: 1px solid #d4d4d4;
+  border-radius: 9px;
+  background: #fff;
+  color: #262626;
+  font-size: 14px;
+}
 
-  <link
-    rel="stylesheet"
-    href="../public/css/common.css"
-  />
+.shift-filter-group input:focus,
+.shift-filter-group select:focus {
+  border-color: #2563eb;
+  outline: none;
+  box-shadow:
+    0 0 0 3px
+    rgba(37, 99, 235, 0.1);
+}
 
-  <link
-    rel="stylesheet"
-    href="../public/css/pc.css"
-  />
+/* 근무 시간대 목록 제목 */
 
-  <link
-    rel="stylesheet"
-    href="../public/css/admin.css"
-  />
+body[data-admin-page="work-schedules"]
+.panel-header > div:first-child {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
 
-  <link
-    rel="stylesheet"
-    href="../public/css/admin-work-schedules.css?v=45"
-  />
-</head>
+body[data-admin-page="work-schedules"]
+.panel-header h3 {
+  margin: 0;
+  color: #262626;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.4;
+}
 
-<body data-admin-page="work-schedules">
-  <div class="admin-layout">
-    <div id="adminSidebar"></div>
+body[data-admin-page="work-schedules"]
+.panel-header p {
+  margin: 0;
+  color: #737373;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+}
 
-    <main class="main">
-      <header class="top-header">
-        <div>
-          <h2>출퇴근 시간 관리</h2>
+#filteredShiftCount {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #737373;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
 
-          <p>
-            현장별 근무 시간대를 등록하고 관리합니다.
-          </p>
-        </div>
+/* 상태 표시 */
 
-        <div class="header-actions">
-          <button
-            class="download-button"
-            type="button"
-            id="addWorkShiftBtn"
-          >
-            + 근무 시간대 등록
-          </button>
-        </div>
-      </header>
+.shift-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
 
-      <section class="content">
-        <section class="stats-grid">
-          <article class="stat-card">
-            <p>전체 시간대</p>
+.shift-status.active {
+  background: #dcfce7;
+  color: #15803d;
+}
 
-            <strong id="totalShiftCount">
-              0
-            </strong>
+.shift-status.inactive {
+  background: #f3f4f6;
+  color: #737373;
+}
 
-            <span>개</span>
-          </article>
+/* 테이블 버튼 */
 
-          <article class="stat-card dark">
-            <p>사용 중</p>
+.shift-action-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
 
-            <strong id="activeShiftCount">
-              0
-            </strong>
+.shift-action-group button {
+  min-height: 32px;
+  padding: 0 11px;
+  border: 1px solid #d4d4d4;
+  border-radius: 8px;
+  background: #fff;
+  color: #404040;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
 
-            <span>개</span>
-          </article>
+.shift-action-group button:hover {
+  border-color: #93c5fd;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
 
-          <article class="stat-card">
-            <p>등록 현장</p>
+/* 근무 시간대 등록 팝업 */
 
-            <strong id="shiftWorkplaceCount">
-              0
-            </strong>
+.shift-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.48);
+}
 
-            <span>곳</span>
-          </article>
+.shift-modal.open {
+  display: flex;
+}
 
-          <article class="stat-card warning">
-            <p>직원 배정</p>
+.shift-modal-content {
+  width: min(620px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow:
+    0 24px 60px
+    rgba(15, 23, 42, 0.24);
+}
 
-            <strong id="shiftAssignmentCount">
-              0
-            </strong>
+.shift-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 21px 24px 17px;
+  border-bottom: 1px solid #e5e7eb;
+}
 
-            <span>건</span>
-          </article>
-        </section>
+.shift-modal-header h3 {
+  margin: 0;
+  color: #171717;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+}
 
-        <section class="shift-filter-panel">
-          <div class="shift-filter-group">
-            <input
-              type="search"
-              id="shiftSearchInput"
-              placeholder="시간대명 검색"
-            />
+.shift-modal-header p {
+  margin: 5px 0 0;
+  color: #737373;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+}
 
-            <select id="shiftWorkplaceFilter">
-              <option value="all">
-                전체 지역
-              </option>
-            </select>
+.shift-modal-header > button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 9px;
+  background: #f5f5f5;
+  color: #525252;
+  font-size: 23px;
+  cursor: pointer;
+}
 
-            <select id="shiftStatusFilter">
-              <option value="all">
-                전체 상태
-              </option>
+.shift-modal-body {
+  padding: 22px 24px;
+}
 
-              <option value="active">
-                사용 중
-              </option>
+.shift-form-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 17px 14px;
+}
 
-              <option value="inactive">
-                사용 중지
-              </option>
-            </select>
-          </div>
-        </section>
+.shift-form-grid > label {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 7px;
+  color: #262626;
+  font-size: 13px;
+  font-weight: 600;
+}
 
-        <section class="panel">
-          <div class="panel-header">
-            <div>
-              <h3>근무 시간대 목록</h3>
+.shift-form-grid > label.full {
+  grid-column: 1 / -1;
+}
 
-              <p>
-                직원 등록 및 지역 배정 시 선택할 수 있습니다.
-              </p>
-            </div>
+.shift-form-grid input,
+.shift-form-grid select,
+.shift-form-grid textarea {
+  width: 100%;
+  border: 1px solid #d4d4d4;
+  border-radius: 9px;
+  background: #fff;
+  color: #262626;
+  font: inherit;
+  font-weight: 400;
+}
 
-            <span id="filteredShiftCount">
-              0개 시간대
-            </span>
-          </div>
+.shift-form-grid input,
+.shift-form-grid select {
+  height: 44px;
+  padding: 0 12px;
+}
 
-          <div class="attendance-table-wrap">
-            <table class="attendance-table">
-              <thead>
-                <tr>
-                  <th>지역</th>
-                  <th>시간대명</th>
-                  <th>출근 시간</th>
-                  <th>퇴근 시간</th>
-                  <th>휴게 시간</th>
-                  <th>배정 직원</th>
-                  <th>상태</th>
-                  <th>관리</th>
-                </tr>
-              </thead>
+.shift-form-grid textarea {
+  min-height: 86px;
+  padding: 12px;
+  resize: vertical;
+}
 
-              <tbody id="workShiftTableBody">
-                <tr>
-                  <td colspan="8">
-                    근무 시간대를 불러오는 중입니다.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </section>
-    </main>
-  </div>
+.shift-form-grid input:focus,
+.shift-form-grid select:focus,
+.shift-form-grid textarea:focus {
+  border-color: #2563eb;
+  outline: none;
+  box-shadow:
+    0 0 0 3px
+    rgba(37, 99, 235, 0.1);
+}
 
-  <div
-    class="shift-modal"
-    id="workShiftModal"
-  >
-    <div class="shift-modal-content">
-      <div class="shift-modal-header">
-        <div>
-          <h3 id="workShiftModalTitle">
-            근무 시간대 등록
-          </h3>
+.shift-form-grid small {
+  color: #737373;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.5;
+}
 
-          <p>
-            하나의 지역에 여러 시간대를 등록할 수 있습니다.
-          </p>
-        </div>
+.shift-number-row {
+  display: grid;
+  grid-template-columns: 1fr 36px;
+  align-items: center;
+  gap: 7px;
+}
 
-        <button
-          type="button"
-          id="workShiftModalCloseBtn"
-          aria-label="닫기"
-        >
-          ×
-        </button>
-      </div>
+.shift-number-row span {
+  color: #737373;
+  font-size: 13px;
+  text-align: center;
+}
 
-      <form id="workShiftForm">
-        <div class="shift-modal-body">
-          <div class="shift-form-grid">
-            <label class="full">
-              근무 지역
+.shift-active-label {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  min-height: 64px;
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fafafa;
+  cursor: pointer;
+}
 
-              <select
-                id="workShiftWorkplaceInput"
-                required
-              >
-                <option value="">
-                  지역을 선택해 주세요
-                </option>
-              </select>
-            </label>
+.shift-active-label > input {
+  width: 19px;
+  height: 19px;
+  flex: 0 0 auto;
+  padding: 0;
+  accent-color: #2563eb;
+}
 
-            <label class="full">
-              시간대명
+.shift-active-label > span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
 
-              <input
-                type="text"
-                id="workShiftNameInput"
-                placeholder="예: 주간조, 오전 근무, 야간조"
-                maxlength="50"
-                required
-              />
+.shift-active-label strong {
+  font-size: 13px;
+  font-weight: 600;
+}
 
-              <small>
-                직원 등록 화면에는 이 이름으로 표시됩니다.
-              </small>
-            </label>
+.shift-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  padding: 16px 24px 22px;
+  border-top: 1px solid #e5e7eb;
+}
 
-            <label>
-              출근 시간
+.shift-modal-footer button {
+  min-width: 90px;
+  height: 42px;
+  padding: 0 18px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
 
-              <input
-                type="time"
-                id="workShiftStartInput"
-                required
-              />
-            </label>
+.shift-modal-footer .cancel-btn {
+  border: 1px solid #d4d4d4;
+  background: #fff;
+  color: #525252;
+}
 
-            <label>
-              퇴근 시간
+.shift-modal-footer .save-btn {
+  border: 1px solid #2563eb;
+  background: #2563eb;
+  color: #fff;
+}
 
-              <input
-                type="time"
-                id="workShiftEndInput"
-                required
-              />
-            </label>
+@media (max-width: 800px) {
+  .shift-filter-group {
+    grid-template-columns: 1fr;
+  }
+}
 
-            <label>
-              휴게 시간
+@media (max-width: 640px) {
+  .shift-modal {
+    align-items: flex-end;
+    padding: 0;
+  }
 
-              <div class="shift-number-row">
-                <input
-                  type="number"
-                  id="workShiftBreakInput"
-                  min="0"
-                  max="720"
-                  value="0"
-                />
+  .shift-modal-content {
+    width: 100%;
+    max-height: 92vh;
+    border-radius: 18px 18px 0 0;
+  }
 
-                <span>분</span>
-              </div>
-            </label>
+  .shift-form-grid {
+    grid-template-columns: 1fr;
+  }
 
-            <label>
-              정렬 순서
-
-              <input
-                type="number"
-                id="workShiftSortInput"
-                min="0"
-                value="0"
-              />
-            </label>
-
-            <label class="shift-active-label full">
-              <input
-                type="checkbox"
-                id="workShiftActiveInput"
-                checked
-              />
-
-              <span>
-                <strong>사용 중</strong>
-
-                <small>
-                  해제하면 직원 등록 화면에서 선택할 수 없습니다.
-                </small>
-              </span>
-            </label>
-
-            <label class="full">
-              관리자 메모
-
-              <textarea
-                id="workShiftMemoInput"
-                rows="3"
-                maxlength="300"
-                placeholder="선택 사항"
-              ></textarea>
-            </label>
-          </div>
-        </div>
-
-        <div class="shift-modal-footer">
-          <button
-            type="button"
-            class="cancel-btn"
-            id="workShiftModalCancelBtn"
-          >
-            취소
-          </button>
-
-          <button
-            type="submit"
-            class="save-btn"
-            id="workShiftSaveBtn"
-          >
-            저장
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <script
-    src="../public/js/common.js"
-  ></script>
-
-  <script
-    type="module"
-    src="../public/js/pc.js?v=45"
-  ></script>
-
-  <script
-    type="module"
-    src="../public/js/admin-work-schedules.js?v=45"
-  ></script>
-</body>
-</html>
+  .shift-form-grid > label.full {
+    grid-column: auto;
+  }
+}
