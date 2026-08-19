@@ -118,6 +118,21 @@ const quickAssignCancelBtn =
 const quickAssignSaveBtn =
   document.getElementById("quickAssignSaveBtn");
 
+const employeePositionFilter =
+  document.getElementById(
+    "employeePositionFilter"
+  );
+
+const employeeDepartmentFilter =
+  document.getElementById(
+    "employeeDepartmentFilter"
+  );
+
+const employeeDepartmentInput =
+  document.getElementById(
+    "employeeDepartmentInput"
+  );
+
 /* =========================
   데이터
 ========================= */
@@ -130,7 +145,7 @@ let jobPositions = [];
 
 let quickAssignType = null;
 let quickAssignEmployeeId = null;
-
+let employeeDepartments = [];
 /* =========================
   상태
 ========================= */
@@ -141,6 +156,104 @@ const STATUS_LABEL = {
   inactive: "비활성",
   resigned: "퇴사",
 };
+
+async function fetchEmployeeDepartments() {
+  const { data, error } =
+    await supabase
+      .from("employee_departments")
+      .select(`
+        id,
+        name,
+        is_active,
+        sort_order
+      `)
+      .order(
+        "sort_order",
+        {
+          ascending: true,
+        }
+      )
+      .order(
+        "id",
+        {
+          ascending: true,
+        }
+      );
+
+  if (error) {
+    throw error;
+  }
+
+  employeeDepartments =
+    data || [];
+}
+function renderEmployeePositionFilter() {
+  employeePositionFilter.innerHTML = `
+    <option value="all">
+      전체 직급
+    </option>
+
+    <option value="unassigned">
+      직급 미지정
+    </option>
+
+    ${jobPositions
+      .map(
+        (position) => `
+          <option value="${escapeHtml(
+            position.name
+          )}">
+            ${escapeHtml(
+              position.name
+            )}
+          </option>
+        `
+      )
+      .join("")}
+  `;
+}
+
+
+function renderEmployeeDepartmentOptions() {
+  const options =
+    employeeDepartments
+      .filter(
+        (department) =>
+          department.is_active !== false
+      )
+      .map(
+        (department) => `
+          <option value="${escapeHtml(
+            department.name
+          )}">
+            ${escapeHtml(
+              department.name
+            )}
+          </option>
+        `
+      )
+      .join("");
+
+  employeeDepartmentFilter.innerHTML = `
+    <option value="all">
+      전체 소속
+    </option>
+
+    <option value="unassigned">
+      소속 미지정
+    </option>
+
+    ${options}
+  `;
+
+  employeeDepartmentInput.innerHTML = `
+    <option value="">
+      소속 미지정
+    </option>
+
+    ${options}
+  `;
+}
 
 function normalizeStatus(status) {
   if (!status) return "active";
@@ -567,7 +680,7 @@ async function fetchEmployees() {
       employeeTableBody.innerHTML = `
         <tr>
           <td
-            colspan="7"
+            colspan="8"
             class="empty-table"
           >
             직원 정보를 불러오지 못했습니다.
@@ -931,6 +1044,14 @@ function filterEmployees() {
     employeeShiftFilter?.value ||
     "all";
 
+  const selectedPosition =
+    employeePositionFilter?.value ||
+    "all";
+
+  const selectedDepartment =
+    employeeDepartmentFilter?.value ||
+    "all";
+
   const unassignedOnly =
     unassignedOnlyCheck?.checked ||
     false;
@@ -1001,6 +1122,36 @@ function filterEmployees() {
           String(selectedShift)
         );
 
+        const employeePosition =
+          String(
+            employee.position || ""
+          );
+
+        const employeeDepartment =
+          String(
+            employee.department || ""
+          );
+
+        const positionMatched =
+          selectedPosition === "all" ||
+          (
+            selectedPosition ===
+              "unassigned" &&
+            !employeePosition
+          ) ||
+          employeePosition ===
+            selectedPosition;
+
+        const departmentMatched =
+          selectedDepartment === "all" ||
+          (
+            selectedDepartment ===
+              "unassigned" &&
+            !employeeDepartment
+          ) ||
+          employeeDepartment ===
+            selectedDepartment;
+
       const unassignedMatched =
         !unassignedOnly ||
         workplaceIds.length === 0 ||
@@ -1009,6 +1160,8 @@ function filterEmployees() {
       return (
         keywordMatched &&
         statusMatched &&
+        positionMatched &&
+        departmentMatched &&
         regionMatched &&
         shiftMatched &&
         unassignedMatched
@@ -1037,7 +1190,10 @@ function renderEmployeeTable() {
   if (!filteredEmployees.length) {
     employeeTableBody.innerHTML = `
       <tr>
-        <td colspan="7" class="empty-table">
+        <td
+          colspan="8"
+          class="empty-table"
+        >
           조회된 직원이 없습니다.
         </td>
       </tr>
@@ -1050,7 +1206,16 @@ function renderEmployeeTable() {
     filteredEmployees
       .map((employee) => {
         const employeeName =
-          employee.name || "이름 없음";
+          employee.name ||
+          "이름 없음";
+
+        const positionText =
+          employee.position ||
+          "직급 미지정";
+
+        const departmentText =
+          employee.department ||
+          "소속 미지정";
 
         const shiftText =
           getEmployeeShiftText(
@@ -1063,30 +1228,44 @@ function renderEmployeeTable() {
           );
 
         const workplaceText =
-          getEmployeeWorkplaceText(employee);
-
-        const statusLabel =
-          getStatusLabel(employee.status);
-
-        const statusClass =
-          getStatusClass(employee.status);
+          getEmployeeWorkplaceText(
+            employee
+          );
 
         const workplaceUnassigned =
-          isWorkplaceUnassigned(employee);
+          isWorkplaceUnassigned(
+            employee
+          );
+
+        const statusLabel =
+          getStatusLabel(
+            employee.status
+          );
+
+        const statusClass =
+          getStatusClass(
+            employee.status
+          );
 
         return `
           <tr>
+            <!-- 직원명 -->
             <td>
               <div class="employee-name-cell">
                 <span class="employee-avatar">
                   ${escapeHtml(
-                    employeeName.slice(0, 1)
+                    employeeName.slice(
+                      0,
+                      1
+                    )
                   )}
                 </span>
 
                 <div class="employee-name-text">
                   <strong>
-                    ${escapeHtml(employeeName)}
+                    ${escapeHtml(
+                      employeeName
+                    )}
                   </strong>
 
                   <span>
@@ -1100,12 +1279,53 @@ function renderEmployeeTable() {
               </div>
             </td>
 
+            <!-- 연락처 -->
             <td>
               ${escapeHtml(
-                formatPhone(employee.phone)
+                formatPhone(
+                  employee.phone
+                )
               )}
             </td>
 
+            <!-- 직급 -->
+            <td>
+              <div class="employee-position-cell">
+                <strong>
+                  ${escapeHtml(
+                    positionText
+                  )}
+                </strong>
+
+                ${
+                  employee.app_role ===
+                  "team_lead"
+                    ? `
+                      <small>
+                        팀장 권한
+                      </small>
+                    `
+                    : ""
+                }
+              </div>
+            </td>
+
+            <!-- 소속 -->
+            <td>
+              <div
+                class="employee-information-chip ${
+                  !employee.department
+                    ? "is-unassigned"
+                    : ""
+                }"
+              >
+                ${escapeHtml(
+                  departmentText
+                )}
+              </div>
+            </td>
+
+            <!-- 근무 시간대 -->
             <td>
               <div
                 class="employee-shift-display ${
@@ -1114,7 +1334,9 @@ function renderEmployeeTable() {
                     : ""
                 }"
               >
-                <span class="assignment-indicator"></span>
+                <span
+                  class="assignment-indicator"
+                ></span>
 
                 <span class="assignment-value">
                   ${escapeHtml(
@@ -1124,52 +1346,50 @@ function renderEmployeeTable() {
               </div>
             </td>
 
+            <!-- 배정 지역 -->
             <td>
               <button
                 type="button"
                 class="employee-assignment-button ${
-                  !employee.department ? "is-unassigned" : ""
+                  workplaceUnassigned
+                    ? "is-unassigned"
+                    : ""
                 }"
-                data-assignment-type="department"
-                data-employee-id="${escapeHtml(employee.id)}"
+                data-assignment-type="workplace"
+                data-employee-id="${escapeHtml(
+                  employee.id
+                )}"
               >
-                <span class="assignment-indicator"></span>
+                <span
+                  class="assignment-indicator"
+                ></span>
 
                 <span class="assignment-value">
                   ${escapeHtml(
-                    employee.department || "소속 미배정"
+                    workplaceText
                   )}
                 </span>
 
-                <span class="assignment-arrow">›</span>
-              </button>
-            </td>
-
-            <td>
-              <button
-                type="button"
-                class="employee-assignment-button ${
-                  workplaceUnassigned ? "is-unassigned" : ""
-                }"
-                data-assignment-type="workplace"
-                data-employee-id="${escapeHtml(employee.id)}"
-              >
-                <span class="assignment-indicator"></span>
-
-                <span class="assignment-value">
-                  ${escapeHtml(workplaceText)}
+                <span
+                  class="assignment-arrow"
+                >
+                  ›
                 </span>
-
-                <span class="assignment-arrow">›</span>
               </button>
             </td>
 
+            <!-- 상태 -->
             <td>
-              <span class="employee-status ${statusClass}">
-                ${escapeHtml(statusLabel)}
+              <span
+                class="employee-status ${statusClass}"
+              >
+                ${escapeHtml(
+                  statusLabel
+                )}
               </span>
             </td>
 
+            <!-- 관리 -->
             <td>
               <div class="employee-action-group">
                 <a
@@ -1207,7 +1427,6 @@ function renderEmployeeTable() {
 
   bindTableEvents();
 }
-
 
 /* 테이블 버튼 이벤트 */
 function bindTableEvents() {
@@ -1669,6 +1888,10 @@ async function createEmployee(
       employeeMemoInput
         ?.value
         .trim() || null,
+
+    department:
+      employeeDepartmentInput
+        ?.value || null,
   };
 
   submitButton.disabled = true;
@@ -1846,6 +2069,18 @@ function refreshEmployeeList() {
 ========================= */
 
 function bindEvents() {
+  employeePositionFilter
+    ?.addEventListener(
+      "change",
+      refreshEmployeeList
+    );
+
+  employeeDepartmentFilter
+    ?.addEventListener(
+      "change",
+      refreshEmployeeList
+    );
+
   employeeAddBtn?.addEventListener(
     "click",
     openEmployeeModal
@@ -1971,7 +2206,7 @@ async function initEmployeesPage() {
     employeeTableBody.innerHTML = `
       <tr>
         <td
-          colspan="7"
+          colspan="8"
           class="empty-table"
         >
           직원 정보를 불러오는 중입니다.
@@ -1987,6 +2222,7 @@ async function initEmployeesPage() {
       fetchWorkplaceAssignments(),
       fetchJobPositions(),
       fetchEmployees(),
+      fetchEmployeeDepartments(),
     ]);
 
     hydrateEmployeeWorkData();
@@ -1995,6 +2231,8 @@ async function initEmployeesPage() {
     renderPositionOptions();
     renderShiftFilterOptions();
     renderEmployeeShiftOptions();
+    renderEmployeePositionFilter();
+    renderEmployeeDepartmentOptions();
 
     updateSummary();
     renderEmployeeTable();
@@ -2008,7 +2246,7 @@ async function initEmployeesPage() {
       employeeTableBody.innerHTML = `
         <tr>
           <td
-            colspan="7"
+            colspan="8"
             class="empty-table"
           >
             직원 정보를 불러오지 못했습니다.

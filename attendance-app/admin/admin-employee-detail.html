@@ -15,490 +15,8 @@
   <link rel="stylesheet" href="../public/css/common.css" />
   <link rel="stylesheet" href="../public/css/pc.css" />
   <link rel="stylesheet" href="../public/css/admin.css" />
-  <link rel="stylesheet" href="../public/css/admin-attendance-edit.css"/>
-  <style>
-    /* =========================================
-       💻 일반 웹 화면 디자인 (디테일 보정 완료)
-    ========================================= */
-    .employee-detail-hero {
-      display: flex !important;
-      justify-content: space-between !important;
-      align-items: center !important;
-      flex-wrap: wrap !important;
-      gap: 16px !important;
-      padding: 24px !important;
-      background: #ffffff !important;
-      border-radius: 16px !important;
-      border: 1px solid #e5e7eb !important;
-      margin-bottom: 24px !important;
-    }
+  <link rel="stylesheet" href="../public/css/admin-employee-detail.css?v=51" />
 
-    .employee-profile {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .employee-detail-actions {
-      display: flex !important;
-      align-items: center !important;
-      gap: 8px !important;
-      flex-wrap: wrap !important;
-    }
-
-    .employee-detail-actions button {
-      height: 38px;
-      padding: 0 14px;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: bold;
-      border: 1px solid #d1d5db;
-      background: #ffffff;
-      color: #374151;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .employee-detail-actions button:hover {
-      background: #f9fafb;
-      border-color: #9ca3af;
-    }
-
-    /* 🔥 1. 뷰 모드 탭 정렬 (좌측에서 16px 띄워서 안착감 부여) */
-    .view-mode-tabs {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      border-bottom: 1px solid #e5e7eb;
-      padding: 0 16px 14px 16px; /* 👈 좌측 16px 여백 추가! */
-      margin-bottom: 16px;
-    }
-    .view-tab-btn {
-      padding: 6px 14px;
-      border-radius: 8px;
-      background: #f3f4f6;
-      color: #4b5563;
-      font-size: 13px;
-      font-weight: bold;
-      border: 1px solid #e5e7eb;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .view-tab-btn:hover { background: #e5e7eb; }
-    .view-tab-btn.active { background: #111827; color: #ffffff; border-color: #111827; }
-    
-    /* 🔥 2. 상단 중앙 년·월 네비게이터 (폰트 15px로 축소 & 바 전체 크기 슬림화) */
-    .time-navigator {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 14px; /* 20px -> 14px 축소 */
-      margin: 10px auto 20px;
-      padding: 8px 18px; /* 12px 24px -> 8px 18px 축소 */
-      background: #f8fafc;
-      border-radius: 10px;
-      border: 1px solid #e2e8f0;
-      max-width: 340px; /* 420px -> 340px 축소 */
-      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-    }
-    .nav-arrow-btn {
-      width: 28px; /* 34px -> 28px 축소 */
-      height: 28px;
-      border-radius: 50%;
-      background: #ffffff;
-      border: 1px solid #cbd5e1;
-      font-weight: bold;
-      font-size: 14px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .nav-arrow-btn:hover { background: #f1f5f9; }
-    .time-navigator strong { 
-      font-size: 15px; /* 👈 18px -> 15px로 콤팩트하게 변경! */
-      color: #0f172a; 
-      min-width: 130px; 
-      text-align: center; 
-    }
-    
-    /* 직접 지정 기간 검색창 정렬 */
-    .employee-attendance-filter {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      justify-content: center;
-      background: #f8fafc;
-      padding: 16px;
-      border-radius: 12px;
-      border: 1px solid #e2e8f0;
-      margin: 0 16px 20px 16px; /* 좌우 16px 여백 일치 */
-    }
-    .employee-attendance-filter label { font-size: 13px; font-weight: bold; color: #475569; display: flex; align-items: center; gap: 6px; }
-    .employee-attendance-filter input[type="date"] { padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 13px; }
-    .employee-attendance-filter button { padding: 7px 16px; background: #2563eb; color: #fff; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; }
-
-    .attendance-table th, .attendance-table td {
-      vertical-align: middle !important;
-      text-align: center !important;
-    }
-
-    /* 🔥 3. 메모 작성 영역 (좌우 16px 여백 추가) */
-    .memo-editor-box { 
-      display: flex; 
-      flex-direction: column; 
-      gap: 10px; 
-      margin-bottom: 16px; 
-      padding: 0 16px; /* 👈 좌우 16px 여백 추가! */
-    }
-    .memo-editor-box textarea { width: 100%; height: 80px; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 13px; resize: vertical; }
-    .memo-save-btn { align-self: flex-end; padding: 8px 18px; background: #2563eb; color: white; border-radius: 6px; font-weight: bold; font-size: 13px; border: none; cursor: pointer; }
-    .memo-save-btn:hover { background: #1d4ed8; }
-    
-    /* 🔥 4. 메모 히스토리 및 빈 텍스트 영역 (입력창과 동일하게 좌우 16px 여백 일치) */
-    .memo-history-list { 
-      display: flex; 
-      flex-direction: column; 
-      gap: 10px; 
-      padding: 0 16px 16px 16px; /* 👈 입력창과 완벽한 좌우 라인 일치! */
-    }
-    .memo-item { padding: 14px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #3b82f6; border: 1px solid #e2e8f0; border-left-width: 4px; }
-    .memo-item-top { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 11px; color: #64748b; }
-    .memo-item-content { font-size: 13px; color: #1e293b; white-space: pre-wrap; line-height: 1.5; text-align: left; }
-
-    .print-only-header { display: none; }
-
-    /* =========================================
-       🖨️ 인쇄/PDF 출력 전용 스타일 (@media print)
-    ========================================= */
-    @page {
-      size: A4 portrait;
-      margin: 5mm 7mm;
-    }
-
-    @media print {
-      /* 인쇄하지 않을 영역은 공간까지 완전히 제거 */
-
-      body[data-admin-page]
-        #adminSidebar,
-
-      body[data-admin-page]
-        .top-header,
-
-      body[data-admin-page]
-        .content
-        > :not(.employee-attendance-panel),
-
-      body[data-admin-page]
-        > .detail-modal,
-
-      .attendance-print-actions,
-
-      .view-mode-tabs,
-
-      .time-navigator,
-
-      .employee-attendance-filter {
-        display: none !important;
-      }
-
-
-      /* 관리자 화면의 고정 높이와 스크롤 해제 */
-
-      html,
-      body,
-      body[data-admin-page],
-      body[data-admin-page]
-        .admin-layout,
-      body[data-admin-page]
-        .main,
-      body[data-admin-page]
-        .content {
-        position: static !important;
-
-        width: 100% !important;
-        height: auto !important;
-        min-height: 0 !important;
-        max-height: none !important;
-
-        margin: 0 !important;
-        padding: 0 !important;
-
-        background: #ffffff !important;
-
-        overflow: visible !important;
-      }
-
-
-      body[data-admin-page]
-        .admin-layout {
-        display: block !important;
-      }
-
-      body[data-admin-page]
-        .main {
-        display: block !important;
-      }
-
-      body[data-admin-page]
-        .content {
-        display: block !important;
-      }
-
-
-      /* 출근부만 인쇄 */
-
-      .employee-attendance-panel {
-        position: static !important;
-
-        display: block !important;
-
-        width: 100% !important;
-        height: auto !important;
-
-        margin: 0 !important;
-        padding: 0 !important;
-
-        border: 0 !important;
-        border-radius: 0 !important;
-        box-shadow: none !important;
-
-        overflow: visible !important;
-
-        break-inside: avoid !important;
-        page-break-inside:
-          avoid !important;
-      }
-
-
-      /* 대제목 */
-
-      .print-only-header {
-        display: block !important;
-
-        height: 16mm !important;
-
-        margin: 0 0 2mm !important;
-        padding: 0 0 2mm !important;
-
-        border-bottom:
-          1px solid #111827 !important;
-
-        text-align: center;
-      }
-
-      .print-only-header h1 {
-        margin: 0 !important;
-
-        color: #000000 !important;
-
-        font-size: 13pt !important;
-        font-weight: 700 !important;
-        line-height: 8mm !important;
-      }
-
-      .print-only-header p {
-        margin: 0.5mm 0 0 !important;
-
-        color: #333333 !important;
-
-        font-size: 8pt !important;
-        font-weight: 400 !important;
-        line-height: 4mm !important;
-      }
-
-      /* 출근부 표 */
-
-      .attendance-table-wrap {
-        display: block !important;
-
-        width: 100% !important;
-
-        margin: 0 !important;
-        padding: 0 !important;
-
-        overflow: visible !important;
-      }
-
-      .attendance-table {
-        width: 100% !important;
-
-        margin: 0 !important;
-
-        border-collapse:
-          collapse !important;
-
-        table-layout:
-          fixed !important;
-
-        font-size: 7pt !important;
-        line-height: 1 !important;
-
-        break-inside: avoid !important;
-        page-break-inside:
-          avoid !important;
-
-        break-after: avoid !important;
-        page-break-after:
-          avoid !important;
-      }
-
-      .attendance-table thead {
-        display:
-          table-header-group !important;
-      }
-
-      .attendance-table th {
-        height: 5mm !important;
-        min-height: 0 !important;
-
-        padding:
-          0.3mm 0.8mm !important;
-
-        border:
-          1px solid #777777 !important;
-
-        background:
-          #eeeeee !important;
-
-        color: #000000 !important;
-
-        font-size: 7pt !important;
-        font-weight: 700 !important;
-        line-height: 1 !important;
-
-        -webkit-print-color-adjust:
-          exact;
-
-        print-color-adjust:
-          exact;
-      }
-
-      .attendance-table tbody tr {
-        height:
-          var(
-            --print-row-height,
-            7.7mm
-          ) !important;
-
-        min-height:
-          var(
-            --print-row-height,
-            7.7mm
-          ) !important;
-
-        max-height:
-          var(
-            --print-row-height,
-            7.7mm
-          ) !important;
-
-        break-inside: avoid !important;
-        page-break-inside:
-          avoid !important;
-      }
-
-      .attendance-table td {
-        height:
-          var(
-            --print-row-height,
-            7.7mm
-          ) !important;
-
-        min-height:
-          var(
-            --print-row-height,
-            7.7mm
-          ) !important;
-
-        max-height:
-          var(
-            --print-row-height,
-            7.7mm
-          ) !important;
-
-        padding:
-          0.5mm 1.2mm !important;
-
-        border:
-          1px solid #777777 !important;
-
-        color: #000000 !important;
-
-        font-size: 8pt !important;
-        line-height: 1 !important;
-        vertical-align: middle !important;
-
-        overflow: hidden !important;
-      }
-
-      /* 열 너비 */
-
-      .attendance-table th:nth-child(1),
-      .attendance-table td:nth-child(1) {
-        width: 13%;
-        text-align: center;
-      }
-
-      .attendance-table th:nth-child(2),
-      .attendance-table td:nth-child(2) {
-        width: 7%;
-        text-align: center;
-      }
-
-      .attendance-table th:nth-child(3),
-      .attendance-table td:nth-child(3) {
-        width: 22%;
-        text-align: center;
-      }
-
-      .attendance-table th:nth-child(4),
-      .attendance-table td:nth-child(4) {
-        width: 16%;
-        text-align: center;
-      }
-
-      .attendance-table th:nth-child(5),
-      .attendance-table td:nth-child(5) {
-        width: 42%;
-        text-align: left;
-      }
-
-      .daily-note-cell {
-        overflow: hidden !important;
-
-        white-space: nowrap !important;
-        text-overflow: ellipsis !important;
-      }
-
-      .annual-leave-row td {
-        background: #fff8e8;
-      }
-
-      .annual-leave-text {
-        color: #b45309;
-        font-weight: 800;
-      }
-
-      .annual-leave-row td {
-        background:
-          #f3f3f3 !important;
-
-        -webkit-print-color-adjust:
-          exact;
-
-        print-color-adjust:
-          exact;
-      }
-
-      .annual-leave-text {
-        color: #000000 !important;
-        font-weight: 700 !important;
-      }
-    }
-  </style>
 </head>
 
 <body data-admin-page="employees">
@@ -709,46 +227,145 @@
   </div>
 
     <!-- 직원 정보 수정 모달 -->
-  <div id="employeeEditModal" class="detail-modal" aria-hidden="true">
-    <div class="detail-modal-panel">
+<!-- 직원 정보 수정 모달 -->
+  <div
+    id="employeeEditModal"
+    class="detail-modal"
+    aria-hidden="true"
+  >
+    <div class="detail-modal-panel employee-edit-panel">
       <header class="detail-modal-header">
-        <h2>직원 정보 수정</h2>
+        <div>
+          <h2>직원 정보 수정</h2>
 
-        <button id="employeeEditCloseBtn" type="button">
+          <p>
+            직원 등록과 동일한 기본 정보를 수정합니다.
+          </p>
+        </div>
+
+        <button
+          id="employeeEditCloseBtn"
+          type="button"
+          aria-label="닫기"
+        >
           ×
         </button>
       </header>
 
-      <form id="employeeEditForm" class="detail-modal-form">
+      <form
+        id="employeeEditForm"
+        class="detail-modal-form employee-edit-form"
+      >
         <label>
           직원명
-          <input id="editEmployeeName" type="text" required />
+
+          <input
+            id="editEmployeeName"
+            type="text"
+            required
+          />
         </label>
 
         <label>
           연락처
-          <input id="editEmployeePhone" type="tel" required/>
+
+          <input
+            id="editEmployeePhone"
+            type="tel"
+            required
+          />
         </label>
 
         <label>
           직급
-          <select id="editEmployeeRole">
-            <option value="employee">일반 직원</option>
-            <option value="team_lead">팀장</option>
+
+          <select id="editEmployeePosition">
+            <option value="">
+              직급 미지정
+            </option>
           </select>
         </label>
 
         <label>
+          앱 사용 권한
+
+          <select id="editEmployeeRole">
+            <option value="employee">
+              일반 직원 권한
+            </option>
+
+            <option value="team_lead">
+              팀장 권한
+            </option>
+          </select>
+
+          <small>
+            팀장 권한은 청소 점검표와 비품 요청 기능을 사용할 수 있습니다.
+          </small>
+        </label>
+
+        <label>
           소속
+
           <select id="editEmployeeDepartment">
-            <option value="">소속 미배정</option>
-            <option value="현장팀">현장팀</option>
-            <option value="운영팀">운영팀</option>
-            <option value="디자인팀">디자인팀</option>
+            <option value="">
+              소속 미지정
+            </option>
           </select>
         </label>
 
-        <footer class="detail-modal-actions">
+        <label>
+          상태
+
+          <select id="editEmployeeStatus">
+            <option value="active">
+              활성
+            </option>
+
+            <option value="pending">
+              대기
+            </option>
+
+            <option value="inactive">
+              비활성
+            </option>
+
+            <option value="resigned">
+              퇴사
+            </option>
+          </select>
+        </label>
+
+        <section class="employee-edit-assignment full">
+          <div>
+            <strong>
+              근무지역 및 시간대
+            </strong>
+
+            <p id="editEmployeeAssignmentSummary">
+              배정 정보를 불러오는 중입니다.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            id="openRegionFromEmployeeEditBtn"
+          >
+            지역·시간대 설정
+          </button>
+        </section>
+
+        <label class="full">
+          관리자 메모
+
+          <textarea
+            id="editEmployeeMemo"
+            rows="4"
+            placeholder="관리자만 확인할 수 있는 메모"
+          ></textarea>
+        </label>
+
+        <footer class="detail-modal-actions full">
           <button
             id="employeeEditCancelBtn"
             type="button"
@@ -767,7 +384,6 @@
       </form>
     </div>
   </div>
-
 
   <!-- 배정 지역 수정 모달 -->
   <div
@@ -947,6 +563,6 @@
 
   <script src="../public/js/common.js"></script>
   <script type="module" src="../public/js/pc.js"></script>
-  <script type="module" src="../public/js/admin-employee-detail.js?v=26"></script>
+  <script type="module" src="../public/js/admin-employee-detail.js?v=51"></script>
 </body>
 </html>

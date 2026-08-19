@@ -52,13 +52,46 @@ const employeeEditCloseBtn = document.getElementById("employeeEditCloseBtn");
 const employeeEditCancelBtn = document.getElementById("employeeEditCancelBtn");
 const editEmployeeName = document.getElementById("editEmployeeName");
 const editEmployeePhone = document.getElementById("editEmployeePhone");
-const editEmployeeRole = document.getElementById( "editEmployeeRole" ); 
-const editEmployeeDepartment = document.getElementById("editEmployeeDepartment");
 const regionEditModal = document.getElementById("regionEditModal");
 const regionEditList = document.getElementById("regionEditList");
 const regionEditCloseBtn = document.getElementById("regionEditCloseBtn");
 const regionEditCancelBtn = document.getElementById("regionEditCancelBtn");
 const regionEditSaveBtn = document.getElementById("regionEditSaveBtn");
+
+const editEmployeePosition =
+  document.getElementById(
+    "editEmployeePosition"
+  );
+
+const editEmployeeRole =
+  document.getElementById(
+    "editEmployeeRole"
+  );
+
+const editEmployeeDepartment =
+  document.getElementById(
+    "editEmployeeDepartment"
+  );
+
+const editEmployeeStatus =
+  document.getElementById(
+    "editEmployeeStatus"
+  );
+
+const editEmployeeMemo =
+  document.getElementById(
+    "editEmployeeMemo"
+  );
+
+const editEmployeeAssignmentSummary =
+  document.getElementById(
+    "editEmployeeAssignmentSummary"
+  );
+
+const openRegionFromEmployeeEditBtn =
+  document.getElementById(
+    "openRegionFromEmployeeEditBtn"
+  );
 
 const dailyNoteType = document.getElementById("dailyNoteType");
 const toggleAttendanceRowsBtn = document.getElementById( "toggleAttendanceRowsBtn" );
@@ -1352,7 +1385,7 @@ function handlePrintTableOnly() {
   window.print();
 }
 
-function openEmployeeEditModal() {
+async function openEmployeeEditModal() {
   if (
     !employeeEditModal ||
     !currentEmployeeData
@@ -1370,8 +1403,148 @@ function openEmployeeEditModal() {
     currentEmployeeData.app_role ||
     "employee";
 
-  editEmployeeDepartment.value =
-    currentEmployeeData.department || "";
+  editEmployeeStatus.value =
+    currentEmployeeData.status ||
+    "active";
+
+  editEmployeeMemo.value =
+    currentEmployeeData.memo || "";
+
+  editEmployeePosition.innerHTML = `
+    <option value="">
+      직급 미지정
+    </option>
+  `;
+
+  editEmployeeDepartment.innerHTML = `
+    <option value="">
+      소속 미지정
+    </option>
+  `;
+
+  try {
+    const [
+      positionResult,
+      departmentResult,
+      assignmentResult,
+    ] = await Promise.all([
+      supabase
+        .from("job_positions")
+        .select(`
+          name,
+          is_active,
+          sort_order
+        `)
+        .order("sort_order"),
+
+      supabase
+        .from("employee_departments")
+        .select(`
+          name,
+          is_active,
+          sort_order
+        `)
+        .order("sort_order"),
+
+      supabase
+        .from("workplace_users")
+        .select(`
+          workplace_id,
+          work_shift_id
+        `)
+        .eq(
+          "user_id",
+          targetUserId
+        ),
+    ]);
+
+    if (positionResult.error) {
+      throw positionResult.error;
+    }
+
+    if (departmentResult.error) {
+      throw departmentResult.error;
+    }
+
+    if (assignmentResult.error) {
+      throw assignmentResult.error;
+    }
+
+    const currentPosition =
+      currentEmployeeData.position ||
+      "";
+
+    const currentDepartment =
+      currentEmployeeData.department ||
+      "";
+
+    editEmployeePosition.innerHTML +=
+      (positionResult.data || [])
+        .filter(
+          (item) =>
+            item.is_active !== false ||
+            item.name === currentPosition
+        )
+        .map(
+          (item) => `
+            <option value="${escapeHtml(
+              item.name
+            )}">
+              ${escapeHtml(
+                item.name
+              )}
+            </option>
+          `
+        )
+        .join("");
+
+    editEmployeeDepartment.innerHTML +=
+      (departmentResult.data || [])
+        .filter(
+          (item) =>
+            item.is_active !== false ||
+            item.name === currentDepartment
+        )
+        .map(
+          (item) => `
+            <option value="${escapeHtml(
+              item.name
+            )}">
+              ${escapeHtml(
+                item.name
+              )}
+            </option>
+          `
+        )
+        .join("");
+
+    editEmployeePosition.value =
+      currentPosition;
+
+    editEmployeeDepartment.value =
+      currentDepartment;
+
+    const assignmentCount =
+      (
+        assignmentResult.data ||
+        []
+      ).length;
+
+    editEmployeeAssignmentSummary
+      .textContent =
+      assignmentCount > 0
+        ? `${assignmentCount}개 근무지역이 배정되어 있습니다.`
+        : "배정된 근무지역과 시간대가 없습니다.";
+  } catch (error) {
+    console.error(
+      "직원 수정 선택지 조회 실패:",
+      error
+    );
+
+    editEmployeeAssignmentSummary
+      .textContent =
+      "배정 정보를 불러오지 못했습니다.";
+  }
 
   employeeEditModal.classList.add(
     "open"
@@ -1400,16 +1573,30 @@ async function saveEmployeeProfile(
   event.preventDefault();
 
   const name =
-    editEmployeeName.value.trim();
+    editEmployeeName.value
+      .trim();
 
   const phone =
-    editEmployeePhone.value.trim();
+    editEmployeePhone.value
+      .trim();
+
+  const position =
+    editEmployeePosition.value ||
+    null;
 
   const department =
-    editEmployeeDepartment.value;
+    editEmployeeDepartment.value ||
+    null;
 
   const appRole =
     editEmployeeRole.value;
+
+  const nextStatus =
+    editEmployeeStatus.value;
+
+  const memo =
+    editEmployeeMemo.value
+      .trim() || null;
 
   if (!name || !phone) {
     alert(
@@ -1429,35 +1616,55 @@ async function saveEmployeeProfile(
     "저장 중...";
 
   try {
-    const { error } =
-      await supabase.rpc(
-        "admin_update_employee_profile_v2",
+    const {
+      error: profileError,
+    } = await supabase
+      .from("users")
+      .update({
+        name,
+        phone,
+        position,
+        department,
+
+        app_role:
+          appRole,
+
+        memo,
+        updated_at:
+          new Date()
+            .toISOString(),
+      })
+      .eq(
+        "id",
+        targetUserId
+      );
+
+    if (profileError) {
+      throw profileError;
+    }
+
+    if (
+      nextStatus !==
+      currentEmployeeData.status
+    ) {
+      const {
+        error: statusError,
+      } = await supabase.rpc(
+        "admin_set_employee_status",
         {
           p_user_id:
             targetUserId,
 
-          p_name:
-            name,
-
-          p_phone:
-            phone,
-
-          p_department:
-            department || "",
-
-          p_app_role:
-            appRole,
+          p_status:
+            nextStatus,
         }
       );
 
-    if (error) {
-      throw error;
+      if (statusError) {
+        throw statusError;
+      }
     }
 
-    /*
-      저장된 정보를 서버에서 다시 조회한다.
-      RPC 반환 형태와 관계없이 화면 직급이 확실하게 갱신된다.
-    */
     const refreshedEmployee =
       await fetchEmployeeProfile();
 
@@ -1466,22 +1673,24 @@ async function saveEmployeeProfile(
         ...currentEmployeeData,
         name,
         phone,
-        department:
-          department || null,
+        position,
+        department,
         app_role:
           appRole,
+        status:
+          nextStatus,
+        memo,
       };
 
     renderProfileUI(
       currentEmployeeData
     );
 
+    updateAccountStatusButton();
     closeEmployeeEditModal();
 
     alert(
-      appRole === "team_lead"
-        ? "직원 정보가 수정되고 팀장 직급이 부여되었습니다."
-        : "직원 정보가 수정되고 사원 직급이 부여되었습니다."
+      "직원 정보가 수정되었습니다."
     );
   } catch (error) {
     console.error(
@@ -1495,7 +1704,9 @@ async function saveEmployeeProfile(
       }`
     );
   } finally {
-    saveButton.disabled = false;
+    saveButton.disabled =
+      false;
+
     saveButton.textContent =
       "수정 저장";
   }
@@ -2709,6 +2920,15 @@ async function init() {
 
   attendanceExpanded = false;
   await fetchAndRenderAttendance();
+
+  openRegionFromEmployeeEditBtn
+  ?.addEventListener(
+    "click",
+    () => {
+      closeEmployeeEditModal();
+      openRegionEditModal();
+    }
+  );
 }
 
 init();

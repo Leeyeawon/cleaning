@@ -384,6 +384,8 @@
   color: #515c70;
   font-size: 12px;
   font-weight: 800;
+  align-content: start;
+  align-self: start;
 }
 
 .employee-form label.full {
@@ -784,13 +786,17 @@
 .employee-filter-group {
   display: grid;
   grid-template-columns:
-    minmax(230px, 1.4fr)
-    minmax(130px, 0.7fr)
-    minmax(160px, 0.9fr)
-    minmax(180px, 1fr)
+    minmax(220px, 1.5fr)
+    repeat(5, minmax(140px, 0.8fr))
     auto;
   gap: 10px;
   align-items: center;
+}
+
+.employee-table {
+  width: 100%;
+  min-width: 1220px;
+  border-collapse: collapse;
 }
 
 .employee-filter-group input[type="search"],
@@ -877,4 +883,76 @@
 .employee-shift-display.is-unassigned
 .assignment-indicator {
   background: #d49a3f;
+}
+
+.employee-position-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 90px;
+}
+
+.employee-position-cell strong {
+  color: #262626;
+  font-size: 13px;
+}
+
+.employee-position-cell small {
+  color: #2563eb;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.employee-information-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid #e1e5eb;
+  border-radius: 10px;
+  background: #f8f9fb;
+  color: #465166;
+  font-size: 12px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.employee-information-chip.is-unassigned {
+  border-style: dashed;
+  border-color: #ead5ad;
+  background: #fff9ef;
+  color: #9b681e;
+}
+
+/* 직원 등록 팝업 입력창 높이와 위치 통일 */
+
+.employee-form label {
+  grid-template-rows:
+    max-content
+    44px
+    max-content;
+}
+
+.employee-form label.full {
+  grid-template-rows:
+    max-content
+    auto
+    max-content;
+}
+
+.employee-form label > input,
+.employee-form label > select {
+  align-self: start;
+  margin: 0;
+}
+
+.employee-form label > small {
+  display: block;
+  min-height: 17px;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.employee-form textarea {
+  align-self: start;
 }

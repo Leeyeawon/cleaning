@@ -100,10 +100,76 @@ const positionSaveBtn =
     "positionSaveBtn"
   );
 
+const addDepartmentBtn =
+  document.getElementById(
+    "addDepartmentBtn"
+  );
+
+const departmentListCount =
+  document.getElementById(
+    "departmentListCount"
+  );
+
+const departmentTableBody =
+  document.getElementById(
+    "departmentTableBody"
+  );
+
+const departmentModal =
+  document.getElementById(
+    "departmentModal"
+  );
+
+const departmentModalTitle =
+  document.getElementById(
+    "departmentModalTitle"
+  );
+
+const departmentModalCloseBtn =
+  document.getElementById(
+    "departmentModalCloseBtn"
+  );
+
+const departmentModalCancelBtn =
+  document.getElementById(
+    "departmentModalCancelBtn"
+  );
+
+const departmentForm =
+  document.getElementById(
+    "departmentForm"
+  );
+
+const departmentNameInput =
+  document.getElementById(
+    "departmentNameInput"
+  );
+
+const departmentDescriptionInput =
+  document.getElementById(
+    "departmentDescriptionInput"
+  );
+
+const departmentSortInput =
+  document.getElementById(
+    "departmentSortInput"
+  );
+
+const departmentActiveInput =
+  document.getElementById(
+    "departmentActiveInput"
+  );
+
+const departmentSaveBtn =
+  document.getElementById(
+    "departmentSaveBtn"
+  );
 
 let jobPositions = [];
 let employees = [];
 let editingPositionId = null;
+let employeeDepartments = [];
+let editingDepartmentId = null;
 
 
 function escapeHtml(value) {
@@ -644,6 +710,7 @@ async function savePosition(event) {
 
     closePositionModal();
     await loadPositionData();
+    await fetchEmployeeDepartments();
   } catch (error) {
     console.error(
       "직급 저장 실패:",
@@ -712,6 +779,7 @@ async function togglePosition(
     }
 
     await loadPositionData();
+    await fetchEmployeeDepartments();
   } catch (error) {
     alert(
       `직급 상태를 변경하지 못했습니다.\n${error.message}`
@@ -775,6 +843,7 @@ async function deletePosition(
     );
 
     await loadPositionData();
+    await fetchEmployeeDepartments();
   } catch (error) {
     alert(
       `직급을 삭제하지 못했습니다.\n${error.message}`
@@ -827,6 +896,459 @@ positionStatusFilter.addEventListener(
   renderPositionTable
 );
 
+function getDepartmentEmployeeCount(
+  departmentName
+) {
+  return employees.filter(
+    (employee) =>
+      String(
+        employee.department || ""
+      ).trim() ===
+      String(
+        departmentName || ""
+      ).trim()
+  ).length;
+}
+
+
+async function fetchEmployeeDepartments() {
+  const { data, error } =
+    await supabase
+      .from("employee_departments")
+      .select("*")
+      .order(
+        "sort_order",
+        {
+          ascending: true,
+        }
+      )
+      .order(
+        "id",
+        {
+          ascending: true,
+        }
+      );
+
+  if (error) {
+    throw error;
+  }
+
+  employeeDepartments =
+    data || [];
+
+  renderDepartmentTable();
+}
+
+
+function renderDepartmentTable() {
+  departmentListCount.textContent =
+    `${employeeDepartments.length}개 소속`;
+
+  if (!employeeDepartments.length) {
+    departmentTableBody.innerHTML = `
+      <tr>
+        <td
+          colspan="6"
+          style="
+            padding:34px;
+            text-align:center;
+            color:#737373;
+          "
+        >
+          등록된 소속이 없습니다.
+        </td>
+      </tr>
+    `;
+
+    return;
+  }
+
+  departmentTableBody.innerHTML =
+    employeeDepartments
+      .map((department) => {
+        const employeeCount =
+          getDepartmentEmployeeCount(
+            department.name
+          );
+
+        return `
+          <tr>
+            <td>
+              ${Number(
+                department.sort_order || 0
+              )}
+            </td>
+
+            <td>
+              <div class="department-name-cell">
+                <strong>
+                  ${escapeHtml(
+                    department.name
+                  )}
+                </strong>
+              </div>
+            </td>
+
+            <td>
+              ${escapeHtml(
+                department.description ||
+                "-"
+              )}
+            </td>
+
+            <td>
+              <span class="department-employee-count">
+                ${employeeCount}명
+              </span>
+            </td>
+
+            <td>
+              <span
+                class="position-status ${
+                  department.is_active !== false
+                    ? "active"
+                    : "inactive"
+                }"
+              >
+                ${
+                  department.is_active !== false
+                    ? "사용 중"
+                    : "사용 중지"
+                }
+              </span>
+            </td>
+
+            <td>
+              <div class="department-action-group">
+                <button
+                  type="button"
+                  class="table-action-btn"
+                  data-edit-department="${department.id}"
+                >
+                  수정
+                </button>
+
+                <button
+                  type="button"
+                  class="table-action-btn"
+                  data-toggle-department="${department.id}"
+                >
+                  ${
+                    department.is_active !== false
+                      ? "중지"
+                      : "사용"
+                  }
+                </button>
+
+                <button
+                  type="button"
+                  class="table-action-btn department-delete-button"
+                  data-delete-department="${department.id}"
+                >
+                  삭제
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      })
+      .join("");
+
+  departmentTableBody
+    .querySelectorAll(
+      "[data-edit-department]"
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        () => {
+          openDepartmentModal(
+            button.dataset
+              .editDepartment
+          );
+        }
+      );
+    });
+
+  departmentTableBody
+    .querySelectorAll(
+      "[data-toggle-department]"
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        () => {
+          toggleDepartment(
+            button.dataset
+              .toggleDepartment
+          );
+        }
+      );
+    });
+
+  departmentTableBody
+    .querySelectorAll(
+      "[data-delete-department]"
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        () => {
+          deleteDepartment(
+            button.dataset
+              .deleteDepartment
+          );
+        }
+      );
+    });
+}
+
+
+function openDepartmentModal(
+  departmentId = null
+) {
+  departmentForm.reset();
+
+  editingDepartmentId = null;
+  departmentSortInput.value = "0";
+  departmentActiveInput.checked = true;
+
+  if (departmentId) {
+    const department =
+      employeeDepartments.find(
+        (item) =>
+          String(item.id) ===
+          String(departmentId)
+      );
+
+    if (!department) {
+      return;
+    }
+
+    editingDepartmentId =
+      String(department.id);
+
+    departmentModalTitle.textContent =
+      "소속 수정";
+
+    departmentNameInput.value =
+      department.name || "";
+
+    departmentDescriptionInput.value =
+      department.description || "";
+
+    departmentSortInput.value =
+      Number(
+        department.sort_order || 0
+      );
+
+    departmentActiveInput.checked =
+      department.is_active !== false;
+  } else {
+    departmentModalTitle.textContent =
+      "소속 추가";
+  }
+
+  departmentModal.classList.add(
+    "open"
+  );
+}
+
+
+function closeDepartmentModal() {
+  departmentModal.classList.remove(
+    "open"
+  );
+
+  departmentForm.reset();
+  editingDepartmentId = null;
+}
+
+
+async function saveDepartment(
+  event
+) {
+  event.preventDefault();
+
+  const name =
+    departmentNameInput.value
+      .trim();
+
+  if (!name) {
+    alert(
+      "소속명을 입력해 주세요."
+    );
+
+    return;
+  }
+
+  departmentSaveBtn.disabled = true;
+  departmentSaveBtn.textContent =
+    "저장 중...";
+
+  try {
+    const { error } =
+      await supabase.rpc(
+        "admin_save_employee_department",
+        {
+          p_department_id:
+            editingDepartmentId
+              ? Number(
+                  editingDepartmentId
+                )
+              : null,
+
+          p_name:
+            name,
+
+          p_description:
+            departmentDescriptionInput
+              .value
+              .trim(),
+
+          p_sort_order:
+            Number(
+              departmentSortInput
+                .value || 0
+            ),
+
+          p_is_active:
+            departmentActiveInput
+              .checked,
+        }
+      );
+
+    if (error) {
+      throw error;
+    }
+
+    closeDepartmentModal();
+
+    await Promise.all([
+      loadPositionData(),
+      fetchEmployeeDepartments(),
+    ]);
+
+    alert(
+      editingDepartmentId
+        ? "소속이 수정되었습니다."
+        : "소속이 추가되었습니다."
+    );
+  } catch (error) {
+    alert(
+      `소속을 저장하지 못했습니다.\n${error.message}`
+    );
+  } finally {
+    departmentSaveBtn.disabled =
+      false;
+
+    departmentSaveBtn.textContent =
+      "저장";
+  }
+}
+
+
+async function toggleDepartment(
+  departmentId
+) {
+  const department =
+    employeeDepartments.find(
+      (item) =>
+        String(item.id) ===
+        String(departmentId)
+    );
+
+  if (!department) {
+    return;
+  }
+
+  const { error } =
+    await supabase.rpc(
+      "admin_save_employee_department",
+      {
+        p_department_id:
+          department.id,
+
+        p_name:
+          department.name,
+
+        p_description:
+          department.description || "",
+
+        p_sort_order:
+          Number(
+            department.sort_order || 0
+          ),
+
+        p_is_active:
+          department.is_active === false,
+      }
+    );
+
+  if (error) {
+    alert(
+      `상태를 변경하지 못했습니다.\n${error.message}`
+    );
+
+    return;
+  }
+
+  await fetchEmployeeDepartments();
+}
+
+
+async function deleteDepartment(
+  departmentId
+) {
+  const department =
+    employeeDepartments.find(
+      (item) =>
+        String(item.id) ===
+        String(departmentId)
+    );
+
+  if (!department) {
+    return;
+  }
+
+  const confirmed =
+    confirm(
+      `"${department.name}" 소속을 삭제하시겠습니까?`
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+  const { error } =
+    await supabase.rpc(
+      "admin_delete_employee_department",
+      {
+        p_department_id:
+          Number(departmentId),
+      }
+    );
+
+  if (error) {
+    if (
+      String(error.message).includes(
+        "DEPARTMENT_IN_USE"
+      )
+    ) {
+      alert(
+        "사용 중인 직원이 있어 삭제할 수 없습니다. 사용 중지하거나 직원 소속을 먼저 변경해 주세요."
+      );
+    } else {
+      alert(
+        `소속을 삭제하지 못했습니다.\n${error.message}`
+      );
+    }
+
+    return;
+  }
+
+  await fetchEmployeeDepartments();
+}
 
 async function initPage() {
   const admin =
@@ -838,6 +1360,7 @@ async function initPage() {
 
   try {
     await loadPositionData();
+    await fetchEmployeeDepartments();
   } catch (error) {
     console.error(
       "직급 조회 실패:",
@@ -863,6 +1386,42 @@ async function initPage() {
       `직급 정보를 불러오지 못했습니다.\n${error.message}`
     );
   }
+
+  addDepartmentBtn?.addEventListener(
+    "click",
+    () => {
+      openDepartmentModal();
+    }
+  );
+
+  departmentModalCloseBtn
+    ?.addEventListener(
+      "click",
+      closeDepartmentModal
+    );
+
+  departmentModalCancelBtn
+    ?.addEventListener(
+      "click",
+      closeDepartmentModal
+    );
+
+  departmentForm?.addEventListener(
+    "submit",
+    saveDepartment
+  );
+
+  departmentModal?.addEventListener(
+    "click",
+    (event) => {
+      if (
+        event.target ===
+        departmentModal
+      ) {
+        closeDepartmentModal();
+      }
+    }
+  );
 }
 
 

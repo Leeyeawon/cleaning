@@ -1,0 +1,725 @@
+/* =========================================
+    💻 일반 웹 화면 디자인 (디테일 보정 완료)
+========================================= */
+.employee-detail-hero {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 16px !important;
+    padding: 24px !important;
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    border: 1px solid #e5e7eb !important;
+    margin-bottom: 24px !important;
+}
+
+.employee-profile {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.employee-detail-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+}
+
+.employee-detail-actions button {
+    height: 38px;
+    padding: 0 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: bold;
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.employee-detail-actions button:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
+}
+
+/* 🔥 1. 뷰 모드 탭 정렬 (좌측에서 16px 띄워서 안착감 부여) */
+.view-mode-tabs {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 0 16px 14px 16px; /* 👈 좌측 16px 여백 추가! */
+    margin-bottom: 16px;
+}
+.view-tab-btn {
+    padding: 6px 14px;
+    border-radius: 8px;
+    background: #f3f4f6;
+    color: #4b5563;
+    font-size: 13px;
+    font-weight: bold;
+    border: 1px solid #e5e7eb;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.view-tab-btn:hover { background: #e5e7eb; }
+.view-tab-btn.active { background: #111827; color: #ffffff; border-color: #111827; }
+
+/* 🔥 2. 상단 중앙 년·월 네비게이터 (폰트 15px로 축소 & 바 전체 크기 슬림화) */
+.time-navigator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px; /* 20px -> 14px 축소 */
+    margin: 10px auto 20px;
+    padding: 8px 18px; /* 12px 24px -> 8px 18px 축소 */
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    max-width: 340px; /* 420px -> 340px 축소 */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+.nav-arrow-btn {
+    width: 28px; /* 34px -> 28px 축소 */
+    height: 28px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.nav-arrow-btn:hover { background: #f1f5f9; }
+.time-navigator strong { 
+    font-size: 15px; /* 👈 18px -> 15px로 콤팩트하게 변경! */
+    color: #0f172a; 
+    min-width: 130px; 
+    text-align: center; 
+}
+
+/* 직접 지정 기간 검색창 정렬 */
+.employee-attendance-filter {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    margin: 0 16px 20px 16px; /* 좌우 16px 여백 일치 */
+}
+.employee-attendance-filter label { font-size: 13px; font-weight: bold; color: #475569; display: flex; align-items: center; gap: 6px; }
+.employee-attendance-filter input[type="date"] { padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 13px; }
+.employee-attendance-filter button { padding: 7px 16px; background: #2563eb; color: #fff; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; }
+
+.attendance-table th, .attendance-table td {
+    vertical-align: middle !important;
+    text-align: center !important;
+}
+
+/* 🔥 3. 메모 작성 영역 (좌우 16px 여백 추가) */
+.memo-editor-box { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px; 
+    margin-bottom: 16px; 
+    padding: 0 16px; /* 👈 좌우 16px 여백 추가! */
+}
+.memo-editor-box textarea { width: 100%; height: 80px; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 13px; resize: vertical; }
+.memo-save-btn { align-self: flex-end; padding: 8px 18px; background: #2563eb; color: white; border-radius: 6px; font-weight: bold; font-size: 13px; border: none; cursor: pointer; }
+.memo-save-btn:hover { background: #1d4ed8; }
+
+/* 🔥 4. 메모 히스토리 및 빈 텍스트 영역 (입력창과 동일하게 좌우 16px 여백 일치) */
+.memo-history-list { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px; 
+    padding: 0 16px 16px 16px; /* 👈 입력창과 완벽한 좌우 라인 일치! */
+}
+.memo-item { padding: 14px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #3b82f6; border: 1px solid #e2e8f0; border-left-width: 4px; }
+.memo-item-top { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 11px; color: #64748b; }
+.memo-item-content { font-size: 13px; color: #1e293b; white-space: pre-wrap; line-height: 1.5; text-align: left; }
+
+.print-only-header { display: none; }
+
+/* =========================================
+    🖨️ 인쇄/PDF 출력 전용 스타일 (@media print)
+========================================= */
+@page {
+    size: A4 portrait;
+    margin: 5mm 7mm;
+}
+
+@media print {
+    /* 인쇄하지 않을 영역은 공간까지 완전히 제거 */
+
+    body[data-admin-page]
+    #adminSidebar,
+
+    body[data-admin-page]
+    .top-header,
+
+    body[data-admin-page]
+    .content
+    > :not(.employee-attendance-panel),
+
+    body[data-admin-page]
+    > .detail-modal,
+
+    .attendance-print-actions,
+
+    .view-mode-tabs,
+
+    .time-navigator,
+
+    .employee-attendance-filter {
+    display: none !important;
+    }
+
+
+    /* 관리자 화면의 고정 높이와 스크롤 해제 */
+
+    html,
+    body,
+    body[data-admin-page],
+    body[data-admin-page]
+    .admin-layout,
+    body[data-admin-page]
+    .main,
+    body[data-admin-page]
+    .content {
+    position: static !important;
+
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    background: #ffffff !important;
+
+    overflow: visible !important;
+    }
+
+
+    body[data-admin-page]
+    .admin-layout {
+    display: block !important;
+    }
+
+    body[data-admin-page]
+    .main {
+    display: block !important;
+    }
+
+    body[data-admin-page]
+    .content {
+    display: block !important;
+    }
+
+
+    /* 출근부만 인쇄 */
+
+    .employee-attendance-panel {
+    position: static !important;
+
+    display: block !important;
+
+    width: 100% !important;
+    height: auto !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+
+    overflow: visible !important;
+
+    break-inside: avoid !important;
+    page-break-inside:
+        avoid !important;
+    }
+
+
+    /* 대제목 */
+
+    .print-only-header {
+    display: block !important;
+
+    height: 16mm !important;
+
+    margin: 0 0 2mm !important;
+    padding: 0 0 2mm !important;
+
+    border-bottom:
+        1px solid #111827 !important;
+
+    text-align: center;
+    }
+
+    .print-only-header h1 {
+    margin: 0 !important;
+
+    color: #000000 !important;
+
+    font-size: 13pt !important;
+    font-weight: 700 !important;
+    line-height: 8mm !important;
+    }
+
+    .print-only-header p {
+    margin: 0.5mm 0 0 !important;
+
+    color: #333333 !important;
+
+    font-size: 8pt !important;
+    font-weight: 400 !important;
+    line-height: 4mm !important;
+    }
+
+    /* 출근부 표 */
+
+    .attendance-table-wrap {
+    display: block !important;
+
+    width: 100% !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    overflow: visible !important;
+    }
+
+    .attendance-table {
+    width: 100% !important;
+
+    margin: 0 !important;
+
+    border-collapse:
+        collapse !important;
+
+    table-layout:
+        fixed !important;
+
+    font-size: 7pt !important;
+    line-height: 1 !important;
+
+    break-inside: avoid !important;
+    page-break-inside:
+        avoid !important;
+
+    break-after: avoid !important;
+    page-break-after:
+        avoid !important;
+    }
+
+    .attendance-table thead {
+    display:
+        table-header-group !important;
+    }
+
+    .attendance-table th {
+    height: 5mm !important;
+    min-height: 0 !important;
+
+    padding:
+        0.3mm 0.8mm !important;
+
+    border:
+        1px solid #777777 !important;
+
+    background:
+        #eeeeee !important;
+
+    color: #000000 !important;
+
+    font-size: 7pt !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+
+    -webkit-print-color-adjust:
+        exact;
+
+    print-color-adjust:
+        exact;
+    }
+
+    .attendance-table tbody tr {
+    height:
+        var(
+        --print-row-height,
+        7.7mm
+        ) !important;
+
+    min-height:
+        var(
+        --print-row-height,
+        7.7mm
+        ) !important;
+
+    max-height:
+        var(
+        --print-row-height,
+        7.7mm
+        ) !important;
+
+    break-inside: avoid !important;
+    page-break-inside:
+        avoid !important;
+    }
+
+    .attendance-table td {
+    height:
+        var(
+        --print-row-height,
+        7.7mm
+        ) !important;
+
+    min-height:
+        var(
+        --print-row-height,
+        7.7mm
+        ) !important;
+
+    max-height:
+        var(
+        --print-row-height,
+        7.7mm
+        ) !important;
+
+    padding:
+        0.5mm 1.2mm !important;
+
+    border:
+        1px solid #777777 !important;
+
+    color: #000000 !important;
+
+    font-size: 8pt !important;
+    line-height: 1 !important;
+    vertical-align: middle !important;
+
+    overflow: hidden !important;
+    }
+
+    /* 열 너비 */
+
+    .attendance-table th:nth-child(1),
+    .attendance-table td:nth-child(1) {
+    width: 13%;
+    text-align: center;
+    }
+
+    .attendance-table th:nth-child(2),
+    .attendance-table td:nth-child(2) {
+    width: 7%;
+    text-align: center;
+    }
+
+    .attendance-table th:nth-child(3),
+    .attendance-table td:nth-child(3) {
+    width: 22%;
+    text-align: center;
+    }
+
+    .attendance-table th:nth-child(4),
+    .attendance-table td:nth-child(4) {
+    width: 16%;
+    text-align: center;
+    }
+
+    .attendance-table th:nth-child(5),
+    .attendance-table td:nth-child(5) {
+    width: 42%;
+    text-align: left;
+    }
+
+    .daily-note-cell {
+    overflow: hidden !important;
+
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+    }
+
+    .annual-leave-row td {
+    background: #fff8e8;
+    }
+
+    .annual-leave-text {
+    color: #b45309;
+    font-weight: 800;
+    }
+
+    .annual-leave-row td {
+    background:
+        #f3f3f3 !important;
+
+    -webkit-print-color-adjust:
+        exact;
+
+    print-color-adjust:
+        exact;
+    }
+
+    .annual-leave-text {
+    color: #000000 !important;
+    font-weight: 700 !important;
+    }
+}
+
+.detail-attendance-edit-btn {
+  min-width: 72px;
+  padding: 8px 13px;
+
+  border:
+    1px solid #2563eb;
+
+  border-radius: 9px;
+
+  background:
+    #eff6ff;
+
+  color:
+    #1d4ed8;
+
+  font-size: 13px;
+  font-weight: 800;
+
+  box-shadow:
+    0 1px 2px
+    rgba(37, 99, 235, 0.12);
+
+  cursor: pointer;
+}
+
+.detail-attendance-edit-btn:hover {
+  background:
+    #2563eb;
+
+  color:
+    #ffffff;
+
+  transform:
+    translateY(-1px);
+}
+
+.attendance-edit-modal-card {
+  width:
+    min(460px, calc(100% - 32px));
+}
+
+.attendance-edit-form {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+}
+
+.attendance-edit-form label {
+  display: grid;
+  gap: 7px;
+
+  color: #374151;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.attendance-edit-form input,
+.attendance-edit-form select,
+.attendance-edit-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: 11px 12px;
+
+  border:
+    1px solid #cbd5e1;
+
+  border-radius: 9px;
+
+  background: #ffffff;
+  color: #111827;
+  font: inherit;
+}
+
+.attendance-edit-form input:focus,
+.attendance-edit-form select:focus,
+.attendance-edit-form textarea:focus {
+  outline: none;
+
+  border-color:
+    #2563eb;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(37, 99, 235, 0.12);
+}
+
+.attendance-edit-time-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 12px;
+}
+
+@media (max-width: 600px) {
+  .attendance-edit-time-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  .attendance-edit-control,
+  #attendanceEditModal {
+    display: none !important;
+  }
+}
+    
+.employee-edit-panel {
+  width: min(720px, 100%);
+}
+
+.employee-edit-form {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding: 24px;
+}
+
+.employee-edit-form > label {
+  display: grid;
+  grid-template-rows:
+    max-content
+    44px
+    max-content;
+  align-content: start;
+  align-self: start;
+  gap: 8px;
+  color: #515c70;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.employee-edit-form > label.full,
+.employee-edit-form > .full {
+  grid-column: 1 / -1;
+}
+
+.employee-edit-form input,
+.employee-edit-form select,
+.employee-edit-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #dfe3e9;
+  border-radius: 12px;
+  outline: none;
+  background: #fafbfc;
+  color: #293247;
+  font: inherit;
+  font-weight: 400;
+}
+
+.employee-edit-form input,
+.employee-edit-form select {
+  height: 44px;
+  padding: 0 13px;
+}
+
+.employee-edit-form textarea {
+  min-height: 100px;
+  padding: 12px 13px;
+  resize: vertical;
+}
+
+.employee-edit-form input:focus,
+.employee-edit-form select:focus,
+.employee-edit-form textarea:focus {
+  border-color: #2563eb;
+  background: #fff;
+  box-shadow:
+    0 0 0 3px
+    rgba(37, 99, 235, 0.1);
+}
+
+.employee-edit-form small {
+  display: block;
+  min-height: 17px;
+  color: #737373;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.employee-edit-assignment {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 74px;
+  padding: 14px 16px;
+  border: 1px solid #dbe4f0;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.employee-edit-assignment strong {
+  color: #172033;
+  font-size: 13px;
+}
+
+.employee-edit-assignment p {
+  margin: 5px 0 0;
+  color: #737373;
+  font-size: 12px;
+}
+
+.employee-edit-assignment button {
+  flex: 0 0 auto;
+  min-height: 38px;
+  padding: 0 13px;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  background: #fff;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.employee-edit-form
+.detail-modal-actions {
+  padding: 4px 0 0;
+  border: 0;
+}
+
+@media (max-width: 680px) {
+  .employee-edit-form {
+    grid-template-columns: 1fr;
+    padding: 18px;
+  }
+
+  .employee-edit-form > label.full,
+  .employee-edit-form > .full {
+    grid-column: auto;
+  }
+
+  .employee-edit-assignment {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

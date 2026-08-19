@@ -369,3 +369,99 @@
     border-radius: 18px 18px 0 0;
   }
 }
+
+.department-panel {
+  margin-top: 20px;
+}
+
+.department-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.department-panel-actions > span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #737373;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.department-name-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.department-name-cell strong {
+  color: #171717;
+  font-size: 14px;
+}
+
+.department-name-cell small {
+  color: #737373;
+  font-size: 11px;
+}
+
+.department-employee-count {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.department-action-group {
+  display: flex;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.department-delete-button {
+  color: #dc2626;
+}
+
+/* 근무 상세 패널 제목 통일 */
+
+#departmentListCount,
+#filteredPositionCount {
+  flex: 0 0 auto;
+}
+
+.panel > .panel-header > div:first-child {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+}
+
+.panel > .panel-header h3 {
+  margin: 0;
+  color: #171717;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.25;
+  letter-spacing: -0.03em;
+}
+
+.panel > .panel-header p {
+  margin: 0;
+  color: #737373;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.work-planned-panel
+.panel-header h3 {
+  font-size: 20px;
+}

@@ -200,6 +200,55 @@
           </div>
         </section>
 
+        <section class="panel department-panel">
+          <div class="panel-header">
+            <div>
+              <h3>소속 관리</h3>
+
+              <p>
+                직원 등록 및 정보 수정에서 사용할 소속을 관리합니다.
+              </p>
+            </div>
+
+            <div class="department-panel-actions">
+              <span id="departmentListCount">
+                0개 소속
+              </span>
+
+              <button
+                type="button"
+                class="table-action-btn"
+                id="addDepartmentBtn"
+              >
+                + 소속 추가
+              </button>
+            </div>
+          </div>
+
+          <div class="attendance-table-wrap">
+            <table class="attendance-table">
+              <thead>
+                <tr>
+                  <th>순서</th>
+                  <th>소속명</th>
+                  <th>설명</th>
+                  <th>소속 직원</th>
+                  <th>상태</th>
+                  <th>관리</th>
+                </tr>
+              </thead>
+
+              <tbody id="departmentTableBody">
+                <tr>
+                  <td colspan="6">
+                    소속 정보를 불러오는 중입니다.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
         <section class="panel work-planned-panel">
           <div class="panel-header">
             <div>
@@ -375,5 +424,108 @@
     type="module"
     src="../public/js/admin-work-details.js?v=45"
   ></script>
+
+    <div
+    class="position-modal"
+    id="departmentModal"
+  >
+    <div class="position-modal-content">
+      <div class="position-modal-header">
+        <div>
+          <h3 id="departmentModalTitle">
+            소속 추가
+          </h3>
+
+          <p>
+            직원에게 지정할 소속을 등록합니다.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          id="departmentModalCloseBtn"
+          aria-label="닫기"
+        >
+          ×
+        </button>
+      </div>
+
+      <form id="departmentForm">
+        <div class="position-modal-body">
+          <label>
+            소속명
+
+            <input
+              type="text"
+              id="departmentNameInput"
+              maxlength="50"
+              placeholder="예: 현장관리팀"
+              required
+            />
+          </label>
+
+          <label>
+            설명
+
+            <textarea
+              id="departmentDescriptionInput"
+              rows="3"
+              maxlength="200"
+              placeholder="선택 사항"
+            ></textarea>
+          </label>
+
+          <label>
+            정렬 순서
+
+            <input
+              type="number"
+              id="departmentSortInput"
+              min="0"
+              value="0"
+            />
+
+            <small>
+              숫자가 작은 소속부터 먼저 표시됩니다.
+            </small>
+          </label>
+
+          <label class="position-active-option">
+            <input
+              type="checkbox"
+              id="departmentActiveInput"
+              checked
+            />
+
+            <span>
+              <strong>사용 중</strong>
+
+              <small>
+                사용 중인 소속만 직원 등록 화면에 표시됩니다.
+              </small>
+            </span>
+          </label>
+        </div>
+
+        <div class="position-modal-footer">
+          <button
+            type="button"
+            class="cancel-btn"
+            id="departmentModalCancelBtn"
+          >
+            취소
+          </button>
+
+          <button
+            type="submit"
+            class="save-btn"
+            id="departmentSaveBtn"
+          >
+            저장
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 </body>
 </html>

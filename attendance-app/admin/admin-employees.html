@@ -138,6 +138,26 @@
               </option>
             </select>
 
+            <select id="employeePositionFilter">
+              <option value="all">
+                전체 직급
+              </option>
+
+              <option value="unassigned">
+                직급 미지정
+              </option>
+            </select>
+
+            <select id="employeeDepartmentFilter">
+              <option value="all">
+                전체 소속
+              </option>
+
+              <option value="unassigned">
+                소속 미지정
+              </option>
+            </select>
+
             <select id="employeeRegionFilter">
               <option value="all">
                 전체 지역
@@ -178,7 +198,8 @@
                   <th>직원명</th>
                   <th>연락처</th>
                   <th>직급</th>
-                  <th>근무 시간</th>
+                  <th>소속</th>
+                  <th>근무 시간대</th>
                   <th>배정 지역</th>
                   <th>상태</th>
                   <th>관리</th>
@@ -186,7 +207,7 @@
               </thead>
               <tbody id="employeeTableBody">
                 <tr>
-                  <td colspan="7" class="empty-table">직원 정보를 불러오는 중입니다.</td>
+                  <td colspan="8" class="empty-table">직원 정보를 불러오는 중입니다.</td>
                 </tr>
               </tbody>
             </table>
@@ -240,6 +261,16 @@
           <small>
             팀장 권한은 청소 점검표와 비품 요청 기능을 사용할 수 있습니다.
           </small>
+        </label>
+
+        <label>
+          소속
+
+          <select id="employeeDepartmentInput">
+            <option value="">
+              소속 미지정
+            </option>
+          </select>
         </label>
 
         <label>
@@ -337,6 +368,6 @@
 
   <script src="../public/js/common.js"></script>
   <script type="module" src="../public/js/pc.js?v=48"></script>
-  <script type="module" src="../public/js/admin-employees.js?v=49"></script>
+  <script type="module" src="../public/js/admin-employees.js?v=50"></script>
   <script type="module" src="../public/js/admin-app-approval.js?v=48" ></script> </body>
 </html>
