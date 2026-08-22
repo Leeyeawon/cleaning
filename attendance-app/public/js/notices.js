@@ -76,17 +76,9 @@ async function init() {
     getEmployeeSessionToken();
 
   const [
-    workplaceResult,
     notificationResult,
     noticeResult,
   ] = await Promise.all([
-    supabase.rpc(
-      "get_my_workplaces",
-      {
-        p_session_token: token,
-      }
-    ),
-
     supabase.rpc(
       "get_my_notifications",
       {
@@ -94,26 +86,40 @@ async function init() {
       }
     ),
 
-    supabase
-      .from("notices")
-      .select("*")
-      .eq("status", "게시중")
-      .order("important", {
-        ascending: false,
-      })
-      .order("created_at", {
-        ascending: false,
-      }),
+    supabase.rpc(
+      "get_my_notices_by_session",
+      {
+        p_session_token: token,
+      }
+    ),
   ]);
 
-  const targets = new Set([
-    "전체 직원",
-    employee.department,
-    ...(workplaceResult.data || []).map(
-      (workplace) =>
-        workplace.workplace_name
-    ),
-  ].filter(Boolean));
+  if (notificationResult.error) {
+    console.error(
+      "개인 알림 조회 실패:",
+      notificationResult.error
+    );
+  }
+
+  if (noticeResult.error) {
+    console.error(
+      "공지사항 조회 실패:",
+      noticeResult.error
+    );
+  }
+
+  if (
+    notificationResult.error &&
+    noticeResult.error
+  ) {
+    noticeList.innerHTML = `
+      <p class="notice-page-empty">
+        공지사항을 불러오지 못했습니다.
+      </p>
+    `;
+
+    return;
+  }
 
   const notifications =
     (notificationResult.data || []).map(
@@ -131,18 +137,20 @@ async function init() {
 
   const notices =
     (noticeResult.data || [])
-      .filter((notice) =>
-        targets.has(notice.target)
-      )
       .map((notice) => ({
         id: notice.id,
         source: "notice",
         type: "notice",
-        title: notice.title,
-        content: notice.content,
-        createdAt: notice.created_at,
+        title:
+          notice.title ||
+          "제목 없는 공지",
+        content:
+          notice.content || "",
+        createdAt:
+          notice.created_at,
         unread: false,
-        important: notice.important,
+        important:
+          notice.important === true,
       }));
 
   const feed = [

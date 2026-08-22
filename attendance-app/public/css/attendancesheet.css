@@ -19,21 +19,19 @@
 
 .page-label {
   margin: 0 0 2px;
-
   color: #8b95a1;
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 12px;
+  font-weight: 500;
   line-height: 18px;
-  letter-spacing: 0.12em;
+  letter-spacing: 0;
 }
 
 .sheet-header h1 {
   margin: 0;
-
   color: #111827;
-  font-size: 22px;
+  font-size: 19px;
   font-weight: 800;
-  line-height: 30px;
+  line-height: 28px;
 }
 
 .calendar-today-button {
@@ -47,11 +45,15 @@
 }
 
 .sheet-main {
+  width: 100%;
+
   height:
     calc(
       100dvh -
       86px
     );
+
+  min-height: 0;
 
   padding:
     14px
@@ -59,12 +61,24 @@
     calc(
       var(--bottom-nav-height) +
       var(--safe-bottom) +
-      28px
+      32px
     );
 
   box-sizing: border-box;
+
   overflow-y: auto;
   overflow-x: hidden;
+
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+
+  scroll-padding-bottom:
+    calc(
+      var(--bottom-nav-height) +
+      var(--safe-bottom) +
+      32px
+    );
+
   background: #f5f6f8;
 }
 
@@ -356,4 +370,24 @@
 .detail-badge.annual-leave {
   background: #fef3c7;
   color: #a16207;
+}
+
+.attendance-list:last-child {
+  margin-bottom: 12px;
+}
+
+body.large-mode
+.sheet-header h1 {
+  font-size: 22px !important;
+  line-height: 29px;
+}
+
+body.large-mode
+.sheet-header .page-label {
+  font-size: 12px !important;
+}
+
+body.large-mode
+.sheet-header .font-size-btn {
+  font-size: 13px !important;
 }

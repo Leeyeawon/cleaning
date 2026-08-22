@@ -575,19 +575,12 @@ async function loadHomeNoticeFeed() {
       }
     ),
 
-    supabase
-      .from("notices")
-      .select(
-        "id, title, content, target, important, created_at"
-      )
-      .eq("status", "게시중")
-      .order("important", {
-        ascending: false,
-      })
-      .order("created_at", {
-        ascending: false,
-      })
-      .limit(30),
+    supabase.rpc(
+      "get_my_notices_by_session",
+      {
+        p_session_token: token,
+      }
+    ),
   ]);
 
   if (notificationResult.error) {
@@ -629,9 +622,6 @@ async function loadHomeNoticeFeed() {
 
   const publicNotices =
     (noticeResult.data || [])
-      .filter((notice) =>
-        targets.has(notice.target)
-      )
       .map((notice) => ({
         id: notice.id,
         source: "notice",
@@ -639,7 +629,8 @@ async function loadHomeNoticeFeed() {
         content: notice.content,
         createdAt: notice.created_at,
         unread: false,
-        important: notice.important,
+        important:
+          notice.important === true,
         type: "notice",
       }));
 

@@ -406,12 +406,12 @@ async function revokeAnnualLeave(
   clickedButton.textContent =
     "철회 중...";
 
-  const { error } =
+  const { data, error } =
     await supabase.rpc(
-      "admin_revoke_annual_leave",
+      "admin_revoke_approved_leave_request",
       {
         p_request_id:
-          requestId,
+          String(requestId),
 
         p_confirmation:
           confirmation.trim(),
@@ -439,6 +439,23 @@ async function revokeAnnualLeave(
       "승인 철회";
 
     return;
+  }
+
+  const revokedRequest =
+    requests.find(
+      (request) =>
+        String(request.id) ===
+        String(requestId)
+    );
+
+  if (revokedRequest) {
+    revokedRequest.status =
+      "revoked";
+
+    revokedRequest.admin_note =
+      adminNote.trim()
+        ? `철회 사유: ${adminNote.trim()}`
+        : "관리자에 의해 승인 철회";
   }
 
   alert(

@@ -52,24 +52,55 @@ function formatTime(timeString) {
   });
 }
 
-function formatWorkTime(checkIn, checkOut) {
-  if (!checkIn || !checkOut) return "-";
-  const start = new Date(checkIn);
-  const end = new Date(checkOut);
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return "-";
-  
-  const diffMs = end - start;
-  if (diffMs <= 0) return "-";
+function formatWorkTime(
+  checkIn,
+  checkOut
+) {
+  if (!checkIn || !checkOut) {
+    return "-";
+  }
 
-  const totalMinutes = Math.floor(diffMs / 1000 / 60);
-  const displayMinutes = Math.floor(totalMinutes / 30) * 30;
-  if (displayMinutes < 30) return "30분 미만";
+  const start =
+    new Date(checkIn);
 
-  const hours = Math.floor(displayMinutes / 60);
-  const minutes = displayMinutes % 60;
-  if (hours === 0) return `${minutes}분`;
-  if (minutes === 0) return `${hours}시간`;
-  return `${hours}시간 ${minutes}분`;
+  const end =
+    new Date(checkOut);
+
+  if (
+    Number.isNaN(start.getTime()) ||
+    Number.isNaN(end.getTime())
+  ) {
+    return "-";
+  }
+
+  const diffMinutes =
+    Math.floor(
+      (end - start) /
+      1000 /
+      60
+    );
+
+  if (diffMinutes <= 0) {
+    return "-";
+  }
+
+  /*
+    30분 단위로 계산:
+    8시간 29분 → 8.0시간
+    8시간 30분 → 8.5시간
+    9시간 → 9.0시간
+  */
+  const calculatedMinutes =
+    Math.floor(
+      diffMinutes / 30
+    ) * 30;
+
+  const decimalHours =
+    calculatedMinutes / 60;
+
+  return `${decimalHours.toFixed(
+    1
+  )}시간`;
 }
 
 function getMonthRange() {

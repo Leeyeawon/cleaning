@@ -354,6 +354,224 @@ function renderEmployeeWorkplaces(
   );
 }
 
+async function
+loadAndRenderEmployeeAssignments() {
+  if (
+    !detailRegionList ||
+    !targetUserId
+  ) {
+    return;
+  }
+
+  detailRegionList.innerHTML = `
+    <p class="detail-assignment-loading">
+      근무 배정 정보를 불러오는 중입니다.
+    </p>
+  `;
+
+  try {
+    const [
+      assignmentResult,
+      workplaceResult,
+      shiftResult,
+    ] = await Promise.all([
+      supabase
+        .from("workplace_users")
+        .select(`
+          workplace_id,
+          start_date,
+          end_date,
+          days_of_week,
+          work_shift_id
+        `)
+        .eq(
+          "user_id",
+          targetUserId
+        ),
+
+      supabase
+        .from("workplaces")
+        .select(`
+          id,
+          name,
+          address
+        `),
+
+      supabase
+        .from("work_shifts")
+        .select(`
+          id,
+          name,
+          start_time,
+          end_time
+        `),
+    ]);
+
+    if (assignmentResult.error) {
+      throw assignmentResult.error;
+    }
+
+    if (workplaceResult.error) {
+      throw workplaceResult.error;
+    }
+
+    if (shiftResult.error) {
+      throw shiftResult.error;
+    }
+
+    const assignments =
+      assignmentResult.data || [];
+
+    const workplaces =
+      workplaceResult.data || [];
+
+    const workShifts =
+      shiftResult.data || [];
+
+    if (!assignments.length) {
+      detailRegionList.innerHTML = `
+        <div class="detail-assignment-empty">
+          배정된 근무지역이 없습니다.
+        </div>
+      `;
+
+      return;
+    }
+
+    detailRegionList.innerHTML =
+      assignments
+        .map((assignment) => {
+          const workplace =
+            workplaces.find(
+              (item) =>
+                String(item.id) ===
+                String(
+                  assignment
+                    .workplace_id
+                )
+            );
+
+          const workShift =
+            workShifts.find(
+              (item) =>
+                String(item.id) ===
+                String(
+                  assignment
+                    .work_shift_id
+                )
+            );
+
+          const startDate =
+            assignment.start_date ||
+            "제한 없음";
+
+          const endDate =
+            assignment.end_date ||
+            "제한 없음";
+
+          const days =
+            Array.isArray(
+              assignment.days_of_week
+            ) &&
+            assignment
+              .days_of_week.length
+              ? assignment
+                  .days_of_week
+                  .join(" · ")
+              : "매일";
+
+          const shiftText =
+            workShift
+              ? `${workShift.name} · ${String(
+                  workShift.start_time
+                ).slice(0, 5)}~${String(
+                  workShift.end_time
+                ).slice(0, 5)}`
+              : "근무 시간대 미지정";
+
+          return `
+            <article
+              class="detail-assignment-card"
+            >
+              <div
+                class="detail-assignment-title"
+              >
+                <div>
+                  <strong>
+                    ${escapeHtml(
+                      workplace?.name ||
+                      "삭제된 근무지역"
+                    )}
+                  </strong>
+
+                  <small>
+                    ${escapeHtml(
+                      workplace?.address ||
+                      "주소 미등록"
+                    )}
+                  </small>
+                </div>
+
+                <span>
+                  배정 중
+                </span>
+              </div>
+
+              <dl
+                class="detail-assignment-info"
+              >
+                <div>
+                  <dt>배정 기간</dt>
+
+                  <dd>
+                    ${escapeHtml(
+                      startDate
+                    )}
+                    ~
+                    ${escapeHtml(
+                      endDate
+                    )}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt>근무 요일</dt>
+
+                  <dd>
+                    ${escapeHtml(days)}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt>근무 시간대</dt>
+
+                  <dd>
+                    ${escapeHtml(
+                      shiftText
+                    )}
+                  </dd>
+                </div>
+              </dl>
+            </article>
+          `;
+        })
+        .join("");
+  } catch (error) {
+    console.error(
+      "근무 배정 상세 조회 실패:",
+      error
+    );
+
+    detailRegionList.innerHTML = `
+      <div
+        class="detail-assignment-empty error"
+      >
+        근무 배정 정보를 불러오지 못했습니다.
+      </div>
+    `;
+  }
+}
+
 function renderProfileUI(employee) {
   if (!employee) return;
 
@@ -1450,11 +1668,40 @@ async function openEmployeeEditModal() {
         .from("workplace_users")
         .select(`
           workplace_id,
+          start_date,
+          end_date,
+          days_of_week,
           work_shift_id
         `)
         .eq(
           "user_id",
           targetUserId
+        ),
+
+        supabase
+        .from("work_shifts")
+        .select(`
+          id,
+          workplace_id,
+          name,
+          start_time,
+          end_time,
+          break_minutes,
+          is_active,
+          sort_order
+        `)
+        .eq("is_active", true)
+        .order(
+          "sort_order",
+          {
+            ascending: true,
+          }
+        )
+        .order(
+          "start_time",
+          {
+            ascending: true,
+          }
         ),
     ]);
 
@@ -1468,6 +1715,10 @@ async function openEmployeeEditModal() {
 
     if (assignmentResult.error) {
       throw assignmentResult.error;
+    }
+
+    if (shiftResult.error) {
+      throw shiftResult.error;
     }
 
     const currentPosition =
@@ -1736,6 +1987,7 @@ async function openRegionEditModal() {
     const [
       workplaceResult,
       assignmentResult,
+      shiftResult,
     ] = await Promise.all([
       supabase
         .from("workplaces")
@@ -1757,8 +2009,7 @@ async function openRegionEditModal() {
           start_date,
           end_date,
           days_of_week,
-          work_start_time,
-          work_end_time
+          work_shift_id
         `)
         .eq(
           "user_id",
@@ -1918,35 +2169,62 @@ async function openRegionEditModal() {
 
                   <div class="detail-workplace-time">
                     <label>
-                      근무 시작시간
+                      근무 시간대
 
-                      <input
-                        class="detail-workplace-start-time"
-                        type="time"
-                        value="${escapeHtml(
-                          String(
-                            assignment
-                              ?.work_start_time ||
-                            ""
-                          ).slice(0, 5)
-                        )}"
-                      />
-                    </label>
+                      <select
+                        class="detail-workplace-shift-select"
+                      >
+                        <option value="">
+                          시간대 미지정
+                        </option>
 
-                    <label>
-                      근무 종료시간
+                        ${workShifts
+                          .filter(
+                            (shift) =>
+                              String(
+                                shift.workplace_id
+                              ) === workplaceId
+                          )
+                          .map(
+                            (shift) => `
+                              <option
+                                value="${escapeHtml(
+                                  shift.id
+                                )}"
+                                ${
+                                  String(
+                                    assignment
+                                      ?.work_shift_id ||
+                                    ""
+                                  ) ===
+                                  String(shift.id)
+                                    ? "selected"
+                                    : ""
+                                }
+                              >
+                                ${escapeHtml(
+                                  shift.name
+                                )}
+                                (${escapeHtml(
+                                  String(
+                                    shift.start_time
+                                  ).slice(0, 5)
+                                )}
+                                ~
+                                ${escapeHtml(
+                                  String(
+                                    shift.end_time
+                                  ).slice(0, 5)
+                                )})
+                              </option>
+                            `
+                          )
+                          .join("")}
+                      </select>
 
-                      <input
-                        class="detail-workplace-end-time"
-                        type="time"
-                        value="${escapeHtml(
-                          String(
-                            assignment
-                              ?.work_end_time ||
-                            ""
-                          ).slice(0, 5)
-                        )}"
-                      />
+                      <small>
+                        출퇴근 시간 관리에서 등록한 시간대가 표시됩니다.
+                      </small>
                     </label>
                   </div>
 
@@ -2036,7 +2314,10 @@ async function openRegionEditModal() {
 
         const scheduleInputs = [
           ...card.querySelectorAll(
-            'input[type="date"], input[type="time"]'
+            `
+              input[type="date"],
+              .detail-workplace-shift-select
+            `
           ),
         ];
 
@@ -2125,6 +2406,9 @@ async function openRegionEditModal() {
   }
 }
 
+const workShifts =
+  shiftResult.data || [];
+
 function closeRegionEditModal() {
   regionEditModal?.classList.remove(
     "open"
@@ -2166,14 +2450,9 @@ async function saveEmployeeRegions() {
         ".detail-workplace-end-date"
       )?.value || null;
 
-    const workStartTime =
+    const workShiftId =
       card.querySelector(
-        ".detail-workplace-start-time"
-      )?.value || null;
-
-    const workEndTime =
-      card.querySelector(
-        ".detail-workplace-end-time"
+        ".detail-workplace-shift-select"
       )?.value || null;
 
     if (
@@ -2183,17 +2462,6 @@ async function saveEmployeeRegions() {
     ) {
       alert(
         "배정 종료일은 시작일보다 빠를 수 없습니다."
-      );
-
-      return;
-    }
-
-    if (
-      Boolean(workStartTime) !==
-      Boolean(workEndTime)
-    ) {
-      alert(
-        "근무 시작시간과 종료시간을 모두 입력해 주세요."
       );
 
       return;
@@ -2229,11 +2497,10 @@ async function saveEmployeeRegions() {
       days_of_week:
         daysOfWeek,
 
-      work_start_time:
-        workStartTime,
-
-      work_end_time:
-        workEndTime,
+      work_shift_id:
+        workShiftId
+          ? Number(workShiftId)
+          : null,
     });
   }
 
@@ -2271,6 +2538,8 @@ async function saveEmployeeRegions() {
         currentEmployeeData
       );
     }
+
+    await loadAndRenderEmployeeAssignments();
 
     closeRegionEditModal();
 
@@ -2888,6 +3157,8 @@ async function init() {
   renderProfileUI(
     currentEmployeeData
   );
+
+  await loadAndRenderEmployeeAssignments();
 
   setupEventListeners();
 
