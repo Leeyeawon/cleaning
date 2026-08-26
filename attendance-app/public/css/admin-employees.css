@@ -956,3 +956,14 @@
 .employee-form textarea {
   align-self: start;
 }
+
+#headerUnassignedFilterBtn.active {
+  color: #ffffff;
+  background: #111827;
+  border-color: #111827;
+}
+
+#headerUnassignedFilterBtn.active strong,
+#headerUnassignedFilterBtn.active span {
+  color: inherit;
+}

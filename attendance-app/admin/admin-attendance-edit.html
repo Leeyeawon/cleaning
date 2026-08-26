@@ -94,7 +94,9 @@
 
             <label>
               근태 상태
-              <select id="editRecordStatusSelect">
+
+              <select id="editStatusFilter">
+                <option value="all">전체 상태</option>
                 <option value="done">정상·근무 완료</option>
                 <option value="working">근무 중</option>
                 <option value="late">지각</option>
@@ -180,10 +182,28 @@
         </div>
 
         <label>
-          처리 상태
+          근태 상태
+
           <select id="editRecordStatusSelect">
-            <option value="수정 필요">수정 필요</option>
-            <option value="수정 완료">수정 완료</option>
+            <option value="done">
+              정상·근무 완료
+            </option>
+
+            <option value="working">
+              근무 중
+            </option>
+
+            <option value="late">
+              지각
+            </option>
+
+            <option value="absent">
+              결근
+            </option>
+
+            <option value="location_error">
+              위치 오류
+            </option>
           </select>
         </label>
 

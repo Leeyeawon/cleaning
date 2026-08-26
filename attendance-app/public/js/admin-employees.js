@@ -133,6 +133,10 @@ const employeeDepartmentInput =
     "employeeDepartmentInput"
   );
 
+const headerUnassignedFilterBtn =
+  document.getElementById(
+    "headerUnassignedFilterBtn"
+  );
 /* =========================
   데이터
 ========================= */
@@ -2088,8 +2092,27 @@ async function disableEmployee(
 /* =========================
   필터 렌더링
 ========================= */
+function syncUnassignedFilterUI() {
+  const isActive =
+    Boolean(
+      unassignedOnlyCheck?.checked
+    );
+
+  headerUnassignedFilterBtn
+    ?.classList.toggle(
+      "active",
+      isActive
+    );
+
+  headerUnassignedFilterBtn
+    ?.setAttribute(
+      "aria-pressed",
+      String(isActive)
+    );
+}
 
 function refreshEmployeeList() {
+  syncUnassignedFilterUI();
   renderEmployeeTable();
 }
 
@@ -2098,6 +2121,21 @@ function refreshEmployeeList() {
 ========================= */
 
 function bindEvents() {
+  headerUnassignedFilterBtn
+    ?.addEventListener(
+      "click",
+      () => {
+        if (!unassignedOnlyCheck) {
+          return;
+        }
+
+        unassignedOnlyCheck.checked =
+          !unassignedOnlyCheck.checked;
+
+        refreshEmployeeList();
+      }
+    );
+
   employeePositionFilter
     ?.addEventListener(
       "change",

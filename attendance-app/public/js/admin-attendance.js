@@ -23,11 +23,77 @@ const statAbsent = document.getElementById("statAbsent");
 const statLocation = document.getElementById("statLocation");
 
 // 오늘 날짜 문자열 (YYYY-MM-DD)
-const todayStr = new Date().toISOString().split("T")[0];
+function getAttendanceWorkDate() {
+  const sixHours =
+    6 * 60 * 60 * 1000;
 
+  /*
+    오전 6시를 하루의 시작으로 봅니다.
+    현재 시각에서 6시간을 빼고
+    한국 날짜를 계산합니다.
+  */
+  const shiftedDate =
+    new Date(
+      Date.now() - sixHours
+    );
+
+  const formatter =
+    new Intl.DateTimeFormat(
+      "en-CA",
+      {
+        timeZone: "Asia/Seoul",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }
+    );
+
+  const parts =
+    formatter.formatToParts(
+      shiftedDate
+    );
+
+  const year =
+    parts.find(
+      (part) =>
+        part.type === "year"
+    )?.value;
+
+  const month =
+    parts.find(
+      (part) =>
+        part.type === "month"
+    )?.value;
+
+  const day =
+    parts.find(
+      (part) =>
+        part.type === "day"
+    )?.value;
+
+  return `${year}-${month}-${day}`;
+}
+
+const todayStr =
+  getAttendanceWorkDate();
 // 실제 DB에서 불러온 데이터를 보관할 배열 (필터링용)
 let realAttendanceList = [];
 
+function startAttendanceDateWatcher() {
+  window.setInterval(
+    () => {
+      const currentWorkDate =
+        getAttendanceWorkDate();
+
+      if (
+        currentWorkDate !== todayStr
+      ) {
+        window.location.reload();
+      }
+    },
+    60 * 1000
+  );
+}
 // 1. 상단 안내 날짜 설정
 function setTodayDate() {
   if (!todayDateElement) return;
@@ -104,11 +170,12 @@ async function fetchTodayAttendance() {
       userResult,
       attendanceResult,
       leaveResult,
+      assignmentResult,
     ] = await Promise.all([
       supabase
         .from("users")
         .select(
-          "id, name, department"
+          "id, name, phone, department"
         )
         .eq("status", "active"),
 
@@ -122,6 +189,7 @@ async function fetchTodayAttendance() {
           status,
           users (
             name,
+            phone,
             department
           ),
           workplaces (
@@ -140,6 +208,19 @@ async function fetchTodayAttendance() {
           "day_type",
           "annual_leave"
         ),
+
+      supabase
+        .from("workplace_users")
+        .select(`
+          user_id,
+          workplace_id,
+          start_date,
+          end_date,
+          workplaces (
+            name,
+            is_active
+          )
+        `),
     ]);
 
     if (userResult.error) {
@@ -154,11 +235,84 @@ async function fetchTodayAttendance() {
       throw leaveResult.error;
     }
 
+    if (assignmentResult.error) {
+      throw assignmentResult.error;
+    }
+
     const allUsers =
       userResult.data || [];
 
     const attendanceData =
       attendanceResult.data || [];
+
+    const workplaceAssignments =
+      assignmentResult.data || [];
+
+    const assignedRegionMap =
+      new Map();
+
+    workplaceAssignments
+      .filter((assignment) => {
+        const workplaceActive =
+          assignment.workplaces
+            ?.is_active !== false;
+
+        const started =
+          !assignment.start_date ||
+          assignment.start_date <=
+            todayStr;
+
+        const notEnded =
+          !assignment.end_date ||
+          assignment.end_date >=
+            todayStr;
+
+        return (
+          workplaceActive &&
+          started &&
+          notEnded
+        );
+      })
+      .forEach((assignment) => {
+        const userId =
+          String(
+            assignment.user_id
+          );
+
+        const workplaceName =
+          assignment.workplaces
+            ?.name;
+
+        if (!workplaceName) {
+          return;
+        }
+
+        if (
+          !assignedRegionMap.has(
+            userId
+          )
+        ) {
+          assignedRegionMap.set(
+            userId,
+            []
+          );
+        }
+
+        const names =
+          assignedRegionMap.get(
+            userId
+          );
+
+        if (
+          !names.includes(
+            workplaceName
+          )
+        ) {
+          names.push(
+            workplaceName
+          );
+        }
+      });
 
     const annualLeaveUserIds =
       new Set(
@@ -226,6 +380,9 @@ async function fetchTodayAttendance() {
               item.users?.name ||
               "이름 없음",
 
+            phone:
+              item.users?.phone || "",
+
             department:
               item.users?.department ||
               "부서 없음",
@@ -281,6 +438,9 @@ async function fetchTodayAttendance() {
             user.name ||
             "이름 없음",
 
+          phone:
+            user.phone || "",
+
           department:
             user.department ||
             "부서 없음",
@@ -325,11 +485,18 @@ async function fetchTodayAttendance() {
             user.name ||
             "이름 없음",
 
+          phone:
+            user.phone || "",
+
           department:
             user.department ||
             "부서 없음",
 
-          region: "미출근",
+          region:
+            assignedRegionMap
+              .get(String(user.id))
+              ?.join(", ") ||
+            "미배정",
 
           checkIn: "—",
           checkOut: "—",
@@ -657,6 +824,77 @@ async function loadMonthlyLateEmployees() {
 }
 
 // 9. 지역, 상태, 이름 검색 필터링 기능
+function renderRegionFilterOptions() {
+  if (!regionFilter) {
+    return;
+  }
+
+  const currentValue =
+    regionFilter.value ||
+    "전체 지역";
+
+  const excludedValues = new Set([
+    "",
+    "미배정",
+    "미출근",
+    "연차",
+  ]);
+
+  const regionNames = [
+    ...new Set(
+      realAttendanceList
+        .map((item) =>
+          String(
+            item.region || ""
+          ).trim()
+        )
+        .filter(
+          (regionName) =>
+            !excludedValues.has(
+              regionName
+            )
+        )
+    ),
+  ].sort((a, b) =>
+    a.localeCompare(
+      b,
+      "ko"
+    )
+  );
+
+  regionFilter.innerHTML = `
+    <option value="전체 지역">
+      전체 지역
+    </option>
+
+    <option value="미배정">
+      미배정
+    </option>
+
+    ${regionNames
+      .map(
+        (regionName) => `
+          <option value="${regionName}">
+            ${regionName}
+          </option>
+        `
+      )
+      .join("")}
+  `;
+
+  const valueExists = [
+    ...regionFilter.options,
+  ].some(
+    (option) =>
+      option.value === currentValue
+  );
+
+  regionFilter.value =
+    valueExists
+      ? currentValue
+      : "전체 지역";
+}
+
 function filterAttendanceData() {
   const selectedRegion = regionFilter ? regionFilter.value : "전체 지역";
   const selectedStatus = statusFilter ? statusFilter.value : "전체 상태";
@@ -671,8 +909,28 @@ function filterAttendanceData() {
     const isStatusMatched =
       selectedStatus === "전체 상태" || item.status === selectedStatus;
 
+    const normalizedKeyword =
+      searchKeyword
+        .toLowerCase()
+        .replace(/[^0-9a-z가-힣]/g, "");
+
+    const normalizedName =
+      String(item.name || "")
+        .toLowerCase()
+        .replace(/[^0-9a-z가-힣]/g, "");
+
+    const normalizedPhone =
+      String(item.phone || "")
+        .replace(/[^0-9]/g, "");
+
     const isSearchMatched =
-      searchKeyword === "" || item.name.includes(searchKeyword);
+      !normalizedKeyword ||
+      normalizedName.includes(
+        normalizedKeyword
+      ) ||
+      normalizedPhone.includes(
+        normalizedKeyword
+      );
 
     return isRegionMatched && isStatusMatched && isSearchMatched;
   });
@@ -718,24 +976,50 @@ function handleExcelDownload() {
 // 🔥 페이지 초기화 실행
 async function initAttendancePage() {
   setTodayDate();
+  startAttendanceDateWatcher();
 
-  // 1. 실제 DB에서 오늘 출퇴근 목록 가져오기
-  realAttendanceList = await fetchTodayAttendance();
+  realAttendanceList =
+    await fetchTodayAttendance();
 
-  // 2. 상단 통계 숫자 계산 및 반영
-  updateSummaryStats(realAttendanceList);
+  renderRegionFilterOptions();
 
-  // 3. 표(Table) 렌더링
-  renderAttendanceTable(realAttendanceList);
+  updateSummaryStats(
+    realAttendanceList
+  );
 
-  // 4. 이번 달 상습 지각자 조회
+  renderAttendanceTable(
+    realAttendanceList
+  );
+
   await loadMonthlyLateEmployees();
 
-  // 5. 필터 및 검색 이벤트 리스너 연결
-  if (regionFilter) regionFilter.addEventListener("change", filterAttendanceData);
-  if (statusFilter) statusFilter.addEventListener("change", filterAttendanceData);
-  if (employeeSearchInput) employeeSearchInput.addEventListener("input", filterAttendanceData);
-  if (excelDownloadBtn) excelDownloadBtn.addEventListener("click", handleExcelDownload);
+  if (regionFilter) {
+    regionFilter.addEventListener(
+      "change",
+      filterAttendanceData
+    );
+  }
+
+  if (statusFilter) {
+    statusFilter.addEventListener(
+      "change",
+      filterAttendanceData
+    );
+  }
+
+  if (employeeSearchInput) {
+    employeeSearchInput.addEventListener(
+      "input",
+      filterAttendanceData
+    );
+  }
+
+  if (excelDownloadBtn) {
+    excelDownloadBtn.addEventListener(
+      "click",
+      handleExcelDownload
+    );
+  }
 }
 
 initAttendancePage();
