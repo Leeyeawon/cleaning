@@ -2011,10 +2011,7 @@ async function openRegionEditModal() {
           days_of_week,
           work_shift_id
         `)
-        .eq(
-          "user_id",
-          targetUserId
-        ),
+        .eq("user_id", profile.id),
 
       supabase
         .from("work_shifts")
@@ -2029,18 +2026,12 @@ async function openRegionEditModal() {
           sort_order
         `)
         .eq("is_active", true)
-        .order(
-          "sort_order",
-          {
-            ascending: true,
-          }
-        )
-        .order(
-          "start_time",
-          {
-            ascending: true,
-          }
-        ),
+        .order("sort_order", {
+          ascending: true,
+        })
+        .order("start_time", {
+          ascending: true,
+        }),
     ]);
 
     if (workplaceResult.error) {
@@ -2058,20 +2049,11 @@ async function openRegionEditModal() {
     const workplaces =
       workplaceResult.data || [];
 
+    const assignments =
+      assignmentResult.data || [];
+
     const workShifts =
       shiftResult.data || [];
-
-    const assignmentMap =
-      new Map(
-        (
-          assignmentResult.data || []
-        ).map((assignment) => [
-          String(
-            assignment.workplace_id
-          ),
-          assignment,
-        ])
-      );
 
     if (!workplaces.length) {
       regionEditList.innerHTML = `
