@@ -2421,9 +2421,6 @@ async function openRegionEditModal() {
   }
 }
 
-const workShifts =
-  shiftResult.data || [];
-
 function closeRegionEditModal() {
   regionEditModal?.classList.remove(
     "open"
