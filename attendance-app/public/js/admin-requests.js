@@ -74,14 +74,27 @@ function formatDate(value) {
 }
 
 function getRequestPeriod(request) {
-  if (request.request_type === "annual_leave") {
+  if (
+    request.request_type ===
+    "annual_leave"
+  ) {
     const startDate =
-      request.start_date || "-";
+      formatDate(request.start_date);
 
     const endDate =
-      request.end_date || "-";
+      formatDate(request.end_date);
 
-    if (startDate === endDate) {
+    if (
+      !request.start_date &&
+      !request.end_date
+    ) {
+      return "연차 날짜 미입력";
+    }
+
+    if (
+      request.start_date ===
+      request.end_date
+    ) {
       return startDate;
     }
 
