@@ -46,7 +46,33 @@
 }
 
 .workflow-table {
+  width: 100%;
   min-width: 1100px;
+  table-layout: auto;
+}
+
+.workflow-table th,
+.workflow-table td {
+  vertical-align: middle;
+}
+
+.workflow-table th:nth-child(5),
+.workflow-table td:nth-child(5),
+.workflow-table th:nth-child(7),
+.workflow-table td:nth-child(7) {
+  width: 18%;
+}
+
+.workflow-table th:nth-child(8),
+.workflow-table td:nth-child(8) {
+  width: 130px;
+  text-align: center;
+}
+
+.workflow-table th:nth-child(9),
+.workflow-table td:nth-child(9) {
+  width: 70px;
+  text-align: center;
 }
 
 .workflow-department {
@@ -277,8 +303,9 @@ body[data-admin-page="requests"]
 
 body[data-admin-page="requests"]
 .workflow-table {
-  width: max-content;
+  width: 100%;
   min-width: 1180px;
+  table-layout: auto;
 }
 
 /* 유형 필터와 색상 안내 */
@@ -1338,22 +1365,42 @@ body[data-admin-page="requests"]
   background: #ede9fe;
 }
 
+.workflow-table th:nth-child(8),
+.workflow-table td:nth-child(8) {
+  width: 140px;
+  text-align: center;
+}
+
+.workflow-table th:nth-child(9),
+.workflow-table td:nth-child(9) {
+  width: 72px;
+  text-align: center;
+}
+
+.workflow-actions {
+  justify-content: center;
+}
+
+.workflow-detail-cell {
+  vertical-align: middle;
+}
+
 .workflow-employee-detail-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
 
-  min-height: 28px;
-  margin-top: 8px;
-  padding: 0 9px;
+  min-width: 48px;
+  min-height: 31px;
+  padding: 0 10px;
 
   border: 1px solid #dbe1e8;
-  border-radius: 7px;
+  border-radius: 8px;
 
   background: #ffffff;
   color: #374151;
 
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   line-height: 1;
   text-decoration: none;

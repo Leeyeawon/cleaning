@@ -130,7 +130,7 @@ function updateSummary() {
 async function loadRequests() {
   tableBody.innerHTML = `
     <tr>
-      <td colspan="8" class="workflow-empty">
+      <td colspan="9" class="workflow-empty">
         요청 목록을 불러오는 중입니다.
       </td>
     </tr>
@@ -149,7 +149,7 @@ async function loadRequests() {
 
     tableBody.innerHTML = `
       <tr>
-        <td colspan="8" class="workflow-empty error">
+        <td colspan="9" class="workflow-empty error">
           요청을 불러오지 못했습니다.<br />
           Supabase SQL과 관리자 로그인을 확인해 주세요.
         </td>
@@ -193,7 +193,7 @@ function renderRequests() {
   if (!filteredRequests.length) {
     tableBody.innerHTML = `
       <tr>
-        <td colspan="8" class="workflow-empty">
+        <td colspan="9" class="workflow-empty">
           조건에 맞는 요청이 없습니다.
         </td>
       </tr>
@@ -244,21 +244,6 @@ function renderRequests() {
                   "소속 미지정"
                 )}
               </small>
-
-              ${
-                request.user_id
-                  ? `
-                    <a
-                      class="workflow-employee-detail-link"
-                      href="admin-employee-detail.html?id=${encodeURIComponent(
-                        String(request.user_id)
-                      )}"
-                    >
-                      직원 상세
-                    </a>
-                  `
-                  : ""
-              }
             </td>
 
             <td>
@@ -344,6 +329,23 @@ function renderRequests() {
                         처리 완료
                       </span>
                     `
+              }
+            </td>
+
+            <td class="workflow-detail-cell">
+              ${
+                request.user_id
+                  ? `
+                    <a
+                      class="workflow-employee-detail-link"
+                      href="admin-employee-detail.html?id=${encodeURIComponent(
+                        String(request.user_id)
+                      )}"
+                    >
+                      상세
+                    </a>
+                  `
+                  : "-"
               }
             </td>
           </tr>
