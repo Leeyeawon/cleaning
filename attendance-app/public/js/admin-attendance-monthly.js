@@ -1448,21 +1448,43 @@ function openPrintWindow(
   content,
   pageStyle = ""
 ) {
+  const oldPrintFrame =
+    document.getElementById(
+      "attendancePrintFrame"
+    );
+
+  oldPrintFrame?.remove();
+
+  const printFrame =
+    document.createElement(
+      "iframe"
+    );
+
+  printFrame.id =
+    "attendancePrintFrame";
+
+  printFrame.title =
+    "출근부 인쇄";
+
+  Object.assign(
+    printFrame.style,
+    {
+      position: "fixed",
+      right: "0",
+      bottom: "0",
+      width: "0",
+      height: "0",
+      border: "0",
+      visibility: "hidden",
+    }
+  );
+
+  document.body.appendChild(
+    printFrame
+  );
+
   const printWindow =
-    window.open(
-      "",
-      "_blank",
-      "width=110",
-      "0,height=850"
-    );
-
-  if (!printWindow) {
-    alert(
-      "인쇄창이 차단되었습니다. 브라우저의 팝업을 허용해주세요."
-    );
-
-    return;
-  }
+    printFrame.contentWindow;
 
   printWindow.document.open();
 
@@ -1504,7 +1526,7 @@ function openPrintWindow(
           }
 
           .print-header {
-            margin-bottom: 5mm;
+            margin-bottom: 6mm;
             text-align: center;
           }
 
@@ -1624,6 +1646,11 @@ function openPrintWindow(
         () => {
           printWindow.focus();
           printWindow.print();
+
+          printWindow.onafterprint =
+            () => {
+              printFrame.remove();
+            };
         },
         250
       );
@@ -1918,8 +1945,8 @@ async function printEmployeeMonthlyAttendance(
         }
 
         .employee-table td {
-          height: 7.2mm;
-          padding: 0.8mm 1mm;
+          height: 7.7mm;
+          padding: 1.1mm 1mm;
         }
 
         .employee-table th:nth-child(1),
@@ -2181,50 +2208,26 @@ function printWorkplaceMonthlyAttendance(
       )
     );
 
-  const dayHeaders = [];
+  const numberSpan =
+    Math.floor(
+      daysInMonth / 3
+    );
 
-  for (
-    let day = 1;
-    day <= daysInMonth;
-    day += 1
-  ) {
-    const dateKey =
-      createDateKey(
-        year,
-        month,
-        day
-      );
+  const nameSpan =
+    Math.floor(
+      daysInMonth / 3
+    );
 
-    const weekDay =
-      getKoreanDayOfWeek(
-        dateKey
-      );
+  const departmentSpan =
+    daysInMonth -
+    numberSpan -
+    nameSpan;
 
-    const weekendClass =
-      weekDay === "토" ||
-      weekDay === "일"
-        ? "weekend"
-        : "";
-
-    dayHeaders.push(`
-      <th class="${weekendClass}">
-        <span>${day}</span>
-        <small>${weekDay}</small>
-      </th>
-    `);
-  }
-
-  const employeeRows =
+  const employeeBlocks =
     targetEmployees.map(
-      (
-        employee,
-        index
-      ) => {
-        let attendanceCount = 0;
-        let lateCount = 0;
-        let leaveCount = 0;
-
+      (employee, index) => {
         const dayCells = [];
+        const timeCells = [];
 
         for (
           let day = 1;
@@ -2252,178 +2255,315 @@ function printWorkplaceMonthlyAttendance(
               dateKey
             );
 
-          const weekendClass =
+          const isWeekend =
             weekDay === "토" ||
-            weekDay === "일"
-              ? "weekend"
-              : "";
-
-          let text = "";
-          let cellClass =
-            weekendClass;
-
-          if (isLeave) {
-            text = "연";
-            cellClass +=
-              " annual-leave-cell";
-
-            leaveCount += 1;
-          } else if (
-            record?.check_in_time
-          ) {
-            attendanceCount += 1;
-
-            if (
-              isLateStatus(
-                record.status
-              )
-            ) {
-              text = "지";
-              cellClass +=
-                " late-cell";
-
-              lateCount += 1;
-            } else {
-              text = "출";
-            }
-          } else if (
-            record?.status ===
-              "absent" ||
-            record?.status ===
-              "미출근"
-          ) {
-            text = "결";
-          }
+            weekDay === "일";
 
           dayCells.push(`
-            <td class="${cellClass}">
-              ${text}
+            <td
+              class="${
+                isWeekend
+                  ? "weekend"
+                  : ""
+              }"
+            >
+              ${day}
+            </td>
+          `);
+
+          let timeContent = "";
+
+          if (isLeave) {
+            timeContent = `
+              <strong>연차</strong>
+            `;
+          } else if (
+            record?.check_in_time ||
+            record?.check_out_time
+          ) {
+            timeContent = `
+              <span>
+                ${escapeHtml(
+                  formatTimeOnly(
+                    record
+                      ?.check_in_time
+                  )
+                )}
+              </span>
+
+              <span>
+                ${escapeHtml(
+                  formatTimeOnly(
+                    record
+                      ?.check_out_time
+                  )
+                )}
+              </span>
+            `;
+          } else if (
+            record?.status === "absent" ||
+            record?.status === "미출근"
+          ) {
+            timeContent = `
+              <strong>미출근</strong>
+            `;
+          }
+
+          timeCells.push(`
+            <td
+              class="${
+                isWeekend
+                  ? "weekend"
+                  : ""
+              }"
+            >
+              ${timeContent}
             </td>
           `);
         }
 
         return `
-          <tr>
-            <td>
-              ${index + 1}
-            </td>
+          <tbody class="employee-block">
+            <tr class="employee-info-row">
+              <td colspan="${numberSpan}">
+                사용자번호:
+                <strong>
+                  ${index + 1}
+                </strong>
+              </td>
 
-            <td class="employee-name-cell">
-              ${escapeHtml(
-                employee.name
-              )}
-            </td>
+              <td colspan="${nameSpan}">
+                이름:
+                <strong>
+                  ${escapeHtml(
+                    employee.name ||
+                    "이름 없음"
+                  )}
+                </strong>
+              </td>
 
-            ${dayCells.join("")}
+              <td colspan="${departmentSpan}">
+                부서명:
+                <strong>
+                  ${escapeHtml(
+                    employee.department ||
+                    "소속 미지정"
+                  )}
+                </strong>
+              </td>
+            </tr>
 
-            <td>
-              ${attendanceCount}
-            </td>
+            <tr class="employee-day-row">
+              ${dayCells.join("")}
+            </tr>
 
-            <td>
-              ${lateCount}
-            </td>
-
-            <td>
-              ${leaveCount}
-            </td>
-          </tr>
+            <tr class="employee-time-row">
+              ${timeCells.join("")}
+            </tr>
+          </tbody>
         `;
       }
-    );
+    )
+    .join("");
 
   const title =
-    `${year}년 ${month}월 현장별 출근부`;
+    "근무 기록 보고서";
+
+  const printDate =
+    new Date()
+      .toLocaleString(
+        "ko-KR",
+        {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        }
+      );
 
   openPrintWindow(
     title,
     {
       styles: `
-        .workplace-table {
-          font-size: 5.8pt;
+        .workplace-report-header {
+          position: relative;
+          min-height: 16mm;
+          margin-bottom: 2mm;
+          text-align: center;
         }
 
-        .workplace-table th,
-        .workplace-table td {
-          height: 8mm;
-          padding: 0.4mm;
+        .workplace-report-header h1 {
+          margin: 0;
+          padding-top: 4mm;
+          color: #000000;
+          font-size: 17pt;
+          letter-spacing: 2px;
         }
 
-        .workplace-table th small {
+        .workplace-report-meta {
+          position: absolute;
+          right: 0;
+          bottom: 0;
+          text-align: left;
+          font-size: 6.5pt;
+          line-height: 1.5;
+        }
+
+        .workplace-report-meta span {
           display: block;
-          margin-top: 0.5mm;
-          font-size: 4.8pt;
         }
 
-        .workplace-table th:first-child,
-        .workplace-table td:first-child {
-          width: 6mm;
-        }
-
-        .workplace-table
-        .employee-name-cell {
-          width: 25mm;
+        .workplace-report-location {
+          margin: 0 0 2mm;
+          color: #000000;
           font-size: 7pt;
-          font-weight: 700;
+          text-align: left;
+        }
+
+        .workplace-report-table {
+          width: 100%;
+          border: 0.45mm solid #000000;
+          border-collapse: collapse;
+          table-layout: fixed;
+          color: #000000;
+        }
+
+        .workplace-report-table td {
+          padding: 0;
+          border: 0.25mm solid #000000;
+          background: #ffffff;
+          color: #000000;
+          text-align: center;
+          vertical-align: middle;
+        }
+
+        .employee-block {
+          break-inside: avoid;
+          page-break-inside: avoid;
+        }
+
+        .employee-block:not(:first-of-type)
+        .employee-info-row td {
+          border-top-width: 0.5mm;
+        }
+
+        .employee-info-row td {
+          height: 5.8mm;
+          padding: 0 1.2mm;
+          font-size: 6.3pt;
+          text-align: left;
           white-space: nowrap;
         }
 
-        .workplace-table th:nth-last-child(-n+3),
-        .workplace-table td:nth-last-child(-n+3) {
-          width: 9mm;
+        .employee-info-row strong {
+          margin-left: 1mm;
+          font-size: 6.8pt;
+        }
+
+        .employee-day-row td {
+          height: 4.8mm;
+          font-size: 5.2pt;
+          font-weight: 700;
+        }
+
+        .employee-time-row td {
+          height: 7.4mm;
+          padding: 0.6mm 0;
+          font-size: 4.4pt;
+          line-height: 1.2;
+        }
+
+        .employee-time-row span {
+          display: block;
+          min-height: 2.3mm;
+          white-space: nowrap;
+        }
+
+        .employee-time-row strong {
+          font-size: 4.2pt;
+          font-weight: 700;
+        }
+
+        .workplace-report-table
+        .weekend {
+          background: #f3f3f3;
+          color: #000000;
+        }
+
+        @media print {
+          .employee-block {
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
         }
       `,
 
       html: `
         <main class="print-document">
-          <header class="print-header">
+          <header
+            class="workplace-report-header"
+          >
             <h1>
               ${escapeHtml(title)}
             </h1>
 
-            <p>
-              현장:
+            <div
+              class="workplace-report-meta"
+            >
+              <span>
+                근무기간:
+                ${escapeHtml(startDate)}
+                ~
+                ${escapeHtml(
+                  new Date(
+                    year,
+                    month,
+                    0
+                  )
+                    .toISOString()
+                    .slice(0, 10)
+                )}
+              </span>
+
+              <span>
+                출력시간:
+                ${escapeHtml(printDate)}
+              </span>
+            </div>
+          </header>
+
+          <p
+            class="workplace-report-location"
+          >
+            현장:
+            <strong>
               ${escapeHtml(
                 workplace.name
               )}
-              |
-              주소:
-              ${escapeHtml(
-                workplace.address ||
-                "주소 미등록"
-              )}
-            </p>
-          </header>
+            </strong>
+          </p>
 
-          <table class="workplace-table">
-            <thead>
-              <tr>
-                <th>No</th>
-                <th>성명</th>
+          <table
+            class="workplace-report-table"
+          >
+            <colgroup>
+              ${Array.from(
+                {
+                  length:
+                    daysInMonth,
+                },
+                () => "<col />"
+              ).join("")}
+            </colgroup>
 
-                ${dayHeaders.join("")}
-
-                <th>출근</th>
-                <th>지각</th>
-                <th>연차</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              ${employeeRows.join("")}
-            </tbody>
+            ${employeeBlocks}
           </table>
-
-          <div class="print-legend">
-            <span>출: 정상 출근</span>
-            <span>지: 지각</span>
-            <span>연: 연차</span>
-            <span>결: 미출근</span>
-          </div>
         </main>
       `,
     },
-    "size: A4 landscape;"
+    "size: A4 portrait;"
   );
 }
 
