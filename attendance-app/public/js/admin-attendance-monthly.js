@@ -1598,16 +1598,11 @@ function openPrintWindow(
 
           .late-cell {
             background: #fee2e2;
-            color: #b91clate-cell {
-            background: #fee2e2;
-            color: #b1c;
+            color: #b91c1c;
             font-weight: 700;
 
-            print-color-adjust:
-              exact;
-
-            -webkit-print-color-adjust:
-              exact;
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
           }
 
           .print-legend {
@@ -2208,24 +2203,9 @@ function printWorkplaceMonthlyAttendance(
       )
     );
 
-  const numberSpan =
-    Math.floor(
-      daysInMonth / 3
-    );
-
-  const nameSpan =
-    Math.floor(
-      daysInMonth / 3
-    );
-
-  const departmentSpan =
-    daysInMonth -
-    numberSpan -
-    nameSpan;
-
   const employeeBlocks =
-    targetEmployees.map(
-      (employee, index) => {
+    targetEmployees
+      .map((employee) => {
         const dayCells = [];
         const timeCells = [];
 
@@ -2250,23 +2230,13 @@ function printWorkplaceMonthlyAttendance(
           const isLeave =
             leaveSet.has(key);
 
-          const weekDay =
-            getKoreanDayOfWeek(
-              dateKey
-            );
-
-          const isWeekend =
-            weekDay === "토" ||
-            weekDay === "일";
+          const leaveClass =
+            isLeave
+              ? "annual-leave-day"
+              : "";
 
           dayCells.push(`
-            <td
-              class="${
-                isWeekend
-                  ? "weekend"
-                  : ""
-              }"
-            >
+            <td class="${leaveClass}">
               ${day}
             </td>
           `);
@@ -2277,46 +2247,30 @@ function printWorkplaceMonthlyAttendance(
             timeContent = `
               <strong>연차</strong>
             `;
-          } else if (
-            record?.check_in_time ||
-            record?.check_out_time
-          ) {
+          } else {
+            const checkIn =
+              formatTimeOnly(
+                record?.check_in_time
+              );
+
+            const checkOut =
+              formatTimeOnly(
+                record?.check_out_time
+              );
+
             timeContent = `
               <span>
-                ${escapeHtml(
-                  formatTimeOnly(
-                    record
-                      ?.check_in_time
-                  )
-                )}
+                ${escapeHtml(checkIn)}
               </span>
 
               <span>
-                ${escapeHtml(
-                  formatTimeOnly(
-                    record
-                      ?.check_out_time
-                  )
-                )}
+                ${escapeHtml(checkOut)}
               </span>
-            `;
-          } else if (
-            record?.status === "absent" ||
-            record?.status === "미출근"
-          ) {
-            timeContent = `
-              <strong>미출근</strong>
             `;
           }
 
           timeCells.push(`
-            <td
-              class="${
-                isWeekend
-                  ? "weekend"
-                  : ""
-              }"
-            >
+            <td class="${leaveClass}">
               ${timeContent}
             </td>
           `);
@@ -2325,31 +2279,37 @@ function printWorkplaceMonthlyAttendance(
         return `
           <tbody class="employee-block">
             <tr class="employee-info-row">
-              <td colspan="${numberSpan}">
-                사용자번호:
-                <strong>
-                  ${index + 1}
-                </strong>
-              </td>
+              <td colspan="${daysInMonth}">
+                <div class="employee-info-content">
+                  <span>
+                    이름:
+                    <strong>
+                      ${escapeHtml(
+                        employee.name ||
+                        "이름 없음"
+                      )}
+                    </strong>
+                  </span>
 
-              <td colspan="${nameSpan}">
-                이름:
-                <strong>
-                  ${escapeHtml(
-                    employee.name ||
-                    "이름 없음"
-                  )}
-                </strong>
-              </td>
+                  <span>
+                    현장:
+                    <strong>
+                      ${escapeHtml(
+                        workplace.name
+                      )}
+                    </strong>
+                  </span>
 
-              <td colspan="${departmentSpan}">
-                부서명:
-                <strong>
-                  ${escapeHtml(
-                    employee.department ||
-                    "소속 미지정"
-                  )}
-                </strong>
+                  <span>
+                    소속:
+                    <strong>
+                      ${escapeHtml(
+                        employee.department ||
+                        "소속 미지정"
+                      )}
+                    </strong>
+                  </span>
+                </div>
               </td>
             </tr>
 
@@ -2362,77 +2322,63 @@ function printWorkplaceMonthlyAttendance(
             </tr>
           </tbody>
         `;
-      }
-    )
-    .join("");
+      })
+      .join("");
 
   const title =
-    "근무 기록 보고서";
+    "월별 출퇴근표";
 
-  const printDate =
-    new Date()
-      .toLocaleString(
-        "ko-KR",
-        {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        }
-      );
+  const periodStart =
+    createDateKey(
+      year,
+      month,
+      1
+    );
+
+  const periodEnd =
+    createDateKey(
+      year,
+      month,
+      daysInMonth
+    );
 
   openPrintWindow(
     title,
     {
       styles: `
-        .workplace-report-header {
-          position: relative;
-          min-height: 16mm;
-          margin-bottom: 2mm;
+        .monthly-report {
+          width: 100%;
+          color: #000000;
+        }
+
+        .monthly-report-title {
+          margin: 0 0 8px;
+          color: #000000;
+          font-size: 14px;
+          font-weight: 700;
+          line-height: 1.2;
           text-align: center;
         }
 
-        .workplace-report-header h1 {
-          margin: 0;
-          padding-top: 4mm;
+        .monthly-report-period {
+          margin: 0 0 3px;
           color: #000000;
-          font-size: 17pt;
-          letter-spacing: 2px;
+          font-size: 8px;
+          line-height: 1.2;
+          text-align: right;
         }
 
-        .workplace-report-meta {
-          position: absolute;
-          right: 0;
-          bottom: 0;
-          text-align: left;
-          font-size: 6.5pt;
-          line-height: 1.5;
-        }
-
-        .workplace-report-meta span {
-          display: block;
-        }
-
-        .workplace-report-location {
-          margin: 0 0 2mm;
-          color: #000000;
-          font-size: 7pt;
-          text-align: left;
-        }
-
-        .workplace-report-table {
+        .monthly-report-table {
           width: 100%;
-          border: 0.45mm solid #000000;
+          margin: 0;
+          border: 1px solid #000000;
           border-collapse: collapse;
           table-layout: fixed;
-          color: #000000;
         }
 
-        .workplace-report-table td {
+        .monthly-report-table td {
           padding: 0;
-          border: 0.25mm solid #000000;
+          border: 1px solid #000000;
           background: #ffffff;
           color: #000000;
           text-align: center;
@@ -2444,52 +2390,75 @@ function printWorkplaceMonthlyAttendance(
           page-break-inside: avoid;
         }
 
-        .employee-block:not(:first-of-type)
         .employee-info-row td {
-          border-top-width: 0.5mm;
+          height: 22px;
+          padding: 0 8px;
+          text-align: left;
         }
 
-        .employee-info-row td {
-          height: 5.8mm;
-          padding: 0 1.2mm;
-          font-size: 6.3pt;
-          text-align: left;
+        .employee-info-content {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 24px;
+          width: 100%;
+          font-size: 8px;
           white-space: nowrap;
         }
 
-        .employee-info-row strong {
-          margin-left: 1mm;
-          font-size: 6.8pt;
+        .employee-info-content span {
+          flex: 1;
         }
 
-        .employee-day-row td {
-          height: 4.8mm;
-          font-size: 5.2pt;
+        .employee-info-content span:nth-child(2) {
+          text-align: center;
+        }
+
+        .employee-info-content span:nth-child(3) {
+          text-align: right;
+        }
+
+        .employee-info-content strong {
+          margin-left: 4px;
+          font-size: 8px;
           font-weight: 700;
         }
 
+        .employee-day-row td {
+          height: 18px;
+          font-size: 6px;
+          font-weight: 700;
+          line-height: 1;
+        }
+
         .employee-time-row td {
-          height: 7.4mm;
-          padding: 0.6mm 0;
-          font-size: 4.4pt;
-          line-height: 1.2;
+          height: 32px;
+          padding: 2px 0;
+          font-size: 5.5px;
+          line-height: 1.25;
         }
 
         .employee-time-row span {
           display: block;
-          min-height: 2.3mm;
+          min-height: 8px;
           white-space: nowrap;
         }
 
         .employee-time-row strong {
-          font-size: 4.2pt;
+          display: inline-block;
+          font-size: 6px;
           font-weight: 700;
+          line-height: 28px;
+          white-space: nowrap;
         }
 
-        .workplace-report-table
-        .weekend {
-          background: #f3f3f3;
+        .monthly-report-table
+        .annual-leave-day {
+          background: #fff2a8;
           color: #000000;
+
+          print-color-adjust: exact;
+          -webkit-print-color-adjust: exact;
         }
 
         @media print {
@@ -2501,53 +2470,19 @@ function printWorkplaceMonthlyAttendance(
       `,
 
       html: `
-        <main class="print-document">
-          <header
-            class="workplace-report-header"
-          >
-            <h1>
-              ${escapeHtml(title)}
-            </h1>
+        <main class="monthly-report">
+          <h1 class="monthly-report-title">
+            ${escapeHtml(title)}
+          </h1>
 
-            <div
-              class="workplace-report-meta"
-            >
-              <span>
-                근무기간:
-                ${escapeHtml(startDate)}
-                ~
-                ${escapeHtml(
-                  new Date(
-                    year,
-                    month,
-                    0
-                  )
-                    .toISOString()
-                    .slice(0, 10)
-                )}
-              </span>
-
-              <span>
-                출력시간:
-                ${escapeHtml(printDate)}
-              </span>
-            </div>
-          </header>
-
-          <p
-            class="workplace-report-location"
-          >
-            현장:
-            <strong>
-              ${escapeHtml(
-                workplace.name
-              )}
-            </strong>
+          <p class="monthly-report-period">
+            근무기간:
+            ${escapeHtml(periodStart)}
+            ~
+            ${escapeHtml(periodEnd)}
           </p>
 
-          <table
-            class="workplace-report-table"
-          >
+          <table class="monthly-report-table">
             <colgroup>
               ${Array.from(
                 {
