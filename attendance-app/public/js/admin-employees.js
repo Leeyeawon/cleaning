@@ -883,7 +883,7 @@ function renderShiftFilterOptions() {
       시간대 미배정
     </option>
 
-    ${workShifts
+    ${availableShifts
       .map((shift) => {
         const workplace =
           workplaces.find(
@@ -2215,10 +2215,14 @@ function bindEvents() {
     refreshEmployeeList
   );
 
-  employeeRegionFilter?.addEventListener(
-    "change",
-    refreshEmployeeList
-  );
+  employeeRegionFilter
+    ?.addEventListener(
+      "change",
+      () => {
+        renderShiftFilterOptions();
+        refreshEmployeeList();
+      }
+    );
 
   employeeShiftFilter?.addEventListener(
     "change",

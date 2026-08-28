@@ -1645,6 +1645,7 @@ async function openEmployeeEditModal() {
       positionResult,
       departmentResult,
       assignmentResult,
+      shiftResult,
     ] = await Promise.all([
       supabase
         .from("job_positions")
@@ -2011,7 +2012,10 @@ async function openRegionEditModal() {
           days_of_week,
           work_shift_id
         `)
-        .eq("user_id", profile.id),
+        .eq(
+          "user_id",
+          targetUserId
+        ),
 
       supabase
         .from("work_shifts")
@@ -2051,6 +2055,18 @@ async function openRegionEditModal() {
 
     const assignments =
       assignmentResult.data || [];
+
+    const assignmentMap =
+      new Map(
+        assignments.map(
+          (assignment) => [
+            String(
+              assignment.workplace_id
+            ),
+            assignment,
+          ]
+        )
+      );
 
     const workShifts =
       shiftResult.data || [];

@@ -111,3 +111,40 @@
   opacity: 1 !important;
   visibility: visible !important;
 }
+
+#assignModal .zone-modal-content {
+  display: flex;
+  flex-direction: column;
+
+  max-height:
+    calc(100dvh - 48px);
+
+  overflow: hidden;
+}
+
+#assignModal .zone-modal-header {
+  flex: 0 0 auto;
+}
+
+#assignModal .zone-modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+#assignModal .zone-modal-footer {
+  position: relative;
+  z-index: 2;
+
+  flex: 0 0 auto;
+
+  background: #ffffff;
+  border-top:
+    1px solid #e5e7eb;
+
+  box-shadow:
+    0 -8px 20px
+    rgba(15, 23, 42, 0.06);
+}
