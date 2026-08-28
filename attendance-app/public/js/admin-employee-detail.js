@@ -1832,9 +1832,17 @@ async function saveEmployeeProfile(
     editEmployeePhone.value
       .trim();
 
+  const selectedPositionOption =
+    editEmployeePosition
+      .selectedOptions[0];
+
   const position =
-    editEmployeePosition.value ||
-    null;
+    editEmployeePosition
+      .selectedIndex > 0
+      ? selectedPositionOption
+          ?.textContent
+          .trim() || null
+      : null;
 
   const department =
     editEmployeeDepartment.value ||

@@ -244,6 +244,21 @@ function renderRequests() {
                   "소속 미지정"
                 )}
               </small>
+
+              ${
+                request.user_id
+                  ? `
+                    <a
+                      class="workflow-employee-detail-link"
+                      href="admin-employee-detail.html?id=${encodeURIComponent(
+                        String(request.user_id)
+                      )}"
+                    >
+                      직원 상세
+                    </a>
+                  `
+                  : ""
+              }
             </td>
 
             <td>

@@ -1337,3 +1337,31 @@ body[data-admin-page="requests"]
   color: #7c3aed;
   background: #ede9fe;
 }
+
+.workflow-employee-detail-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 28px;
+  margin-top: 8px;
+  padding: 0 9px;
+
+  border: 1px solid #dbe1e8;
+  border-radius: 7px;
+
+  background: #ffffff;
+  color: #374151;
+
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.workflow-employee-detail-link:hover {
+  border-color: #111827;
+  background: #111827;
+  color: #ffffff;
+}
