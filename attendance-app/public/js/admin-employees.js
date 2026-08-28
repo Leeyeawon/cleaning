@@ -786,30 +786,6 @@ function renderWorkplaceOptions() {
     const currentValue =
       employeeRegionFilter.value || "all";
 
-    const selectedRegion =
-      employeeRegionFilter?.value ||
-      "all";
-
-    const availableShifts =
-      workShifts.filter((shift) => {
-        if (shift.is_active === false) {
-          return false;
-        }
-
-        if (selectedRegion === "all") {
-          return true;
-        }
-
-        if (selectedRegion === "unassigned") {
-          return false;
-        }
-
-        return (
-          String(shift.workplace_id) ===
-          String(selectedRegion)
-        );
-      });
-
     employeeRegionFilter.innerHTML = `
       <option value="all">전체 지역</option>
       <option value="unassigned">미배정</option>
@@ -893,10 +869,37 @@ function renderShiftFilterOptions() {
   if (!employeeShiftFilter) {
     return;
   }
-
+ 
   const currentValue =
     employeeShiftFilter.value ||
     "all";
+    
+  const selectedRegion =
+    employeeRegionFilter?.value ||
+    "all";
+
+  const availableShifts =
+    workShifts.filter((shift) => {
+      if (shift.is_active === false) {
+        return false;
+      }
+
+      if (selectedRegion === "all") {
+        return true;
+      }
+
+      if (
+        selectedRegion ===
+        "unassigned"
+      ) {
+        return false;
+      }
+
+      return (
+        String(shift.workplace_id) ===
+        String(selectedRegion)
+      );
+    });
 
   employeeShiftFilter.innerHTML = `
     <option value="all">
