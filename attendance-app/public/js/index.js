@@ -490,16 +490,6 @@ async function checkIn() {
           "위치 오류 기록 실패:",
           logError
         );
-
-        window.alert(
-          `위치 오류 기록 실패: ${
-            logError.message
-          }`
-        );
-      } else {
-        window.alert(
-          "위치 오류 기록 성공"
-        );
       }
     }
 
