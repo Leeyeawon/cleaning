@@ -2245,7 +2245,7 @@ function printWorkplaceMonthlyAttendance(
 
           if (isLeave) {
             timeContent = `
-              <strong>연차</strong>
+              <strong>연</strong>
             `;
           } else {
             const checkIn =
@@ -2434,20 +2434,22 @@ function printWorkplaceMonthlyAttendance(
         .employee-time-row td {
           height: 32px;
           padding: 2px 0;
-          font-size: 5.5px;
-          line-height: 1.25;
+          font-size: 7px;
+          line-height: 1.2;
         }
 
         .employee-time-row span {
           display: block;
-          min-height: 8px;
+          min-height: 10px;
+          font-size: 7px;
+          font-weight: 600;
           white-space: nowrap;
         }
 
         .employee-time-row strong {
           display: inline-block;
-          font-size: 6px;
-          font-weight: 700;
+          font-size: 9px;
+          font-weight: 800;
           line-height: 28px;
           white-space: nowrap;
         }

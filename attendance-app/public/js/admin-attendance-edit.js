@@ -255,6 +255,13 @@ function normalizeStatus(status) {
     return "location_error";
   }
 
+  if (
+    value === "연차" ||
+    value === "annual_leave"
+  ) {
+    return "annual_leave";
+  }
+
   if (value === "working") {
     return "working";
   }
@@ -277,6 +284,8 @@ function getAttendanceStatusText(
     지각: "지각",
     결근: "결근",
     위치오류: "위치 오류",
+    annual_leave: "연차",
+    연차: "연차",
   };
 
   return labels[status] ||
@@ -306,6 +315,9 @@ function isPastDate(workDate) {
 }
 
 function getEditType(row) {
+  if (row.is_annual_leave) {
+    return "연차";
+  }
   if (!row.has_record) {
     return "기록 없음";
   }
@@ -355,6 +367,10 @@ function getEditType(row) {
 }
 
 function needsEdit(row) {
+  if (row.is_annual_leave) {
+    return false;
+  }
+
   if (!row.has_record) {
     return true;
   }
@@ -442,28 +458,98 @@ function getErrorMessage(error) {
 }
 
 async function fetchAttendanceRows() {
-  const { data, error } =
-    await supabase.rpc(
+  const selectedDate =
+    editDateFilter.value;
+
+  const [
+    attendanceResult,
+    leaveResult,
+  ] = await Promise.all([
+    supabase.rpc(
       "admin_get_attendance_edit_rows",
       {
         p_work_date:
-          editDateFilter.value,
+          selectedDate,
       }
+    ),
+
+    supabase
+      .from(
+        "employee_daily_notes"
+      )
+      .select(`
+        user_id,
+        note_date,
+        content,
+        day_type
+      `)
+      .eq(
+        "note_date",
+        selectedDate
+      )
+      .eq(
+        "day_type",
+        "annual_leave"
+      ),
+  ]);
+
+  if (attendanceResult.error) {
+    throw attendanceResult.error;
+  }
+
+  if (leaveResult.error) {
+    throw leaveResult.error;
+  }
+
+  const leaveMap =
+    new Map(
+      (leaveResult.data || [])
+        .map((leave) => [
+          String(leave.user_id),
+          leave,
+        ])
     );
 
-  if (error) throw error;
-
   attendanceRows =
-    (data || []).map(
-      (row) => ({
+    (
+      attendanceResult.data || []
+    ).map((row) => {
+      const leave =
+        leaveMap.get(
+          String(row.user_id)
+        );
+
+      const isAnnualLeave =
+        Boolean(leave);
+
+      return {
         ...row,
+
+        is_annual_leave:
+          isAnnualLeave,
+
+        annual_leave_content:
+          leave?.content || "",
+
+        attendance_status:
+          isAnnualLeave
+            ? "annual_leave"
+            : row.attendance_status,
+
+        has_record:
+          isAnnualLeave ||
+          row.has_record,
 
         row_key:
           row.attendance_id
-            ? `attendance-${row.attendance_id}`
-            : `employee-${row.user_id}`,
-      })
-    );
+            ? `attendance-${
+                row.attendance_id
+              }`
+            : `employee-${
+                row.user_id
+              }`,
+      };
+    });
 }
 
 async function fetchEditHistories() {
@@ -907,6 +993,26 @@ function renderWorkplaceOptions(
       : "";
 }
 
+function syncAnnualLeaveFields() {
+  const isAnnualLeave =
+    editRecordStatusSelect.value ===
+    "annual_leave";
+
+  editCheckInInput.disabled =
+    isAnnualLeave;
+
+  editCheckOutInput.disabled =
+    isAnnualLeave;
+
+  editWorkplaceSelect.disabled =
+    isAnnualLeave;
+
+  if (isAnnualLeave) {
+    editCheckInInput.value = "";
+    editCheckOutInput.value = "";
+  }
+}
+
 function openEditModal(rowKey) {
   const row =
     attendanceRows.find(
@@ -952,9 +1058,13 @@ function openEditModal(rowKey) {
   );
 
   editRecordStatusSelect.value =
-    normalizeStatus(
-      row.attendance_status
-    );
+    row.is_annual_leave
+      ? "annual_leave"
+      : normalizeStatus(
+          row.attendance_status
+        );
+
+  syncAnnualLeaveFields();
 
   const reasonMap = {
     "기록 없음":
@@ -981,8 +1091,11 @@ function openEditModal(rowKey) {
       getEditType(row)
     ] || "기타";
 
-  editMemoInput.value = "";
-
+  editMemoInput.value =
+    row.is_annual_leave
+      ? row.annual_leave_content ||
+        ""
+      : "";
   
   const title =
     editModal.querySelector(
@@ -1111,6 +1224,78 @@ async function saveAttendanceEdit() {
 
   const status =
     editRecordStatusSelect.value;
+
+  if (status === "annual_leave") {
+    const confirmed =
+      confirm(
+        "연차로 변경하면 해당 날짜의 기존 출퇴근 기록이 삭제됩니다.\n계속하시겠습니까?"
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    editSaveBtn.disabled = true;
+    editSaveBtn.textContent =
+      "연차 등록 중...";
+
+    try {
+      const { error } =
+        await supabase.rpc(
+          "admin_convert_attendance_to_annual_leave",
+          {
+            p_user_id:
+              selectedRow.user_id,
+
+            p_work_date:
+              selectedRow.work_date,
+
+            p_memo:
+              editMemoInput.value
+                .trim() || null,
+          }
+        );
+
+      if (error) {
+        throw error;
+      }
+
+      alert(
+        "기존 출퇴근 기록을 삭제하고 연차로 변경했습니다."
+      );
+
+      closeEditModal();
+
+      const safeReturnUrl =
+        getSafeReturnUrl();
+
+      if (safeReturnUrl) {
+        window.location.replace(
+          safeReturnUrl
+        );
+
+        return;
+      }
+
+      await loadPageData();
+    } catch (error) {
+      console.error(
+        "연차 변경 실패:",
+        error
+      );
+
+      alert(
+        `연차로 변경하지 못했습니다.\n${
+          error.message || ""
+        }`
+      );
+    } finally {
+      editSaveBtn.disabled = false;
+      editSaveBtn.textContent = "저장";
+    }
+
+    return;
+  }
 
   const checkInValue =
     status === "absent"
@@ -1334,6 +1519,12 @@ function bindEvents() {
     "click",
     resetFilters
   );
+
+  editRecordStatusSelect
+    .addEventListener(
+      "change",
+      syncAnnualLeaveFields
+    );
 
   editModal.addEventListener(
     "click",
