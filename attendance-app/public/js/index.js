@@ -466,7 +466,7 @@ async function checkIn() {
 
     if (
       errorMessage.includes(
-        "OUT_OF_WORKPLACE_RANGE_OR_SCHEDULE"
+        "OUT_OF_WORKPLACE_RANGE"
       )
     ) {
       const {
@@ -489,6 +489,16 @@ async function checkIn() {
         console.error(
           "위치 오류 기록 실패:",
           logError
+        );
+
+        window.alert(
+          `위치 오류 기록 실패: ${
+            logError.message
+          }`
+        );
+      } else {
+        window.alert(
+          "위치 오류 기록 성공"
         );
       }
     }
