@@ -12,6 +12,9 @@ const editTypeFilter =
 const editStatusFilter =
   byId("editStatusFilter");
 
+const editWorkplaceFilter =
+  byId("editWorkplaceFilter");
+
 const editSearchInput =
   byId("editSearchInput");
 
@@ -587,6 +590,10 @@ function getFilteredRows() {
   const selectedStatus =
     editStatusFilter.value;
 
+  const selectedWorkplace =
+    editWorkplaceFilter.value ||
+    "all";
+
   const keyword =
     editSearchInput.value
       .trim()
@@ -597,8 +604,12 @@ function getFilteredRows() {
       const type =
         getEditType(row);
 
-      const status =
-        getProcessingStatus(row);
+      const attendanceStatus =
+        row.is_annual_leave
+          ? "annual_leave"
+          : normalizeStatus(
+              row.attendance_status
+            );
 
       const searchText = [
         row.employee_name,
@@ -616,11 +627,30 @@ function getFilteredRows() {
         ) &&
         (
           selectedStatus === "all" ||
-          selectedStatus === status
+          selectedStatus ===
+            attendanceStatus
+        ) &&
+        (
+          selectedWorkplace ===
+            "all" ||
+
+          (
+            selectedWorkplace ===
+              "unassigned"
+              ? !row.workplace_id
+              : String(
+                  row.workplace_id
+                ) ===
+                String(
+                  selectedWorkplace
+                )
+          )
         ) &&
         (
           !keyword ||
-          searchText.includes(keyword)
+          searchText.includes(
+            keyword
+          )
         )
       );
     }
@@ -955,6 +985,56 @@ function renderHistories() {
         </div>
       `)
       .join("");
+}
+
+function renderWorkplaceFilterOptions() {
+  const currentValue =
+    editWorkplaceFilter.value ||
+    "all";
+
+  editWorkplaceFilter.innerHTML = `
+    <option value="all">
+      전체 근무지
+    </option>
+
+    <option value="unassigned">
+      근무지 미배정
+    </option>
+
+    ${workplaces
+      .filter(
+        (workplace) =>
+          workplace.is_active !==
+          false
+      )
+      .map(
+        (workplace) => `
+          <option
+            value="${escapeHtml(
+              workplace.id
+            )}"
+          >
+            ${escapeHtml(
+              workplace.name
+            )}
+          </option>
+        `
+      )
+      .join("")}
+  `;
+
+  const valueExists = [
+    ...editWorkplaceFilter.options,
+  ].some(
+    (option) =>
+      option.value ===
+      currentValue
+  );
+
+  editWorkplaceFilter.value =
+    valueExists
+      ? currentValue
+      : "all";
 }
 
 function renderWorkplaceOptions(
@@ -1437,6 +1517,8 @@ async function loadPageData() {
       fetchWorkplaces(),
     ]);
 
+    renderWorkplaceFilterOptions();
+
     renderTable();
     renderHistories();
     updateStats();
@@ -1474,6 +1556,9 @@ function resetFilters() {
   editStatusFilter.value =
     "all";
 
+  editWorkplaceFilter.value =
+    "all";
+
   editSearchInput.value = "";
 
   loadPageData();
@@ -1491,6 +1576,11 @@ function bindEvents() {
   );
 
   editStatusFilter.addEventListener(
+    "change",
+    renderTable
+  );
+
+  editWorkplaceFilter.addEventListener(
     "change",
     renderTable
   );

@@ -90,7 +90,16 @@
 
             <label>
               근무지
-              <select id="editWorkplaceSelect"></select>
+
+              <select id="editWorkplaceFilter">
+                <option value="all">
+                  전체 근무지
+                </option>
+
+                <option value="unassigned">
+                  근무지 미배정
+                </option>
+              </select>
             </label>
 
             <label>
@@ -182,6 +191,16 @@
             <input type="time" id="editCheckOutInput" />
           </label>
         </div>
+
+        <label>
+          근무지
+
+          <select id="editWorkplaceSelect">
+            <option value="">
+              미배정
+            </option>
+          </select>
+        </label>
 
         <label>
           근태 상태
