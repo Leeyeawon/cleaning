@@ -5,8 +5,6 @@
 
 import supabase from "./supabase.js";
 
-const WORK_START_TIME = "09:00";
-
 const todayDate = document.getElementById("todayDate");
 
 const issueLateCount = document.getElementById("issueLateCount");
@@ -28,25 +26,100 @@ const modalEmployeeInfo = document.getElementById("modalEmployeeInfo");
 const reasonSelect = document.getElementById("reasonSelect");
 const reasonMemo = document.getElementById("reasonMemo");
 
-const todayStr = new Date().toISOString().split("T")[0];
-
 let lateEmployees = [];
 let absentEmployees = [];
 let locationErrors = [];
 let selectedLateIndex = null;
 
+function getAttendanceIssueDate() {
+  const sixHours =
+    6 * 60 * 60 * 1000;
+
+  const shiftedDate =
+    new Date(
+      Date.now() - sixHours
+    );
+
+  const formatter =
+    new Intl.DateTimeFormat(
+      "en-CA",
+      {
+        timeZone:
+          "Asia/Seoul",
+
+        year:
+          "numeric",
+
+        month:
+          "2-digit",
+
+        day:
+          "2-digit",
+      }
+    );
+
+  const parts =
+    formatter.formatToParts(
+      shiftedDate
+    );
+
+  const year =
+    parts.find(
+      (part) =>
+        part.type === "year"
+    )?.value;
+
+  const month =
+    parts.find(
+      (part) =>
+        part.type === "month"
+    )?.value;
+
+  const day =
+    parts.find(
+      (part) =>
+        part.type === "day"
+    )?.value;
+
+  return `${year}-${month}-${day}`;
+}
+
+const todayStr =
+  getAttendanceIssueDate();
+
 function setTodayText() {
-  if (!todayDate) return;
+  if (!todayDate) {
+    return;
+  }
 
-  const now = new Date();
-  const formattedDate = now.toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    weekday: "long",
-  });
+  const workDate =
+    new Date(
+      `${todayStr}T00:00:00+09:00`
+    );
 
-  todayDate.textContent = `${formattedDate} 지각, 미출근, 위치 오류 직원을 확인합니다.`;
+  const formattedDate =
+    workDate.toLocaleDateString(
+      "ko-KR",
+      {
+        timeZone:
+          "Asia/Seoul",
+
+        year:
+          "numeric",
+
+        month:
+          "2-digit",
+
+        day:
+          "2-digit",
+
+        weekday:
+          "long",
+      }
+    );
+
+  todayDate.textContent =
+    `${formattedDate} 지각, 미출근, 위치 오류 직원을 확인합니다.`;
 }
 
 function formatTime(timeString) {
@@ -61,26 +134,130 @@ function formatTime(timeString) {
   });
 }
 
-function getMinutesLate(checkInTime) {
-  if (!checkInTime) return 0;
+function formatShiftTime(
+  timeString
+) {
+  if (!timeString) {
+    return "미설정";
+  }
 
-  const checkInDate = new Date(checkInTime);
-  if (Number.isNaN(checkInDate.getTime())) return 0;
+  return String(timeString)
+    .slice(0, 5);
+}
 
-  const [hour, minute] = WORK_START_TIME.split(":").map(Number);
-  const scheduledDate = new Date(checkInDate);
-  scheduledDate.setHours(hour, minute, 0, 0);
+function getMinutesLate(
+  checkInTime,
+  scheduledTime
+) {
+  if (
+    !checkInTime ||
+    !scheduledTime ||
+    scheduledTime === "미설정"
+  ) {
+    return null;
+  }
 
-  const diffMs = checkInDate - scheduledDate;
-  const diffMinutes = Math.floor(diffMs / 1000 / 60);
+  const checkInDate =
+    new Date(checkInTime);
 
-  return Math.max(diffMinutes, 0);
+  if (
+    Number.isNaN(
+      checkInDate.getTime()
+    )
+  ) {
+    return null;
+  }
+
+  const [
+    hour,
+    minute,
+  ] = scheduledTime
+    .split(":")
+    .map(Number);
+
+  if (
+    !Number.isFinite(hour) ||
+    !Number.isFinite(minute)
+  ) {
+    return null;
+  }
+
+  const scheduledDate =
+    new Date(checkInDate);
+
+  scheduledDate.setHours(
+    hour,
+    minute,
+    0,
+    0
+  );
+
+  const diffMs =
+    checkInDate -
+    scheduledDate;
+
+  const diffMinutes =
+    Math.floor(
+      diffMs /
+      1000 /
+      60
+    );
+
+  return Math.max(
+    diffMinutes,
+    0
+  );
 }
 
 function getReasonBadgeClass(reason) {
   if (!reason || reason === "미확인") return "unchecked";
   if (reason === "기타 직접 입력") return "input";
   return "checked";
+}
+
+async function saveIssueAction({
+  userId,
+  attendanceId = null,
+  issueType,
+  actionStatus = null,
+  reason = null,
+  memo = null,
+}) {
+  const { error } =
+    await supabase.rpc(
+      "admin_save_attendance_issue_action",
+      {
+        p_user_id:
+          userId,
+
+        p_attendance_id:
+          attendanceId,
+
+        p_issue_date:
+          todayStr,
+
+        p_issue_type:
+          issueType,
+
+        p_action_status:
+          actionStatus,
+
+        p_reason:
+          reason,
+
+        p_memo:
+          memo,
+      }
+    );
+
+  if (error) {
+    console.error(
+      "처리 내용 저장 실패:",
+      error
+    );
+
+    throw error;
+  }
 }
 
 function updateStats() {
@@ -102,6 +279,10 @@ async function fetchIssueData() {
     userResult,
     attendanceResult,
     leaveResult,
+    assignmentResult,
+    actionResult,
+    shiftResult,
+    locationResult,
   ] = await Promise.all([
     supabase
       .from("users")
@@ -115,6 +296,7 @@ async function fetchIssueData() {
       .select(`
         id,
         user_id,
+        workplace_id,
         work_date,
         check_in_time,
         check_out_time,
@@ -135,22 +317,67 @@ async function fetchIssueData() {
         "user_id, note_date, day_type"
       )
       .eq("note_date", todayStr)
+      .eq( "day_type", "annual_leave" ),
+
+    supabase
+      .from("workplace_users")
+      .select(`
+        user_id,
+        workplace_id,
+        work_shift_id,
+        start_date,
+        end_date,
+        workplaces (
+          name,
+          is_active
+        )
+      `),
+
+    supabase.rpc(
+      "admin_get_attendance_issue_actions",
+      {
+        p_issue_date:
+          todayStr,
+      }
+    ),
+
+    supabase
+      .from("work_shifts")
+      .select(
+        "id, start_time, is_active"
+      )
       .eq(
-        "day_type",
-        "annual_leave"
+        "is_active",
+        true
       ),
+
+    supabase.rpc(
+      "admin_get_attendance_location_errors",
+      {
+        p_issue_date:
+          todayStr,
+      }
+    ),
   ]);
 
   if (
     userResult.error ||
     attendanceResult.error ||
-    leaveResult.error
+    leaveResult.error ||
+    assignmentResult.error ||
+    actionResult.error ||
+    shiftResult.error ||
+    locationResult.error
   ) {
     console.error(
       "지각·미출근 데이터 조회 실패:",
       userResult.error ||
       attendanceResult.error ||
-      leaveResult.error
+      leaveResult.error ||
+      assignmentResult.error ||
+      actionResult.error ||
+      shiftResult.error ||
+      locationResult.error
     );
 
     lateEmployees = [];
@@ -165,6 +392,150 @@ async function fetchIssueData() {
 
   const attendanceData =
     attendanceResult.data || [];
+
+  const shiftStartMap =
+    new Map(
+      (shiftResult.data || []).map(
+        (shift) => [
+          String(shift.id),
+
+          formatShiftTime(
+            shift.start_time
+          ),
+        ]
+      )
+    );
+
+  const assignedShiftMap =
+    new Map();
+
+  const workplaceShiftMap =
+    new Map();
+
+  const assignedRegionMap =
+    new Map();
+
+  (
+    assignmentResult.data || []
+  )
+    .filter((assignment) => {
+      const workplaceActive =
+        assignment.workplaces
+          ?.is_active !== false;
+
+      const started =
+        !assignment.start_date ||
+        assignment.start_date <=
+          todayStr;
+
+      const notEnded =
+        !assignment.end_date ||
+        assignment.end_date >=
+          todayStr;
+
+      return (
+        workplaceActive &&
+        started &&
+        notEnded
+      );
+    })
+    .forEach((assignment) => {
+      const userId =
+        String(
+          assignment.user_id
+        );
+
+      const workplaceName =
+        assignment.workplaces
+          ?.name;
+
+      if (!workplaceName) {
+        return;
+      }
+
+      const shiftStart =
+        shiftStartMap.get(
+          String(
+            assignment.work_shift_id
+          )
+        );
+
+      if (shiftStart) {
+        const workplaceKey =
+          `${userId}:${String(
+            assignment.workplace_id
+          )}`;
+
+        workplaceShiftMap.set(
+          workplaceKey,
+          shiftStart
+        );
+
+        if (
+          !assignedShiftMap.has(
+            userId
+          )
+        ) {
+          assignedShiftMap.set(
+            userId,
+            []
+          );
+        }
+
+        const shiftTimes =
+          assignedShiftMap.get(
+            userId
+          );
+
+        if (
+          !shiftTimes.includes(
+            shiftStart
+          )
+        ) {
+          shiftTimes.push(
+            shiftStart
+          );
+        }
+      }
+
+      if (
+        !assignedRegionMap.has(
+          userId
+        )
+      ) {
+        assignedRegionMap.set(
+          userId,
+          []
+        );
+      }
+
+      const regionNames =
+        assignedRegionMap.get(
+          userId
+        );
+
+      if (
+        !regionNames.includes(
+          workplaceName
+        )
+      ) {
+        regionNames.push(
+          workplaceName
+        );
+      }
+    });
+
+  const issueActionMap =
+    new Map(
+      (actionResult.data || []).map(
+        (action) => [
+          `${String(
+            action.user_id
+          )}:${action.issue_type}`,
+          action,
+        ]
+      )
+    );
 
   const annualLeaveUserIds =
     new Set(
@@ -202,9 +573,27 @@ async function fetchIssueData() {
         );
       })
       .map((item) => {
+        const scheduledTime =
+          workplaceShiftMap.get(
+            `${String(
+              item.user_id
+            )}:${String(
+              item.workplace_id
+            )}`
+          ) ||
+          "미설정";
+
         const lateMinutes =
           getMinutesLate(
-            item.check_in_time
+            item.check_in_time,
+            scheduledTime
+          );
+
+        const savedAction =
+          issueActionMap.get(
+            `${String(
+              item.user_id
+            )}:late`
           );
 
         return {
@@ -227,7 +616,7 @@ async function fetchIssueData() {
             "미배정",
 
           scheduledTime:
-            WORK_START_TIME,
+            scheduledTime,
 
           actualTime:
             formatTime(
@@ -235,11 +624,13 @@ async function fetchIssueData() {
             ),
 
           lateMinutes:
-            `${lateMinutes}분`,
+            lateMinutes === null
+              ? "계산 불가"
+              : `${lateMinutes}분`,
 
           monthlyLateCount: 1,
-          reason: "미확인",
-          memo: "",
+          reason: savedAction?.reason || "미확인",
+          memo: savedAction?.memo || "",
         };
       });
 
@@ -270,73 +661,117 @@ async function fetchIssueData() {
           user.department ||
           "부서 없음",
 
-        region: "미출근",
+        region:
+          assignedRegionMap
+            .get(
+              String(user.id)
+            )
+            ?.join(", ") ||
+          "미배정",
 
         scheduledTime:
-          WORK_START_TIME,
+          assignedShiftMap
+            .get(
+              String(user.id)
+            )
+            ?.join(", ") ||
+          "미설정",
 
         phone: "—",
-        status: "미확인",
+        status:
+          issueActionMap.get(
+            `${String(
+              user.id
+            )}:absent`
+          )?.action_status ||
+          "미확인",
       }));
 
   locationErrors =
-    attendanceData
-      .filter((item) => {
-        const isLocationError =
-          item.status ===
-            "location_error" ||
-          item.status ===
-            "위치오류";
+    (
+      locationResult.data || []
+    ).map((item) => {
+      const distance =
+        item.distance_m === null ||
+        item.distance_m === undefined
+          ? null
+          : Number(
+              item.distance_m
+            );
 
-        const isAnnualLeave =
-          annualLeaveUserIds.has(
-            String(item.user_id)
-          );
+      const allowedRadius =
+        item.allowed_radius === null ||
+        item.allowed_radius === undefined
+          ? null
+          : Number(
+              item.allowed_radius
+            );
 
-        return (
-          isLocationError &&
-          !isAnnualLeave
-        );
-      })
-      .map((item) => ({
-        attendanceId:
+      let distanceText =
+        "배정 위치를 계산할 수 없음";
+
+      if (
+        distance !== null &&
+        allowedRadius !== null &&
+        Number.isFinite(distance) &&
+        Number.isFinite(
+          allowedRadius
+        )
+      ) {
+        distanceText =
+          `지정 위치와 약 ${Math.round(
+            distance
+          )}m 거리 · 허용 ${Math.round(
+            allowedRadius
+          )}m`;
+      }
+
+      return {
+        attemptId:
           item.id,
 
         userId:
           item.user_id,
 
         name:
-          item.users?.name ||
+          item.employee_name ||
           "이름 없음",
 
+        department:
+          item.department ||
+          "부서 없음",
+
         region:
-          item.workplaces?.name ||
+          item.workplace_name ||
           "미배정",
 
         time:
           formatTime(
-            item.check_in_time
+            item.attempted_at
           ),
 
         distance:
-          "확인 필요",
+          distanceText,
 
         status:
-          "확인 필요",
-      }));
-
+          distance !== null &&
+          Number.isFinite(
+            distance
+          )
+            ? "범위 밖"
+            : "배정 위치 없음",
+      };
+    });
+    
   await applyMonthlyLateCount();
 }
 
 async function applyMonthlyLateCount() {
-  const today = new Date();
-  const firstDayOfMonth = new Date(
-    today.getFullYear(),
-    today.getMonth(),
-    1
-  )
-    .toISOString()
-    .split("T")[0];
+  const firstDayOfMonth =
+    `${todayStr.slice(
+      0,
+      7
+    )}-01`;
 
   const { data, error } = await supabase
     .from("attendance")
@@ -467,12 +902,72 @@ function renderAbsentTable() {
     })
     .join("");
 
-  absentTableBody.querySelectorAll("[data-absent-index]").forEach((select) => {
-    select.addEventListener("change", () => {
-      const index = Number(select.dataset.absentIndex);
-      absentEmployees[index].status = select.value;
+    absentTableBody
+    .querySelectorAll(
+      "[data-absent-index]"
+    )
+    .forEach((select) => {
+      select.addEventListener(
+        "change",
+        async () => {
+          const index =
+            Number(
+              select.dataset
+                .absentIndex
+            );
+
+          const employee =
+            absentEmployees[index];
+
+          if (!employee) {
+            return;
+          }
+
+          const previousStatus =
+            employee.status;
+
+          const nextStatus =
+            select.value;
+
+          select.disabled = true;
+
+          try {
+            await saveIssueAction({
+              userId:
+                employee.userId,
+
+              attendanceId:
+                null,
+
+              issueType:
+                "absent",
+
+              actionStatus:
+                nextStatus,
+
+              reason:
+                null,
+
+              memo:
+                null,
+            });
+
+            employee.status =
+              nextStatus;
+          } catch (error) {
+            select.value =
+              previousStatus;
+
+            window.alert(
+              "미출근 처리 상태를 저장하지 못했습니다."
+            );
+          } finally {
+            select.disabled =
+              false;
+          }
+        }
+      );
     });
-  });
 }
 
 function renderRepeatLateList() {
@@ -526,7 +1021,15 @@ function renderLocationErrors() {
             <strong>${error.name}</strong>
             <span>${error.status}</span>
           </div>
-          <p>${error.region} · ${error.time} · 지정 위치와 ${error.distance}</p>
+          <p>
+            ${error.department}
+            ·
+            ${error.region}
+            ·
+            ${error.time}
+            ·
+            ${error.distance}
+          </p>
         </div>
       `;
     })
@@ -557,15 +1060,63 @@ function closeReasonModal() {
   }
 }
 
-function saveReason() {
-  if (selectedLateIndex === null) return;
+async function saveReason() {
+  if (
+    selectedLateIndex === null
+  ) {
+    return;
+  }
 
-  lateEmployees[selectedLateIndex].reason = reasonSelect.value;
-  lateEmployees[selectedLateIndex].memo = reasonMemo.value.trim();
+  const employee =
+    lateEmployees[
+      selectedLateIndex
+    ];
 
-  renderLateTable();
-  renderRepeatLateList();
-  closeReasonModal();
+  if (!employee) {
+    return;
+  }
+
+  const nextReason =
+    reasonSelect.value;
+
+  const nextMemo =
+    reasonMemo.value.trim();
+
+  try {
+    await saveIssueAction({
+      userId:
+        employee.userId,
+
+      attendanceId:
+        employee.attendanceId,
+
+      issueType:
+        "late",
+
+      actionStatus:
+        "사유 확인",
+
+      reason:
+        nextReason,
+
+      memo:
+        nextMemo,
+    });
+
+    employee.reason =
+      nextReason;
+
+    employee.memo =
+      nextMemo;
+
+    renderLateTable();
+    renderRepeatLateList();
+    closeReasonModal();
+  } catch (error) {
+    window.alert(
+      "지각 사유를 저장하지 못했습니다."
+    );
+  }
 }
 
 function bindEvents() {

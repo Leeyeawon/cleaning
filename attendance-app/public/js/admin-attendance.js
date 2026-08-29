@@ -833,34 +833,6 @@ function renderRegionFilterOptions() {
     regionFilter.value ||
     "전체 지역";
 
-  const selectedRegion =
-    employeeRegionFilter?.value ||
-    "all";
-
-  const availableShifts =
-    workShifts.filter(
-      (shift) => {
-        if (
-          selectedRegion === "all"
-        ) {
-          return true;
-        }
-
-        if (
-          selectedRegion ===
-          "unassigned"
-        ) {
-          return false;
-        }
-
-        return (
-          String(
-            shift.workplace_id
-          ) ===
-          String(selectedRegion)
-        );
-      }
-    );
 
   const excludedValues = new Set([
     "",

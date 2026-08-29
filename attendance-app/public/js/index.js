@@ -456,8 +456,46 @@ async function checkIn() {
   });
 
   if (error) {
-    console.error("출근 오류:", error);
-    throw new Error(getErrorMessage(error));
+    console.error(
+      "출근 오류:",
+      error
+    );
+
+    const errorMessage =
+      error?.message || "";
+
+    if (
+      errorMessage.includes(
+        "OUT_OF_WORKPLACE_RANGE_OR_SCHEDULE"
+      )
+    ) {
+      const {
+        error: logError,
+      } = await supabase.rpc(
+        "employee_log_location_error",
+        {
+          p_session_token:
+            token,
+
+          p_lat:
+            position.latitude,
+
+          p_lng:
+            position.longitude,
+        }
+      );
+
+      if (logError) {
+        console.error(
+          "위치 오류 기록 실패:",
+          logError
+        );
+      }
+    }
+
+    throw new Error(
+      getErrorMessage(error)
+    );
   }
 
   todayAttendance = data?.[0] || null;
