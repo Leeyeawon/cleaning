@@ -689,6 +689,22 @@ function renderTable() {
         row.employee_name ||
         "이름 없음";
 
+      const autoCloseBadge =
+        row.is_auto_closed
+          ? `
+            <span
+              class="auto-close-badge"
+              title="자동 처리 시각: ${escapeHtml(
+                formatDateTime(
+                  row.auto_closed_at
+                )
+              )}"
+            >
+              자동 퇴근
+            </span>
+          `
+          : "";
+
       return `
         <tr>
           <td>
@@ -747,20 +763,24 @@ function renderTable() {
           </td>
 
           <td>
-            <span
-              class="status ${getStatusClass(
-                processingStatus
-              )}"
-              title="${escapeHtml(
-                getAttendanceStatusText(
-                  row.attendance_status
-                )
-              )}"
-            >
-              ${escapeHtml(
-                processingStatus
-              )}
-            </span>
+            <div class="edit-status-stack">
+              <span
+                class="status ${getStatusClass(
+                  processingStatus
+                )}"
+                title="${escapeHtml(
+                  getAttendanceStatusText(
+                    row.attendance_status
+                  )
+                )}"
+              >
+                ${escapeHtml(
+                  processingStatus
+                )}
+              </span>
+
+              ${autoCloseBadge}
+            </div>
           </td>
 
           <td>
@@ -1121,7 +1141,17 @@ function openEditModal(rowKey) {
 
       row.workplace_name ||
         "근무지 미배정",
-    ].join(" · ");
+
+      row.is_auto_closed
+        ? `자동 퇴근 ${
+            formatDateTime(
+              row.auto_closed_at
+            )
+          }`
+        : null,
+    ]
+      .filter(Boolean)
+      .join(" · ");
 
   editCheckInInput.value =
     getTimeInputValue(

@@ -2009,16 +2009,24 @@ async function printEmployeeMonthlyAttendance(
 
         .attendance-time-pair {
           display: flex;
-          flex-direction: column;
-          gap: 0.8mm;
+          align-items: center;
+          justify-content: center;
+          gap: 1.2mm;
 
           line-height: 1.2;
+          white-space: nowrap;
         }
 
         .attendance-time-pair span {
-          display: block;
+          display: inline;
         }
 
+        .attendance-time-pair
+        span + span::before {
+          content: "~";
+          margin-right: 1.2mm;
+        }
+          
         .note-column {
           text-align: left;
           padding-left: 2mm !important;
@@ -2623,7 +2631,7 @@ function bindEvents() {
         }
       }
     );
-    
+
   employeePrintSearchInput
     ?.addEventListener(
       "input",
