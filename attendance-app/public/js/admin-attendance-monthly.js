@@ -80,6 +80,11 @@ const monthlyEmployeeTableBody =
     "monthlyEmployeeTableBody"
   );
 
+const employeePrintSearchInput =
+  document.getElementById(
+    "employeePrintSearchInput"
+  );
+
 const employeePrintSelect =
   document.getElementById(
     "employeePrintSelect"
@@ -736,6 +741,71 @@ function buildEmployeeSummaries() {
 /* =========================
   선택창
 ========================= */
+function filterEmployeePrintOptions() {
+  const keyword =
+    employeePrintSearchInput
+      ?.value
+      .trim()
+      .toLowerCase() ||
+    "";
+
+  const currentValue =
+    employeePrintSelect.value;
+
+  const matchedEmployees =
+    employeeSummaries.filter(
+      (summary) =>
+        !keyword ||
+        String(
+          summary.name || ""
+        )
+          .toLowerCase()
+          .includes(keyword)
+    );
+
+  employeePrintSelect.innerHTML = `
+    <option value="">
+      ${
+        matchedEmployees.length
+          ? "직원을 선택하세요"
+          : "검색 결과가 없습니다"
+      }
+    </option>
+
+    ${matchedEmployees
+      .map(
+        (summary) => `
+          <option
+            value="${escapeHtml(
+              summary.userId
+            )}"
+          >
+            ${escapeHtml(
+              summary.name
+            )}
+            ·
+            ${escapeHtml(
+              summary.department
+            )}
+          </option>
+        `
+      )
+      .join("")}
+  `;
+
+  const valueExists = [
+    ...employeePrintSelect.options,
+  ].some(
+    (option) =>
+      option.value ===
+      currentValue
+  );
+
+  if (valueExists) {
+    employeePrintSelect.value =
+      currentValue;
+  }
+}
 
 function renderSelectOptions() {
   const workplaceOptions =
@@ -771,34 +841,7 @@ function renderSelectOptions() {
     ${workplaceOptions}
   `;
 
-  const employeeOptions =
-    employeeSummaries
-      .map(
-        (summary) => `
-          <option
-            value="${escapeHtml(
-              summary.userId
-            )}"
-          >
-            ${escapeHtml(
-              summary.name
-            )}
-            ·
-            ${escapeHtml(
-              summary.department
-            )}
-          </option>
-        `
-      )
-      .join("");
-
-  employeePrintSelect.innerHTML = `
-    <option value="">
-      직원을 선택하세요
-    </option>
-
-    ${employeeOptions}
-  `;
+  filterEmployeePrintOptions();
 }
 
 /* =========================
@@ -1836,25 +1879,20 @@ async function printEmployeeMonthlyAttendance(
     totalWorkMinutes +=
       workMinutes;
 
-    const statusText =
+    const timeCellClass =
       isAnnualLeave
-        ? "연차"
-        : getAttendanceStatusText(
-            record
-          );
+        ? "annual-leave-cell"
+        : isLateStatus(
+            record?.status
+          )
+          ? "late-cell"
+          : "";
 
     const rowClass =
       weekDay === "토" ||
       weekDay === "일"
         ? "weekend"
         : "";
-
-    const statusClass =
-      isAnnualLeave
-        ? "annual-leave-cell"
-        : statusText === "지각"
-          ? "late-cell"
-          : "";
 
     rows.push(`
       <tr class="${rowClass}">
@@ -1868,29 +1906,35 @@ async function printEmployeeMonthlyAttendance(
           ${weekDay}
         </td>
 
-        <td>
+        <td class="${timeCellClass}">
           ${
             isAnnualLeave
-              ? "—"
-              : escapeHtml(
-                  formatTimeOnly(
-                    record
-                      ?.check_in_time
-                  )
-                )
-          }
-        </td>
+              ? `
+                <strong>
+                  연차
+                </strong>
+              `
+              : `
+                <div class="attendance-time-pair">
+                  <span>
+                    ${escapeHtml(
+                      formatTimeOnly(
+                        record
+                          ?.check_in_time
+                      )
+                    ) || "—"}
+                  </span>
 
-        <td>
-          ${
-            isAnnualLeave
-              ? "—"
-              : escapeHtml(
-                  formatTimeOnly(
-                    record
-                      ?.check_out_time
-                  )
-                )
+                  <span>
+                    ${escapeHtml(
+                      formatTimeOnly(
+                        record
+                          ?.check_out_time
+                      )
+                    ) || "—"}
+                  </span>
+                </div>
+              `
           }
         </td>
 
@@ -1904,12 +1948,6 @@ async function printEmployeeMonthlyAttendance(
                 )
               : ""
           }
-        </td>
-
-        <td class="${statusClass}">
-          ${escapeHtml(
-            statusText
-          )}
         </td>
 
         <td class="note-column">
@@ -1946,34 +1984,39 @@ async function printEmployeeMonthlyAttendance(
 
         .employee-table th:nth-child(1),
         .employee-table td:nth-child(1) {
-          width: 11%;
+          width: 12%;
         }
 
         .employee-table th:nth-child(2),
         .employee-table td:nth-child(2) {
-          width: 7%;
+          width: 8%;
         }
 
         .employee-table th:nth-child(3),
-        .employee-table td:nth-child(3),
+        .employee-table td:nth-child(3) {
+          width: 22%;
+        }
+
         .employee-table th:nth-child(4),
         .employee-table td:nth-child(4) {
-          width: 13%;
+          width: 18%;
         }
 
         .employee-table th:nth-child(5),
         .employee-table td:nth-child(5) {
-          width: 14%;
+          width: 40%;
         }
 
-        .employee-table th:nth-child(6),
-        .employee-table td:nth-child(6) {
-          width: 12%;
+        .attendance-time-pair {
+          display: flex;
+          flex-direction: column;
+          gap: 0.8mm;
+
+          line-height: 1.2;
         }
 
-        .employee-table th:nth-child(7),
-        .employee-table td:nth-child(7) {
-          width: 30%;
+        .attendance-time-pair span {
+          display: block;
         }
 
         .note-column {
@@ -2019,10 +2062,8 @@ async function printEmployeeMonthlyAttendance(
               <tr>
                 <th>일자</th>
                 <th>요일</th>
-                <th>출근</th>
-                <th>퇴근</th>
+                <th>출퇴근 시간</th>
                 <th>시간합계</th>
-                <th>상태</th>
                 <th>기타사항</th>
               </tr>
             </thead>
@@ -2580,6 +2621,17 @@ function bindEvents() {
             .textContent =
               "직원 출근부 출력";
         }
+      }
+    );
+    
+  employeePrintSearchInput
+    ?.addEventListener(
+      "input",
+      () => {
+        employeePrintSelect.value =
+          "";
+
+        filterEmployeePrintOptions();
       }
     );
 
