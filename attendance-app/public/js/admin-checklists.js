@@ -1440,7 +1440,7 @@ function renderChecklistDetailPhotos() {
                     photo.signedUrl
                   )}"
                   alt="현장 사진 ${index + 1}"
-                  loading="lazy"
+                  loading="eager"
                 >
               </a>
             `
@@ -2164,7 +2164,82 @@ function closeChecklistSubmissionDetail() {
   );
 }
 
-function printChecklistSubmissionDetail() {
+async function waitForChecklistPrintImages() {
+  const images = [
+    ...checklistDetailPhotoList
+      .querySelectorAll("img"),
+  ];
+
+  if (!images.length) {
+    return;
+  }
+
+  await Promise.all(
+    images.map(
+      async (image) => {
+        if (
+          image.complete &&
+          image.naturalWidth > 0
+        ) {
+          try {
+            await image.decode();
+          } catch {
+            // 이미 표시 가능한 사진
+          }
+
+          return;
+        }
+
+        await new Promise(
+          (resolve) => {
+            const finish = () => {
+              resolve();
+            };
+
+            image.addEventListener(
+              "load",
+              finish,
+              {
+                once: true,
+              }
+            );
+
+            image.addEventListener(
+              "error",
+              finish,
+              {
+                once: true,
+              }
+            );
+          }
+        );
+
+        try {
+          await image.decode();
+        } catch {
+          // 불러오지 못한 사진은
+          // 나머지 내용만 인쇄
+        }
+      }
+    )
+  );
+}
+
+async function printChecklistSubmissionDetail() {
+  if (
+    checklistDetailPhotoCount
+      .textContent ===
+    "불러오는 중"
+  ) {
+    alert(
+      "사진을 불러온 후 다시 출력해 주세요."
+    );
+
+    return;
+  }
+
+  await waitForChecklistPrintImages();
+
   document.body.classList.add(
     "checklist-detail-printing"
   );

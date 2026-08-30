@@ -754,12 +754,21 @@ async function fetchIssueData() {
           distanceText,
 
         status:
-          distance !== null &&
-          Number.isFinite(
+          distance === null ||
+          !Number.isFinite(
             distance
           )
-            ? "범위 밖"
-            : "배정 위치 없음",
+            ? "배정 위치 없음"
+            : (
+                allowedRadius !== null &&
+                Number.isFinite(
+                  allowedRadius
+                ) &&
+                distance <=
+                  allowedRadius
+              )
+              ? "요일·시간대 확인"
+              : "범위 밖",
       };
     });
     

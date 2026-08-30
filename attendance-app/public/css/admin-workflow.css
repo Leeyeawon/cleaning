@@ -1030,6 +1030,110 @@ body[data-admin-page="requests"]
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
+
+  body.checklist-detail-printing
+  .checklist-detail-photos {
+    margin-top: 18px;
+    padding: 16px 0 0;
+    border-top: 2px solid #111827;
+    background: #ffffff;
+
+    break-inside: auto;
+  }
+
+  body.checklist-detail-printing
+  .checklist-detail-photo-header {
+    margin-bottom: 12px;
+  }
+
+  body.checklist-detail-printing
+  .checklist-detail-photo-header strong {
+    font-size: 14px;
+  }
+
+  body.checklist-detail-printing
+  .checklist-detail-photo-header p {
+    display: none;
+  }
+
+  body.checklist-detail-printing
+  #checklistDetailPhotoCount {
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+
+    -webkit-print-color-adjust:
+      exact;
+
+    print-color-adjust:
+      exact;
+  }
+
+  body.checklist-detail-printing
+  .checklist-detail-photo-list {
+    display: grid;
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+    gap: 10mm 8mm;
+  }
+
+  body.checklist-detail-printing
+  .checklist-detail-photo-card {
+    overflow: visible;
+    border: 1px solid #9ca3af;
+    border-radius: 0;
+    box-shadow: none;
+
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  body.checklist-detail-printing
+  .checklist-detail-photo-preview {
+    display: flex;
+    width: 100%;
+    min-height: 55mm;
+    max-height: 105mm;
+    aspect-ratio: auto;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: #ffffff;
+  }
+
+  body.checklist-detail-printing
+  .checklist-detail-photo-preview img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 105mm;
+    object-fit: contain;
+  }
+
+  body.checklist-detail-printing
+  .checklist-detail-photo-info {
+    padding: 7px 9px;
+    border-top: 1px solid #d1d5db;
+  }
+
+  body.checklist-detail-printing
+  .checklist-detail-photo-info strong {
+    font-size: 10px;
+  }
+
+  body.checklist-detail-printing
+  .checklist-detail-photo-info small {
+    font-size: 9px;
+  }
+
+  body.checklist-detail-printing
+  .checklist-detail-photo-actions {
+    display: none !important;
+  }
+
+  body.checklist-detail-printing
+  .checklist-detail-photo-preview::after {
+    content: none !important;
+  }
 }
 
 .workflow-delete-button {
