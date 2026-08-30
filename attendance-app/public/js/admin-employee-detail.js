@@ -1550,57 +1550,516 @@ async function handleDeleteAccount() {
   }
 }
 
+function openEmployeeAttendancePrint(
+  title,
+  html
+) {
+  const oldFrame =
+    document.getElementById(
+      "employeeAttendancePrintFrame"
+    );
+
+  oldFrame?.remove();
+
+  const printFrame =
+    document.createElement(
+      "iframe"
+    );
+
+  printFrame.id =
+    "employeeAttendancePrintFrame";
+
+  printFrame.title =
+    "직원 출근부 인쇄";
+
+  Object.assign(
+    printFrame.style,
+    {
+      position: "fixed",
+      right: "0",
+      bottom: "0",
+      width: "0",
+      height: "0",
+      border: "0",
+      visibility: "hidden",
+    }
+  );
+
+  document.body.appendChild(
+    printFrame
+  );
+
+  const printWindow =
+    printFrame.contentWindow;
+
+  printWindow.document.open();
+
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html lang="ko">
+      <head>
+        <meta charset="UTF-8">
+
+        <title>
+          ${escapeHtml(title)}
+        </title>
+
+        <style>
+          @page {
+            size: A4 portrait;
+            margin: 7mm;
+          }
+
+          * {
+            box-sizing: border-box;
+          }
+
+          html,
+          body {
+            margin: 0;
+            padding: 0;
+
+            color: #111111;
+
+            font-family:
+              "Malgun Gothic",
+              "Apple SD Gothic Neo",
+              sans-serif;
+          }
+
+          .print-document {
+            width: 100%;
+          }
+
+          .print-header {
+            margin-bottom: 6mm;
+            text-align: center;
+          }
+
+          .print-header h1 {
+            margin: 0;
+
+            font-size: 17pt;
+            line-height: 1.3;
+          }
+
+          .print-header p {
+            margin: 2mm 0 0;
+
+            color: #333333;
+            font-size: 9pt;
+          }
+
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+          }
+
+          th,
+          td {
+            border: 1px solid #666666;
+            text-align: center;
+            vertical-align: middle;
+          }
+
+          th {
+            height: 6mm;
+            padding: 1mm;
+
+            background: #eeeeee;
+            font-weight: 700;
+
+            print-color-adjust: exact;
+            -webkit-print-color-adjust:
+              exact;
+          }
+
+          td {
+            height: 7.7mm;
+            padding: 1.1mm 1mm;
+          }
+
+          .employee-table {
+            font-size: 7.5pt;
+          }
+
+          .employee-table th:nth-child(1),
+          .employee-table td:nth-child(1) {
+            width: 12%;
+          }
+
+          .employee-table th:nth-child(2),
+          .employee-table td:nth-child(2) {
+            width: 8%;
+          }
+
+          .employee-table th:nth-child(3),
+          .employee-table td:nth-child(3) {
+            width: 22%;
+          }
+
+          .employee-table th:nth-child(4),
+          .employee-table td:nth-child(4) {
+            width: 18%;
+          }
+
+          .employee-table th:nth-child(5),
+          .employee-table td:nth-child(5) {
+            width: 40%;
+          }
+
+          .weekend {
+            background: #f8f8f8;
+
+            print-color-adjust: exact;
+            -webkit-print-color-adjust:
+              exact;
+          }
+
+          .annual-leave-cell {
+            background: #fff4cc;
+            color: #8a5a00;
+            font-weight: 700;
+
+            print-color-adjust: exact;
+            -webkit-print-color-adjust:
+              exact;
+          }
+
+          .late-cell {
+            background: #fee2e2;
+            color: #b91c1c;
+            font-weight: 700;
+
+            print-color-adjust: exact;
+            -webkit-print-color-adjust:
+              exact;
+          }
+
+          .attendance-time-pair {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.2mm;
+
+            line-height: 1.2;
+            white-space: nowrap;
+          }
+
+          .attendance-time-pair
+          span + span::before {
+            content: "~";
+            margin-right: 1.2mm;
+          }
+
+          .note-column {
+            padding-left: 2mm !important;
+            text-align: left;
+          }
+
+          .print-signature {
+            margin-top: 5mm;
+            text-align: right;
+            font-size: 9pt;
+          }
+        </style>
+      </head>
+
+      <body>
+        ${html}
+      </body>
+    </html>
+  `);
+
+  printWindow.document.close();
+
+  printWindow.addEventListener(
+    "load",
+    () => {
+      window.setTimeout(
+        () => {
+          printWindow.focus();
+          printWindow.print();
+
+          printWindow.onafterprint =
+            () => {
+              printFrame.remove();
+            };
+        },
+        250
+      );
+    }
+  );
+}
+
+
 function handlePrintTableOnly() {
   if (!currentEmployeeData) {
     return;
   }
 
+  const monthNumber =
+    selectedMonth + 1;
+
   const daysInMonth =
     new Date(
       selectedYear,
-      selectedMonth + 1,
+      monthNumber,
       0
     ).getDate();
 
-  /*
-    A4 인쇄 가능 높이 중
-    표 본문에 약 238mm 사용
-  */
-  const rowHeight =
-    Math.min(
-      8.5,
-      238 / daysInMonth
-    );
+  const attendanceMap =
+    new Map();
 
-  document.documentElement
-    .style.setProperty(
-      "--print-row-height",
-      `${rowHeight}mm`
-    );
+  currentAttendanceRecords.forEach(
+    (record) => {
+      const existing =
+        attendanceMap.get(
+          record.work_date
+        );
+
+      if (
+        !existing ||
+        (
+          record.check_in_time &&
+          !existing.check_in_time
+        )
+      ) {
+        attendanceMap.set(
+          record.work_date,
+          record
+        );
+      }
+    }
+  );
+
+  let totalWorkMinutes = 0;
+
+  const rows = [];
+
+  for (
+    let day = 1;
+    day <= daysInMonth;
+    day += 1
+  ) {
+    const dateKey =
+      toLocalDateKey(
+        selectedYear,
+        selectedMonth,
+        day
+      );
+
+    const weekDay =
+      getKoreanDayOfWeek(
+        dateKey
+      );
+
+    const record =
+      attendanceMap.get(
+        dateKey
+      );
+
+    const note =
+      dailyNotes.get(
+        dateKey
+      ) || {
+        content: "",
+        dayType: "normal",
+      };
+
+    const isAnnualLeave =
+      note.dayType ===
+      "annual_leave";
+
+    const workMinutes =
+      isAnnualLeave
+        ? 0
+        : calcWorkMinutes(
+            record?.check_in_time,
+            record?.check_out_time
+          );
+
+    totalWorkMinutes +=
+      workMinutes;
+
+    const isLate =
+      [
+        "late",
+        "지각",
+      ].includes(
+        String(
+          record?.status || ""
+        ).toLowerCase()
+      );
+
+    const timeCellClass =
+      isAnnualLeave
+        ? "annual-leave-cell"
+        : isLate
+          ? "late-cell"
+          : "";
+
+    const rowClass =
+      weekDay === "토" ||
+      weekDay === "일"
+        ? "weekend"
+        : "";
+
+    const checkInText =
+      record?.check_in_time
+        ? formatTimeOnly(
+            record.check_in_time
+          )
+        : "—";
+
+    const checkOutText =
+      record?.check_out_time
+        ? formatTimeOnly(
+            record.check_out_time
+          )
+        : "—";
+
+    rows.push(`
+      <tr class="${rowClass}">
+        <td>
+          ${monthNumber}.${String(
+            day
+          ).padStart(2, "0")}
+        </td>
+
+        <td>
+          ${weekDay}
+        </td>
+
+        <td class="${timeCellClass}">
+          ${
+            isAnnualLeave
+              ? `
+                <strong>
+                  연차
+                </strong>
+              `
+              : `
+                <div class="attendance-time-pair">
+                  <span>
+                    ${escapeHtml(
+                      checkInText
+                    )}
+                  </span>
+
+                  <span>
+                    ${escapeHtml(
+                      checkOutText
+                    )}
+                  </span>
+                </div>
+              `
+          }
+        </td>
+
+        <td>
+          ${
+            workMinutes > 0
+              ? escapeHtml(
+                  formatMinutesToHoursText(
+                    workMinutes
+                  )
+                )
+              : ""
+          }
+        </td>
+
+        <td class="note-column">
+          ${escapeHtml(
+            note.content ||
+            record?.memo ||
+            ""
+          )}
+        </td>
+      </tr>
+    `);
+  }
+
+  const title =
+    `${selectedYear}년 ` +
+    `${monthNumber}월 출근부`;
 
   const department =
-    currentEmployeeData
-      .department ||
+    currentEmployeeData.department ||
     "소속 미지정";
 
   const employeeName =
     currentEmployeeData.name ||
     "이름 없음";
 
-  if (printTitle) {
-    printTitle.textContent =
-      `${selectedYear}년 ${
-        selectedMonth + 1
-      }월 출근부`;
-  }
+  const workplaceNames =
+    Array.isArray(
+      currentEmployeeData
+        .workplaceNames
+    )
+      ? [
+          ...new Set(
+            currentEmployeeData
+              .workplaceNames
+          ),
+        ]
+      : [];
 
-  if (printSubtitle) {
-    printSubtitle.textContent =
-      `소속: ${department} | ` +
-      `성명: ${employeeName}`;
-  }
+  openEmployeeAttendancePrint(
+    title,
 
-  window.print();
+    `
+      <main class="print-document">
+        <header class="print-header">
+          <h1>
+            ${escapeHtml(title)}
+          </h1>
+
+          <p>
+            소속:
+            ${escapeHtml(department)}
+            |
+            성명:
+            ${escapeHtml(employeeName)}
+            |
+            근무지:
+            ${escapeHtml(
+              workplaceNames.join(", ") ||
+              "미배정"
+            )}
+          </p>
+        </header>
+
+        <table class="employee-table">
+          <thead>
+            <tr>
+              <th>일자</th>
+              <th>요일</th>
+              <th>출퇴근 시간</th>
+              <th>시간합계</th>
+              <th>기타사항</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${rows.join("")}
+          </tbody>
+        </table>
+
+        <div class="print-signature">
+          총 근무시간:
+          <strong>
+            ${escapeHtml(
+              formatMinutesToHoursText(
+                totalWorkMinutes
+              )
+            )}
+          </strong>
+        </div>
+      </main>
+    `
+  );
 }
 
 async function openEmployeeEditModal() {

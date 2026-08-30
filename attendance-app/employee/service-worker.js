@@ -1,5 +1,5 @@
 const CACHE_NAME =
-  "employee-pwa-v55";
+  "employee-pwa-v56";
 
 const CACHE_PREFIX =
   "employee-pwa-";
