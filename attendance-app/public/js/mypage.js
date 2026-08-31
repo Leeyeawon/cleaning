@@ -88,11 +88,9 @@ function renderProfile(profile) {
 
   if (employeeAppRole) {
     employeeAppRole.textContent =
-      profile.app_role === "team_lead"
-        ? "팀장"
-        : "일반 직원";
+      profile.job_title ||
+      "직급 미지정";
   }
-}
 
 async function loadMyWorkplaces() {
   const token = getEmployeeSessionToken();
