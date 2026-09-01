@@ -593,17 +593,31 @@ async function initNotificationSetting() {
 }
 
 async function init() {
+  /*
+    설치 버튼을 다른 조회보다
+    가장 먼저 연결합니다.
+  */
+  initPwaInstallSetting();
+
   currentEmployee =
     await getCurrentEmployee();
 
-  if (!currentEmployee) return;
+  if (!currentEmployee) {
+    return;
+  }
 
   renderProfile(
     currentEmployee
   );
 
-  await loadMyWorkplaces();
-  await checkLocationPermission();
+  /*
+    위치 또는 근무지 조회 하나가 실패해도
+    페이지 초기화를 계속 진행합니다.
+  */
+  await Promise.allSettled([
+    loadMyWorkplaces(),
+    checkLocationPermission(),
+  ]);
 
   editPhoneBtn?.addEventListener(
     "click",
@@ -621,7 +635,6 @@ async function init() {
   );
 
   initNotificationSetting();
-  initPwaInstallSetting();
   
   logoutButton?.addEventListener(
     "click",
